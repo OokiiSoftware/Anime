@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "281298385448",
+    "firebase_url": "https://anime-oki.firebaseio.com",
+    "project_id": "anime-oki",
+    "storage_bucket": "anime-oki.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:281298385448:android:3a4c74b7c7ae63f297131d",
+        "android_client_info": {
+          "package_name": "com.ookiisoftware.anime"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "281298385448-778goounb3hjep4cb3far168de08teg5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ookiisoftware.anime",
+            "certificate_hash": "af2be267eeab734f60c6b5dfa77a648c82a54c97"
+          }
+        },
+        {
+          "client_id": "281298385448-tneb8j5hu4qddpecjiikf8okuks2kdru.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1LfbO2HQh-wToCHTJvMG8GxcmTeaEPsM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "281298385448-tneb8j5hu4qddpecjiikf8okuks2kdru.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
