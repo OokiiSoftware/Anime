@@ -12,6 +12,8 @@ import 'package:anime/res/strings.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'generos_fragment.dart';
+
 class AnimesFragment extends StatefulWidget {
   final List<AnimeList> _data;
   final ListType _list;
@@ -145,7 +147,7 @@ class MyPageState extends State<AnimesFragment> with AutomaticKeepAliveClientMix
           ElevatedButton(
             child: Text('Generos'),
             onPressed: () async {
-              await Navigate.to(context, GenerosFragment(context));
+              await Navigate.to(context, GenerosFragment());
             },
           ),
           ElevatedButton(
@@ -289,102 +291,4 @@ class MyPageState extends State<AnimesFragment> with AutomaticKeepAliveClientMix
 
   //endregion
 
-}
-
-class GenerosFragment extends StatefulWidget {
-  final BuildContext context;
-  GenerosFragment(this.context);
-  @override
-  MyPageState2 createState() => MyPageState2();
-}
-class MyPageState2 extends State<GenerosFragment> {
-
-  bool _allSelected = true;
-  bool _mostrarFab = false;
-  Map<String, bool> _data = Map();
-
-  @override
-  void initState() {
-    super.initState();
-    for (var s in OnlineData.generos) {
-      var b = Config.generos.contains(s);
-      _data[s] = b;
-      if (!b) _allSelected = false;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(MyTitles.GENEROS, style: MyStyles.titleText),
-        actions: [
-          Tooltip(
-            message: _allSelected ? 'Desmarcar Tudo' : 'Marcar Tudo',
-            child: Checkbox(
-              value: _allSelected,
-              onChanged: (value) {
-                setState(() {
-                  _allSelected = value;
-                  for (var key in _data.keys)
-                    _data[key] = _allSelected;
-                });
-              },
-            ),
-          ),
-          Padding(padding: EdgeInsets.symmetric(horizontal: 5))
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.only(bottom: 80),
-        child: Column(
-            children: [
-              for (var key in _data.keys)
-                CheckboxListTile(
-                  title: Text(key),
-                  value: _data[key],
-                  onChanged: (value) {
-                    _onMostrarFab(true);
-                    setState(() {
-                      _data[key] = value;
-                      _allSelected = tudoSelecionado;
-                    });
-                  },
-                )
-            ]
-        ),
-      ),
-      floatingActionButton: _mostrarFab ? FloatingActionButton(
-        child: Icon(Icons.save),
-        onPressed: _onSave,
-      ) : null,
-    );
-  }
-
-  bool get tudoSelecionado {
-    for (var key in _data.keys) {
-      if (!_data[key]) return false;
-    }
-    return true;
-  }
-
-  void _onMostrarFab(bool b) {
-    setState(() {
-      _mostrarFab = b;
-    });
-  }
-
-  void _onSave() {
-    Config.generos = '';
-    for (var key in _data.keys) {
-      if (_data[key])
-        Config.generos += '$key,';
-    }
-    Config.save();
-    RunTime.generosAtualizados = true;
-
-    Log.snack('Dados Salvos');
-
-    _onMostrarFab(false);
-  }
 }
