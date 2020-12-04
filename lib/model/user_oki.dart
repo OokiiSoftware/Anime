@@ -1,9 +1,9 @@
-import 'package:anime/auxiliar/import.dart';
 import 'package:anime/auxiliar/logs.dart';
+import 'package:anime/auxiliar/online_data.dart';
 import 'package:anime/model/anime.dart';
 import 'package:anime/model/user_dados.dart';
 
-class User {
+class UserOki {
 
   //region Variaveis
   static const String TAG = 'User';
@@ -18,15 +18,17 @@ class User {
 
   //region Construtores
 
-  User();
+  UserOki();
 
-  User.fromJson(Map<dynamic, dynamic> map) {
+  UserOki.fromJson(Map<dynamic, dynamic> map) {
     try {
       if(map == null) return;
       if (_mapNotNull(map['animes'])) {
         var itemsList = AnimeList.fromJsonList(map['animes']);
         for (String key in itemsList.keys) {
-          var items = AnimeList.newItem(OnlineData.data[key]);
+          var t = OnlineData.data[key];
+          if (t == null) continue;
+          var items = AnimeList.newItem(t);
           if (items == null) continue;
 
           for (var item in items.itemsToList) {
@@ -60,12 +62,12 @@ class User {
     "favoritos": favoritos,
   };
 
-  static Map<String, User> fromMapList(Map map) {
-    Map<String, User> items = Map();
+  static Map<String, UserOki> fromMapList(Map map) {
+    Map<String, UserOki> items = Map();
     if (map == null)
       return items;
     for (String key in map.keys)
-      items[key] = User.fromJson(map[key]);
+      items[key] = UserOki.fromJson(map[key]);
     return items;
   }
 

@@ -1,7 +1,7 @@
 name: anime
 description: Lista de animes e suas classificações
 
-version: 1.0.10+10
+version: 1.0.14+14
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -10,13 +10,16 @@ dependencies:
 #  android_intent: ^0.3.7+3
 #  device_apps: ^1.2.0
 #  dio: any
-  firebase_auth: ^0.16.1
-  firebase_database: ^3.1.6
-  google_sign_in: ^4.1.1
-  package_info: ^0.4.0+16
-  path_provider: ^1.6.11
-  shared_preferences: ^0.5.8
-  url_launcher: ^5.5.0
+  dynamic_theme: ^1.0.1
+  firebase_admob: ^0.10.2
+  firebase_auth: ^0.18.3+1
+  firebase_database: ^4.3.0
+  firebase_storage: ^5.1.0
+  google_sign_in: ^4.5.6
+  package_info: ^0.4.3+2
+  path_provider: ^1.6.24
+  shared_preferences: ^0.5.12+4
+  url_launcher: ^5.7.10
   flutter:
     sdk: flutter
 

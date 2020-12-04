@@ -1,5 +1,6 @@
 import 'package:anime/model/data_hora.dart';
 import 'package:anime/model/feedback.dart';
+import 'package:anime/res/resources.dart';
 import 'package:anime/res/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,9 +12,10 @@ class Log {
     try {
       scaffKey.currentState.hideCurrentSnackBar();
 
-      var textColor = MyTheme.text();
+      var textColor = MyTheme.text;
       var snack = SnackBar(
         content: Container(
+          margin: Layouts.adsPadding(0),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -23,7 +25,7 @@ class Log {
             ],
           ),
         ),
-        backgroundColor: isError ? Colors.red : MyTheme.accent(),
+        backgroundColor: isError ? Colors.red : MyTheme.accent,
         action: onTap == null ? null: SnackBarAction(
           label: actionLabel,
           onPressed: onTap,

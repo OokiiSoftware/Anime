@@ -1,17 +1,10 @@
-import 'package:anime/auxiliar/import.dart';
-import 'package:anime/auxiliar/firebase.dart';
-import 'package:anime/auxiliar/logs.dart';
+import 'package:anime/auxiliar/aplication.dart';
+import 'package:anime/auxiliar/preferences.dart';
 import 'package:anime/model/anime.dart';
-import 'package:anime/model/config.dart';
-import 'package:anime/model/data_hora.dart';
-import 'package:anime/model/feedback.dart';
-import 'package:anime/res/dialog_box.dart';
 import 'package:anime/res/my_icons.dart';
 import 'package:anime/res/resources.dart';
-import 'package:anime/pages/login_page.dart';
 import 'package:anime/res/strings.dart';
 import 'package:anime/res/theme.dart';
-import 'file:///C:/Users/jhona/Documents/GitHub/anime/lib/pages/admin_page.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -25,10 +18,7 @@ class MyPageState extends State<InfoPage> {
 
   static const String TAG = 'ConfigPage';
 
-  bool _inProgress = false;
-  bool _isAdmin = false;
-  bool _showEcchi = false;
-
+  bool showInfo = false;
   var titleStyle = TextStyle(fontSize: 20);
 
   //endregion
@@ -38,29 +28,13 @@ class MyPageState extends State<InfoPage> {
   @override
   void initState() {
     super.initState();
-    _isAdmin = Firebase.isAdmin;
-    _showEcchi = Config.showEcchi;
+    showInfo = Preferences.getBool(PreferencesKey.CONFIG_SHOW_INFO, padrao: false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-          title: Text(MyTitles.INFORMACOES, style: MyStyles.titleText),
-        actions: [
-          if (_isAdmin)
-            IconButton(
-              tooltip: MyTitles.ADMIN,
-              icon: Icon(Icons.admin_panel_settings),
-              onPressed: _gotoAdminPage,
-            ),
-          IconButton(
-            tooltip: MyStrings.LOGOUT,
-            icon: Icon(Icons.logout),
-            onPressed: onLogout,
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(Titles.INFORMACOES, style: Styles.titleText)),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(20),
         child: Column(
@@ -72,66 +46,38 @@ class MyPageState extends State<InfoPage> {
                 color: MyTheme.textInvert(0.05),
                 padding: EdgeInsets.all(10),
                 child: Column(
-//                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Info', style: titleStyle),
+                    GestureDetector(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('${showInfo ? 'Ocultar' : 'Mostrar'} Info', style: titleStyle),
+                          Padding(padding: EdgeInsets.all(5)),
+                          Icon(showInfo ? Icons.arrow_circle_up : Icons.arrow_circle_down)
+                        ],
+                      ),
+                      onTap: _onShowInfoClick,
+                    ),
+
                     Divider(),
 //                    Text('Disponibilizamos links no app para melhorar o seu uso.\nNão somos patrocinados.'),
-                    Text('Esperamos que esse App seja útil a você e à comunidade Otaku.\n\nEstamos adicionando novos animes, seja paciente, se desejar pode sugerir seus animes favoritos e nós trabalharemos para adiciona-lo o mais rápido possível.\n\nOBS: Não disponibilizaremos animes com conteúdo improprio.'),
-                    _iconsInfo(),
+                    if (showInfo)...[
+                      Text('Esperamos que esse App seja útil a você e à comunidade Otaku.\n\nEstamos adicionando novos animes, seja paciente, se desejar pode sugerir seus animes favoritos e nós trabalharemos para adiciona-lo o mais rápido possível.\n\nOBS: Não disponibilizaremos animes com conteúdo impróprio.'),
+                      _iconsInfo(),
+                    ],
                   ],
                 ),
               ),
-            ),
-
-            Padding(padding: EdgeInsets.all(10)),
-            //Sugestões
-            ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(5)),
-              child: Container(
-                color: MyTheme.textInvert(0.05),
-                padding: EdgeInsets.all(10),
-                child: Column(
-                  children: [
-                    Text(
-                        'Ajude-nos a melhorar enviando sugestões',
-                        textAlign: TextAlign.center),
-                    Divider(),
-                    FlatButton(
-                      minWidth: 200,
-                      color: MyTheme.accent(),
-                      child: Text(MyTexts.ANINE_SUGESTAO, style: MyStyles.text),
-                      onPressed: () => onSugestao(true),
-                    ),
-                    FlatButton(
-                      minWidth: 200,
-                      color: MyTheme.accent(),
-                      child: Text(MyTexts.ENVIE_SUGESTAO, style: MyStyles.text),
-                      onPressed: onSugestao,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            CheckboxListTile(
-              title: Text('Mostrar animes com gênero Ecchi'),
-                value: _showEcchi,
-                onChanged: (value) {
-                  setState(() {
-                    _showEcchi = value;
-                    Config.showEcchi = value;
-                    Config.save();
-                  });
-                }
             ),
 
             Padding(padding: EdgeInsets.only(top: 30)),
-            _appInfo()
+            _appInfo(),
+            Padding(padding: EdgeInsets.only(top: 100)),
+
+            Layouts.adsFooter()
           ],
         ),
       ),
-      floatingActionButton: _inProgress ? CircularProgressIndicator() : null,
     );
   }
 
@@ -140,24 +86,35 @@ class MyPageState extends State<InfoPage> {
   //region Metodos
 
   Widget _appInfo() {
-    var divider = Divider(height: 30, color: MyTheme.background());
+    var dividerP = Padding(padding: EdgeInsets.only(top: 10, right: 5));
+    var dividerG = Padding(padding: EdgeInsets.only(top: 30));
     return Column(children: [
       //Icone
       Image.asset(MyIcons.ic_launcher,
         width: 130,
         height: 130,
       ),
-      divider,
-      Text('${MyStrings.VERSAO} : ${Import.packageInfo.version}'),
-      divider,
-      Text(MyStrings.CONTATOS),
+      dividerG,
+      Text('${MyResources.APP_NAME}'),
+      dividerP,
+      Text('${Strings.VERSAO} : ${Aplication.packageInfo.version}'),
+      dividerG,
+      Text(Strings.CONTATOS),
+      dividerP,
       GestureDetector(
-        child: Text(MyResources.app_email, style: TextStyle(color: MyTheme.primary())),
-        onTap: () {Import.openEmail(MyResources.app_email, context);},
+        child: Text(MyResources.app_email, style: TextStyle(color: MyTheme.primary)),
+        onTap: () {Aplication.openEmail(MyResources.app_email, context);},
       ),
-      Divider(height: 30),
-      Text(MyStrings.POR),
-      Text(MyResources.company_name),
+      dividerG,
+      Text(Strings.POR),
+      dividerP,
+      Tooltip(
+        message: MyResources.company_name,
+        child: Image.asset(MyIcons.ic_oki_logo,
+          width: 80,
+          height: 80,
+        ),
+      ),
     ]);
   }
 
@@ -172,55 +129,55 @@ class MyPageState extends State<InfoPage> {
         ),
        Row(
          children: [
-           MyLayouts.getIcon(AnimeTipo.TV),
+           Layouts.getIcon(AnimeType.TV),
            Padding(
              padding: padding,
-             child: Text('${AnimeTipo.TV}: Televisão'),
+             child: Text('${AnimeType.TV}: Televisão'),
            )
          ]
        ),
        Row(
          children: [
-           MyLayouts.getIcon(AnimeTipo.OVA),
+           Layouts.getIcon(AnimeType.OVA),
            Padding(
              padding: padding,
-             child: Text('${AnimeTipo.OVA}: Original Video Animation'),
+             child: Text('${AnimeType.OVA}: Original Video Animation'),
            )
          ]
        ),
        Row(
          children: [
-           MyLayouts.getIcon(AnimeTipo.ONA),
+           Layouts.getIcon(AnimeType.ONA),
            Padding(
              padding: padding,
-             child: Text('${AnimeTipo.ONA}: Original Net Animation'),
+             child: Text('${AnimeType.ONA}: Original Net Animation'),
            )
          ]
        ),
        Row(
          children: [
-           MyLayouts.getIcon(AnimeTipo.MOVIE),
+           Layouts.getIcon(AnimeType.MOVIE),
            Padding(
              padding: padding,
-             child: Text('${AnimeTipo.MOVIE}: Filme'),
+             child: Text('${AnimeType.MOVIE}: Filme'),
            )
          ]
        ),
        Row(
          children: [
-           MyLayouts.getIcon(AnimeTipo.SPECIAL),
+           Layouts.getIcon(AnimeType.SPECIAL),
            Padding(
              padding: padding,
-             child: Text('${AnimeTipo.SPECIAL}: Especial'),
+             child: Text('${AnimeType.SPECIAL}: Especial'),
            )
          ]
        ),
        Row(
          children: [
-           MyLayouts.getIcon(AnimeTipo.INDEFINIDO),
+           Layouts.getIcon(AnimeType.INDEFINIDO),
            Padding(
              padding: padding,
-             child: Text('${AnimeTipo.INDEFINIDO}: Indefinido'),
+             child: Text('${AnimeType.INDEFINIDO}: Indefinido'),
            )
          ]
        ),
@@ -228,52 +185,11 @@ class MyPageState extends State<InfoPage> {
     );
   }
 
-  void onSugestao([bool isSugestaoAnime = false]) async {
-    var controller = TextEditingController();
-    var title = MyTexts.ENVIAR_SUGESTAO_TITLE;
-    var content = SingleChildScrollView(
-      child: Column(
-        children: [
-          if (isSugestaoAnime)
-            Text('Insira corretamente o nome completo do anime'),
-          TextField(
-            controller: controller,
-            decoration: InputDecoration(
-                hintText: MyTexts.DIGITE_AQUI
-            ),
-          )
-        ],
-      ),
-    );
-    var result = await DialogBox.dialogCancelOK(context, title: title, content: content);
-    var desc = controller.text;
-    if (result.isOK && desc.trim().isNotEmpty) {
-      Sugestao item = Sugestao();
-      item.idUser = Firebase.fUser.uid;
-      item.data = DataHora.now();
-      item.descricao = desc;
-
-      _setInProgress(true);
-      await item.salvar(isSugestaoAnime);
-      _setInProgress(false);
-      Log.snack(MyTexts.ENVIE_SUGESTAO_AGRADECIMENTO);
-    }
-  }
-
-  void onLogout() async {
-    _setInProgress(true);
-    await Firebase.finalize();
-    Navigate.toReplacement(context, LoginPage());
-  }
-
-  void _gotoAdminPage() {
-    Navigate.to(context, AdminPage());
-  }
-
-  void _setInProgress(bool b) {
+  void _onShowInfoClick() {
     setState(() {
-      _inProgress = b;
+      showInfo = !showInfo;
     });
+    Preferences.setBool(PreferencesKey.CONFIG_SHOW_INFO, showInfo);
   }
 
   //endregion

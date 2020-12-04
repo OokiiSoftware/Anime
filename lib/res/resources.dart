@@ -1,25 +1,27 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:anime/model/anime.dart';
-import 'package:anime/model/user.dart';
+import 'package:anime/model/config.dart';
+import 'package:anime/model/user_oki.dart';
 import 'package:anime/res/my_icons.dart';
+import 'package:anime/res/strings.dart';
 import 'package:anime/res/theme.dart';
 import 'package:flutter/material.dart';
 
-class MyLayouts {
+class Layouts {
   static Widget fotoAnime(Anime item, {double iconSize, BoxFit fit}) {
     bool fotoLocal = item.fotoLocalExist;
 
     return fotoLocal ?
     fotoFile(item.fotoToFile, iconSize: iconSize, fit: fit) :
     item.miniatura.isEmpty ? Icon(Icons.image) :
-    fotoNetwork(item.miniatura, item.foto, iconSize: iconSize, fit: fit);
+    fotoNetwork(item.miniatura, iconSize: iconSize, fit: fit);
   }
 
   static Widget fotoFile(File file, {double iconSize, BoxFit fit}) => Image.file(file, fit: fit, width: iconSize, height: iconSize, errorBuilder: (c, u, e) => Icon(Icons.image));
-  static Widget fotoNetwork(String miniatura, String foto, {double iconSize, BoxFit fit}) =>
+  static Widget fotoNetwork(String url, {double iconSize, BoxFit fit}) =>
       Image.network(
-          miniatura, fit: fit, width: iconSize, height: iconSize, errorBuilder: (c, u, e) => Icon(Icons.image),
+          url, fit: fit, width: iconSize, height: iconSize, errorBuilder: (c, u, e) => Icon(Icons.image),
           loadingBuilder: (context, widget, progress) {
             if (progress == null) return widget;
             return Icon(Icons.image);
@@ -49,13 +51,13 @@ class MyLayouts {
       }
     }
 
-    var animesTV = items.itemsToList.where((e) => e.tipo == AnimeTipo.TV).toList();
+    var animesTV = items.itemsToList.where((e) => e.tipo == AnimeType.TV).toList();
 
     var ultimoAnime = animesTV.length > 0 ? animesTV[animesTV.length -1] : items.getItem(items.items.length -1);
     // var icon = getIcon(ultimoAnime.tipo);
     return ListTile(
       contentPadding: EdgeInsets.only(bottom: 3),
-      leading: MyLayouts.fotoAnime(ultimoAnime),
+      leading: Layouts.fotoAnime(ultimoAnime),
       title: Text(items.nome),
       subtitle: Row(children: [
         // if (icon != null)
@@ -75,9 +77,9 @@ class MyLayouts {
   }
 
   static Widget animeItemGrid(AnimeList items, {ListType list, @required onTap(), onLongPress(), Widget footer, bool isOrientationPortrait = true}) {
-    var textStyle = TextStyle(color: isOrientationPortrait ? MyTheme.text() : MyTheme.textInvert());
+    var textStyle = TextStyle(color: isOrientationPortrait ? MyTheme.text : MyTheme.textInvert());
 
-    var animesTV = items.itemsToList.where((e) => e.tipo == AnimeTipo.TV).toList();
+    var animesTV = items.itemsToList.where((e) => e.tipo == AnimeType.TV).toList();
     var ultimoAnime = animesTV.length > 0 ? animesTV[animesTV.length -1] : items.getItem(items.items.length -1);
 
 //    var ultimoAnime = items.getItem(items.items.length -1);
@@ -106,19 +108,19 @@ class MyLayouts {
           child: footer,
         ) : null,
         child: Container(
-          color: isOrientationPortrait ? Colors.black87 : MyTheme.tint(),
+          color: isOrientationPortrait ? Colors.black87 : MyTheme.tint,
           child: isOrientationPortrait ? Column(
             children: [
-              Expanded(child: MyLayouts.fotoAnime(ultimoAnime, fit: BoxFit.fitHeight)),
+              Expanded(child: Layouts.fotoAnime(ultimoAnime, fit: BoxFit.fitHeight)),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-                child: Text(items.nome, maxLines: 1, style: TextStyle(color: MyTheme.text())),
+                child: Text(items.nome, maxLines: 1, style: TextStyle(color: MyTheme.text)),
               )
             ],
           ) :
           Row(
               children: [
-                MyLayouts.fotoAnime(ultimoAnime, fit: BoxFit.fitHeight),
+                Layouts.fotoAnime(ultimoAnime, fit: BoxFit.fitHeight),
                 Expanded(child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 5, vertical: 3),
                   child: Column(
@@ -172,7 +174,7 @@ class MyLayouts {
     var icon = getIcon(item.tipo);
     return ListTile(
       contentPadding: EdgeInsets.only(bottom: 5),
-      leading: MyLayouts.fotoAnime(item),
+      leading: Layouts.fotoAnime(item),
       title: Text(item.nome),
       subtitle: Row(children: [
         if (icon != null)
@@ -189,38 +191,41 @@ class MyLayouts {
 
   static Icon getIcon(String animeTipo) {
     switch(animeTipo) {
-      case AnimeTipo.TV:
+      case AnimeType.TV:
         return Icon(Icons.tv);
         break;
-      case AnimeTipo.OVA:
+      case AnimeType.OVA:
         return Icon(MyIcons.egg, size: 20);
         break;
-      case AnimeTipo.ONA:
+      case AnimeType.ONA:
         return Icon(Icons.wifi_tethering);
         break;
-      case AnimeTipo.MOVIE:
+      case AnimeType.MOVIE:
         return Icon(Icons.video_call);
         break;
-      case AnimeTipo.SPECIAL:
+      case AnimeType.SPECIAL:
         return Icon(Icons.star);
         break;
-      default:
+      case AnimeType.INDEFINIDO:
         return Icon(Icons.error);
+        break;
+      default:
+        return Icon(Icons.circle, color: Colors.transparent);
     }
   }
 
-  static Widget teste(AnimeList item, User user, {bool isGrid = false}) {
+  static Widget teste(AnimeList item, UserOki user, {bool isGrid = false}) {
     double iconSize = 15.0;
     String id = item.id;
     if (isGrid)
       return Row(
         children: [
           if(user.assistindo.containsKey(id))
-            Icon(Icons.list, size: iconSize, color: MyTheme.tint()),
+            Icon(Icons.list, size: iconSize, color: MyTheme.tint),
           if(user.favoritos.containsKey(id))
-            Icon(Icons.favorite, size: iconSize, color: MyTheme.tint()),
+            Icon(Icons.favorite, size: iconSize, color: MyTheme.tint),
           if(user.concluidos.containsKey(id))
-            Icon(Icons.offline_pin, size: iconSize, color: MyTheme.tint()),
+            Icon(Icons.offline_pin, size: iconSize, color: MyTheme.tint),
         ]
       );
     return Column(
@@ -234,7 +239,7 @@ class MyLayouts {
         ]
     );
   }
-  static Widget teste2(Anime item, User user) {
+  static Widget teste2(Anime item, UserOki user) {
     double iconSize = 15.0;
     String id = item.id;
 
@@ -253,9 +258,55 @@ class MyLayouts {
         ]
     );
   }
+
+  static Widget splashScreen({bool mostrarLog = false}) {
+    var padding = Padding(padding: EdgeInsets.only(top: 10));
+    return Scaffold(
+      backgroundColor: MyTheme.primary,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(MyIcons.ic_launcher, width: 200),
+            padding,
+            Text(MyResources.APP_NAME, style: TextStyle(fontSize: 30, color: MyTheme.text)),
+            if (mostrarLog)...[
+              padding,
+              Text('Parece que sua conexão está sem Chakra\nIniciando modo Offline', style: TextStyle(color: MyTheme.text)),
+              LinearProgressIndicator(backgroundColor: MyTheme.primary)
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  static List<DropdownMenuItem<String>> dropDownMenuItems(List list) {
+    List<DropdownMenuItem<String>> items = new List();
+    for (String value in list) {
+      items.add(new DropdownMenuItem(
+          value: value,
+          child: new Text(value)
+      ));
+    }
+    return items;
+  }
+
+  static Padding adsFooter([Widget child]) {
+    double value = 0;
+    if (RunTime.mostrandoAds)
+      value = 50;
+    return Padding(padding: EdgeInsets.only(bottom: value), child: child);
+  }
+  static EdgeInsets adsPadding(double value, [double top, double right, double botton]) {
+    double temp = 0;
+    if (RunTime.mostrandoAds)
+      temp = 50;
+    return EdgeInsets.fromLTRB(value, top ?? value, right ?? value, (botton ?? value) + temp);
+  }
 }
 
-class MyStyles {
-  static TextStyle titleText = TextStyle(fontSize: 20, color: MyTheme.text());
-  static TextStyle text = TextStyle(color: MyTheme.text());
+class Styles {
+  static TextStyle titleText = TextStyle(fontSize: 20, color: MyTheme.text);
+  static TextStyle text = TextStyle(color: MyTheme.text);
 }

@@ -1,24 +1,33 @@
 import 'dart:io';
 import 'package:anime/auxiliar/firebase.dart';
-import 'package:anime/auxiliar/import.dart';
+import 'package:anime/auxiliar/offline_data.dart';
 import 'package:anime/auxiliar/logs.dart';
+import 'package:anime/model/config.dart';
+import 'package:anime/model/data_hora.dart';
+
+import 'classificacao.dart';
 
 class ListType {
-  static const int assistindo = 0;
-  static const int favoritos = 1;
-  static const int concluidos = 2;
-  static const int online = 3;
+  static const int assistindoValue = 0;
+  static const int favoritosValue = 1;
+  static const int concluidosValue = 2;
+  static const int onlineValue = 3;
+
+  static ListType get assistindo => ListType(assistindoValue);
+  static ListType get favoritos => ListType(favoritosValue);
+  static ListType get concluidos => ListType(concluidosValue);
+  static ListType get online => ListType(onlineValue);
 
   ListType(this.value);
   int value;
 
-  bool get isFavoritos => value == favoritos;
-  bool get isAssistindo => value == assistindo;
-  bool get isConcluidos => value == concluidos;
-  bool get isOnline => value == online;
+  bool get isFavoritos => value == favoritos.value;
+  bool get isAssistindo => value == assistindo.value;
+  bool get isConcluidos => value == concluidos.value;
+  bool get isOnline => value == online.value;
 }
 
-class AnimeTipo {
+class AnimeType {
 
   static const String TV = 'TV';
   static const String OVA = 'OVA';
@@ -27,27 +36,29 @@ class AnimeTipo {
   static const String SPECIAL = 'SPECIAL';
   static const String INDEFINIDO = 'INDEFINIDO';
 
-  AnimeTipo(this.value);
-  String value;
+  // AnimeType(this.value);
+  // String value;
 
-  bool get isTV => value == TV;
-  bool get isOVA => value == OVA;
-  bool get isONA => value == ONA;
-  bool get isMOVIE => value == MOVIE;
-  bool get isSPECIAL => value == SPECIAL;
-  bool get isINDEFINIDO => (!isTV && !isOVA && !isOVA && !isMOVIE && !isSPECIAL);
+  // bool get isTV => value == TV;
+  // bool get isOVA => value == OVA;
+  // bool get isONA => value == ONA;
+  // bool get isMOVIE => value == MOVIE;
+  // bool get isSPECIAL => value == SPECIAL;
+  // bool get isINDEFINIDO => (!isTV && !isOVA && !isOVA && !isMOVIE && !isSPECIAL);
 }
 
 class AnimeList {
 
   static const String TAG = 'AnimeList';
 
+  //region variaveis
   String _id;
   String _idUser;
   String _nome;
   String _nome2;
   Map<String, Anime> _items;
   List<dynamic> _generos;
+  //endregion
 
   //region Construttores
 
@@ -96,6 +107,7 @@ class AnimeList {
 
    //endregion
 
+  //region gets
   bool get isCompleto => itemsToList[0].tipo != null;
 
   double get media {
@@ -137,15 +149,28 @@ class AnimeList {
   }
 
   List<Anime> get itemsToList {
-    return items.values.toList()..sort((a, b) => a.data.compareTo(b.data));
+    switch(Config.listOrder) {
+      case ListOrder.nome:
+        return items.values.toList()..sort((a, b) => a.nome.compareTo(b.nome));
+        break;
+      case ListOrder.dataAsc:
+        return items.values.toList()..sort((a, b) => a.data.compareTo(b.data));
+      break;
+      default:
+        return items.values.toList()..sort((a, b) => b.data.compareTo(a.data));
+        break;
+    }
   }
+  //endregion
+
+  //region metodos
 
   Anime getItem(int position) {
     return itemsToList[position];
   }
 
   Future<void> completar() async {
-    var snapshot = await Firebase.databaseReference
+    var snapshot = await FirebaseOki.database
         .child(FirebaseChild.ANIME)
         .child(FirebaseChild.COMPLEMENTO)
         .child(id)
@@ -158,12 +183,14 @@ class AnimeList {
       if (valueNotNull(map[item.id])) {
         Log.d(TAG, 'completar', map[item.id]);
         Anime aux = Anime.fromJson(map[item.id]);
-        if (aux != null) item.completar(aux);
+        if (aux != null) item._completar(aux);
       }
     }
   }
 
   static bool valueNotNull(dynamic value) => value != null;
+
+  //endregion
 
   //region get set
 
@@ -228,9 +255,8 @@ class Anime {
   String _link;
   String _data;
   String _tipo;
-  String _foto;
+  // String _foto;//todo
   String _aviso;
-  String _status;
   String _miniatura;
   String _sinopse;
   String _fotoLocal;
@@ -247,24 +273,26 @@ class Anime {
   Anime();
 
   Anime.fromJson(Map<dynamic, dynamic> map) {
-    id = map['id'];
-    nome = map['nome'];
-    nome2 = map['nome2'];
-    desc = map['desc'];
-    link = map['link'];
-    data = map['data'];
-    tipo = map['tipo'];
-    foto = map['foto'];
-    aviso = map['aviso'];
-    status = map['status'];
-    sinopse = map['sinopse'];
-    generos = map['generos'];
-    isCopiado = map['isCopiado'];
-    episodios = map['episodios'];
-    miniatura = map['miniatura'];
-    ultimoAssistido = map['ultimoAssistido'];
-    classificacao = new Classificacao.fromJson(map['classificacao']);
+    if (mapIsNoNull(map['id'])) id = map['id'];
+    if (mapIsNoNull(map['nome'])) nome = map['nome'];
+    if (mapIsNoNull(map['nome2'])) nome2 = map['nome2'];
+    if (mapIsNoNull(map['desc'])) desc = map['desc'];
+    if (mapIsNoNull(map['link'])) link = map['link'];
+    if (mapIsNoNull(map['data'])) data = map['data'];
+    if (mapIsNoNull(map['tipo'])) tipo = map['tipo'];
+    // if (mapIsNoNull(map['foto'])) foto = map['foto'];todo
+    if (mapIsNoNull(map['aviso'])) aviso = map['aviso'];
+    // if (mapIsNoNull(map['status'])) status = map['status'];
+    if (mapIsNoNull(map['sinopse'])) sinopse = map['sinopse'];
+    if (mapIsNoNull(map['generos'])) generos = map['generos'];
+    if (mapIsNoNull(map['isCopiado'])) isCopiado = map['isCopiado'];
+    if (mapIsNoNull(map['episodios'])) episodios = map['episodios'];
+    if (mapIsNoNull(map['miniatura'])) miniatura = map['miniatura'];
+    if (mapIsNoNull(map['ultimoAssistido'])) ultimoAssistido = map['ultimoAssistido'];
+    if (mapIsNoNull(map['classificacao'])) classificacao = new Classificacao.fromJson(map['classificacao']);
   }
+
+  bool mapIsNoNull(dynamic map) => map != null;
 
   Map<String, dynamic> toJson() => {
     "id": id,
@@ -276,7 +304,7 @@ class Anime {
     "tipo": tipo,
     "foto": foto,
     "aviso": aviso,
-    "status": status,
+    // "status": status,
     "sinopse": sinopse,
     "generos": generos,
     "isCopiado": isCopiado,
@@ -308,29 +336,49 @@ class Anime {
 
   //region Metodos
 
-  void completar(Anime item) {
-    foto = item.foto;
+  void _completar(Anime item) {
+    // foto = item.foto;todo
     link = item.link;
     tipo = item.tipo;
-    status = item.status;
+    // status = item.status;
     sinopse = item.sinopse;
     episodios = item.episodios;
+  }
+
+  Future<bool> complete() async {
+    try{
+      var snapshot = await FirebaseOki.database
+          .child(FirebaseChild.ANIME)
+          .child(FirebaseChild.COMPLEMENTO)
+          .child(idPai)
+          .child(FirebaseChild.ITEMS)
+          .child(id)
+          .once();
+      Log.d(TAG, 'complete', id, idPai);
+      var item = Anime.fromJson(snapshot.value);
+      if (item != null)
+        _completar(item);
+      return true;
+    } catch(e) {
+      Log.e(TAG, 'complete', id, e);
+      return false;
+    }
   }
 
   Future<bool> salvar(ListType list) async {
     String child = '';
 
     switch(list.value) {
-      case ListType.assistindo:
-        Firebase.user.assistindo[id] = id;
+      case ListType.assistindoValue:
+        FirebaseOki.user.assistindo[id] = id;
         child = FirebaseChild.DESEJOS;
         break;
-      case ListType.concluidos:
-        Firebase.user.concluidos[id] = id;
+      case ListType.concluidosValue:
+        FirebaseOki.user.concluidos[id] = id;
         child = FirebaseChild.CONCLUIDOS;
         break;
-      case ListType.favoritos:
-        Firebase.user.favoritos[id] = id;
+      case ListType.favoritosValue:
+        FirebaseOki.user.favoritos[id] = id;
         child = FirebaseChild.FAVORITOS;
         break;
     }
@@ -343,7 +391,7 @@ class Anime {
     };
 
     try {
-      await Firebase.databaseReference
+      await FirebaseOki.database
           .child(FirebaseChild.USUARIO)
           .child(idUser)
           .child(FirebaseChild.ANIMES)
@@ -357,7 +405,7 @@ class Anime {
         Log.e(TAG, 'salvar fail', id, e);
         return false;
       });
-      return await Firebase.databaseReference
+      return await FirebaseOki.database
           .child(FirebaseChild.USUARIO)
           .child(idUser)
           .child(child)
@@ -377,7 +425,7 @@ class Anime {
   }
   Future<bool> salvarAdmin() async {
     try {
-      return await Firebase.databaseReference
+      return await FirebaseOki.database
           .child(FirebaseChild.ANIMES)
           .child(id)
           .set(toJson()).then((value) {
@@ -399,31 +447,31 @@ class Anime {
     String childOld = '';
 
     switch(list.value) {
-      case ListType.assistindo:
-        Firebase.user.assistindo[id] = id;
+      case ListType.assistindoValue:
+        FirebaseOki.user.assistindo[id] = id;
         childNew = FirebaseChild.DESEJOS;
         break;
-      case ListType.concluidos:
-        Firebase.user.concluidos[id] = id;
+      case ListType.concluidosValue:
+        FirebaseOki.user.concluidos[id] = id;
         childNew = FirebaseChild.CONCLUIDOS;
         break;
-      case ListType.favoritos:
-        Firebase.user.favoritos[id] = id;
+      case ListType.favoritosValue:
+        FirebaseOki.user.favoritos[id] = id;
         childNew = FirebaseChild.FAVORITOS;
         break;
     }
 
     switch(old.value) {
-      case ListType.assistindo:
-        Firebase.user.assistindo.remove(id);
+      case ListType.assistindoValue:
+        FirebaseOki.user.assistindo.remove(id);
         childOld = FirebaseChild.DESEJOS;
         break;
-      case ListType.concluidos:
-        Firebase.user.concluidos.remove(id);
+      case ListType.concluidosValue:
+        FirebaseOki.user.concluidos.remove(id);
         childOld = FirebaseChild.CONCLUIDOS;
         break;
-      case ListType.favoritos:
-        Firebase.user.favoritos.remove(id);
+      case ListType.favoritosValue:
+        FirebaseOki.user.favoritos.remove(id);
         childOld = FirebaseChild.FAVORITOS;
         break;
     }
@@ -431,7 +479,7 @@ class Anime {
     try {
       await salvar(list);
 
-      var result = await Firebase.databaseReference
+      var result = await FirebaseOki.database
           .child(FirebaseChild.USUARIO)
           .child(idUser)
           .child(childNew)
@@ -445,7 +493,7 @@ class Anime {
         return false;
       });
       if (result) {
-        Firebase.databaseReference
+        FirebaseOki.database
             .child(FirebaseChild.USUARIO)
             .child(idUser)
             .child(childOld)
@@ -469,7 +517,7 @@ class Anime {
   Future<bool> delete(ListType list, {bool save = true, bool deleteAll = false}) async {
     var result = await _deleteAux(list, id);
     if (deleteAll) {
-      await Firebase.databaseReference
+      await FirebaseOki.database
           .child(FirebaseChild.USUARIO)
           .child(idUser)
           .child(FirebaseChild.ANIMES)
@@ -490,22 +538,22 @@ class Anime {
   Future<bool> _deleteAux(ListType list, String key) async {
     String child = '';
     switch(list.value) {
-      case ListType.assistindo:
-        Firebase.user.assistindo.remove(key);
+      case ListType.assistindoValue:
+        FirebaseOki.user.assistindo.remove(key);
         child = FirebaseChild.DESEJOS;
         break;
-      case ListType.concluidos:
-        Firebase.user.concluidos.remove(key);
+      case ListType.concluidosValue:
+        FirebaseOki.user.concluidos.remove(key);
         child = FirebaseChild.CONCLUIDOS;
         break;
-      case ListType.favoritos:
-        Firebase.user.favoritos.remove(key);
+      case ListType.favoritosValue:
+        FirebaseOki.user.favoritos.remove(key);
         child = FirebaseChild.FAVORITOS;
         break;
     }
 
     try {
-      return await Firebase.databaseReference
+      return await FirebaseOki.database
           .child(FirebaseChild.USUARIO)
           .child(idUser)
           .child(child)
@@ -528,6 +576,9 @@ class Anime {
     File file = File(OfflineData.localPath + '/' + fotoLocal);
     return file.existsSync();
   }
+  bool get isComplete => tipo.isNotEmpty;
+  bool get isNoLancado => !isLancado;
+  bool get isLancado => data.compareTo(DataHora.now()) < 0;
 
   File get fotoToFile {
     return File(OfflineData.localPath + '/' + fotoLocal);
@@ -550,302 +601,85 @@ class Anime {
   //region get set
 
   String get id => _id ?? '';
+  set id(String value) => _id = value;
 
-  set id(String value) {
-    _id = value;
+  String get idUser => FirebaseOki.fUser.uid;
+  String get idPai {
+    if (id[0] == '_') {
+      var temp = id.substring(1, id.length);
+      return '_' + temp.substring(0, temp.indexOf('_'));
+    }
+    return id.substring(0, id.indexOf('_'));
   }
-
-  String get idUser => Firebase.fUser.uid;
-
-  String get idPai => id.substring(0, id.indexOf('_'));
-//
-//  set idPai(String value) {
-//    _idPai = value;
-//  }
 
   String get nome => _nome ?? '';
-
-  set nome(String value) {
-    _nome = value;
-  }
+  set nome(String value) => _nome = value;
 
   String get tipo => _tipo ?? '';
-
-  set tipo(String value) {
-    _tipo = value;
-  }
+  set tipo(String value) => _tipo = value;
 
   String get nome2 => _nome2 ?? null;
-
-  set nome2(String value) {
-    _nome2 = value;
-  }
+  set nome2(String value) => _nome2 = value;
 
   String get desc => _desc ?? '';
-
-  set desc(String value) {
-    _desc = value;
-  }
+  set desc(String value) => _desc = value;
 
   int get episodios => _episodios ?? 0;
-
-  set episodios(int value) {
-    _episodios = value;
-  }
+  set episodios(int value) => _episodios = value;
 
   String get aviso => _aviso ?? null;
+  set aviso(String value) => _aviso = value;
 
-  set aviso(String value) {
-    _aviso = value;
+  Future<String> get foto async {
+    var ref = FirebaseOki.storage
+        .child(FirebaseChild.ANIME)
+        .child(FirebaseChild.CAPA).child(id[0])
+        .child('$id.jpg');
+    try {
+      return await ref.getDownloadURL();
+    } catch(e) {
+      Log.e(TAG, 'foto', e, !e.toString().contains('Not Found.  Could not get object'));
+      return null;
+    }
+
+    // if (_foto == null || _foto.isEmpty) return miniatura;
+    // return _foto;
   }
-
-  String get status => _status ?? null;
-
-  set status(String value) {
-    _status = value;
-  }
-
-  String get foto {
-    if (_foto == null || _foto.isEmpty) return miniatura;
-    return _foto;
-  }
-
-  set foto(String value) {
-    _foto = value;
-  }
+  // set foto(String value) {todo
+  //   _foto = value;
+  // }
 
   String get miniatura => _miniatura ?? '';
-
-  set miniatura(String value) {
-    _miniatura = value;
-  }
+  set miniatura(String value) => _miniatura = value;
 
   String get sinopse => _sinopse ?? '';
-
-  set sinopse(String value) {
-    _sinopse = value;
-  }
+  set sinopse(String value) => _sinopse = value;
 
   List<dynamic> get generos {
     if (_generos == null)
       _generos = [];
     return _generos;
   }
-
-  set generos(List<dynamic> value) {
-    _generos = value;
-  }
+  set generos(List<dynamic> value) => _generos = value;
 
   String get link => _link ?? '';
-
-  set link(String value) {
-    _link = value;
-  }
+  set link(String value) =>  _link = value;
 
   Classificacao get classificacao {
     if (_classificacao == null)
       _classificacao = Classificacao();
     return _classificacao;
   }
-
-  set classificacao(Classificacao value) {
-    _classificacao = value;
-  }
+  set classificacao(Classificacao value) => _classificacao = value;
 
   bool get isCopiado => _isCopiado ?? false;
-
-  set isCopiado(bool value) {
-    _isCopiado = value;
-  }
+  set isCopiado(bool value) => _isCopiado = value;
 
   int get ultimoAssistido => _ultimoAssistido ?? 0;
-
-  set ultimoAssistido(int value) {
-    _ultimoAssistido = value;
-  }
+  set ultimoAssistido(int value) => _ultimoAssistido = value;
 
   String get data => _data ?? '';
-
-  set data(String value) {
-    _data = value;
-  }
-
-  //endregion
-
-}
-
-class Classificacao {
-
-  //region Variaveis
-  static const String ACAO = 'acao';
-  static const String DRAMA = 'drama';
-  static const String TERROR = 'terror';
-  static const String ROMANCE = 'romance';
-  static const String COMEDIA = 'comedia';
-  static const String ANIMACAO = 'animacao';
-  static const String AVENTURA = 'aventura';
-  static const String HISTORIA = 'historia';
-  static const String ECCHI = 'ecchi';
-  static const String FIM = 'fim';
-  static const String VOTOS = 'votos';
-
-  double _acao;
-  double _drama;
-  double _terror;
-  double _romance;
-  double _comedia;
-  double _animacao;
-  double _aventura;
-  double _historia;
-  double _ecchi;
-  double _fim;
-  int _votos;
-  //endregion
-
-  //region Construtores
-
-  Classificacao();
-
-  Classificacao.fromJson(Map<dynamic, dynamic> map) {
-    if (map == null) return;
-    //A forma que eu usava antes <map[ACAO]?.toString()> não estava funcionando
-    //então fiz essa verificação <_mapNotNull>
-    if(_mapNotNull(map[ACAO])) acao = double.tryParse(map[ACAO]?.toString());
-    if(_mapNotNull(map[DRAMA])) drama = double.tryParse(map[DRAMA]?.toString());
-    if(_mapNotNull(map[TERROR])) terror = double.tryParse(map[TERROR]?.toString());
-    if(_mapNotNull(map[ROMANCE])) romance = double.tryParse(map[ROMANCE]?.toString());
-    if(_mapNotNull(map[COMEDIA])) comedia = double.tryParse(map[COMEDIA]?.toString());
-    if(_mapNotNull(map[ANIMACAO])) animacao = double.tryParse(map[ANIMACAO]?.toString());
-    if(_mapNotNull(map[AVENTURA])) aventura = double.tryParse(map[AVENTURA]?.toString());
-    if(_mapNotNull(map[HISTORIA])) historia = double.tryParse(map[HISTORIA]?.toString());
-    if(_mapNotNull(map[ECCHI])) ecchi = double.tryParse(map[ECCHI]?.toString());
-    if(_mapNotNull(map[FIM])) fim = double.tryParse(map[FIM]?.toString());
-    if(_mapNotNull(map[VOTOS])) votos = map[VOTOS];
-  }
-
-  Map<String, dynamic> toJson() => {
-    ACAO: acao,
-    DRAMA: drama,
-    TERROR: terror,
-    ROMANCE: romance,
-    COMEDIA: comedia,
-    ANIMACAO: animacao,
-    AVENTURA: aventura,
-    HISTORIA: historia,
-    ECCHI: ecchi,
-    FIM: fim,
-    VOTOS: votos,
-  };
-
-  //endregion
-
-  //region Metodos
-
-  double get media {
-    List<double> values = mediaValues();
-
-    if (values.length == 0)
-      return -1.0;
-    double value = 0;
-    double total = 0;
-    for (double v in values) {
-      value += v;
-    }
-    total = value / values.length;
-    return double.parse(total.toStringAsFixed(2));
-  }
-
-  List<double> mediaValues({bool tudo = false}) {
-    List<double> values = [];
-    if (acao >= 0) values.add(acao);
-    if (drama >= 0) values.add(drama);
-    if (romance >= 0) values.add(romance);
-    if (comedia >= 0) values.add(comedia);
-    if (animacao >= 0) values.add(animacao);
-    if (aventura >= 0) values.add(aventura);
-    if (historia >= 0) values.add(historia);
-    if (fim >= 0) values.add(fim);
-    if (tudo) {
-      if (terror >= 0) values.add(terror);
-      if (ecchi >= 0) values.add(ecchi);
-    }
-
-    return values;
-  }
-
-  static bool _mapNotNull(dynamic value) {
-    return value != null;
-  }
-
-  //endregion
-
-  //region get set
-
-  double get historia => _historia ?? -1.0;
-
-  set historia(double value) {
-    _historia = value;
-  }
-
-  double get fim => _fim ?? -1.0;
-
-  set fim(double value) {
-    _fim = value;
-  }
-
-  double get animacao => _animacao ?? -1.0;
-
-  set animacao(double value) {
-    _animacao = value;
-  }
-
-  double get ecchi => _ecchi ?? -1.0;
-
-  set ecchi(double value) {
-    _ecchi = value;
-  }
-
-  double get comedia => _comedia ?? -1.0;
-
-  set comedia(double value) {
-    _comedia = value;
-  }
-
-  double get romance => _romance ?? -1.0;
-
-  set romance(double value) {
-    _romance = value;
-  }
-
-  double get drama => _drama ?? -1.0;
-
-  set drama(double value) {
-    _drama = value;
-  }
-
-  double get acao => _acao ?? -1.0;
-
-  set acao(double value) {
-    _acao = value;
-  }
-
-  double get aventura => _aventura ?? -1.0;
-
-  set aventura(double value) {
-    _aventura = value;
-  }
-
-  double get terror => _terror ?? -1.0;
-
-  set terror(double value) {
-    _terror = value;
-  }
-
-  int get votos => _votos ?? null;
-
-  set votos(int value) {
-    _votos = value;
-  }
+  set data(String value) => _data = value;
 
   //endregion
 

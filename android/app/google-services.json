@@ -15,6 +15,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "281298385448-mc9opfr2m7api9e69ss44c9g70q79d3k.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ookiisoftware.anime",
+            "certificate_hash": "8e6e515d136efe90b2b07ff2fe4003378d3efda1"
+          }
+        },
+        {
+          "client_id": "281298385448-n7ph3kkqvdv3rasepvkjmt74f5oi8pqh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ookiisoftware.anime",
+            "certificate_hash": "704c32eae3735edac401ba1a3e061aff9641c7ca"
+          }
+        },
+        {
           "client_id": "281298385448-778goounb3hjep4cb3far168de08teg5.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
@@ -41,7 +57,8 @@
             }
           ]
         }
-      }
+      },
+      "admob_app_id": "ca-app-pub-8585143969698496~3199903473"
     }
   ],
   "configuration_version": "1"

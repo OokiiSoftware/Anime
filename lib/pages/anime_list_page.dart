@@ -38,7 +38,7 @@ class MyPageState extends State<AnimeListPage> {
 
   @override
   Widget build(BuildContext context) {
-    var user = Firebase.user;
+    var user = FirebaseOki.user;
     return WillPopScope(
       onWillPop: () async {
         if (_inEditMode) {
@@ -51,32 +51,33 @@ class MyPageState extends State<AnimeListPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-            title: Text(anime.nome, style: TextStyle(color: MyTheme.text()))),
+            title: Text(anime.nome, style: TextStyle(color: MyTheme.text))),
         body: SingleChildScrollView(
-          padding: EdgeInsets.all(10),
+          padding: EdgeInsets.fromLTRB(10, 10, 10, 80),
           child: Column(children: [
 //          if (_fotoUrl.isNotEmpty)
 //            Image.network(_fotoUrl),
             for (Anime item in anime.itemsToList)
-              MyLayouts.anime(
+              Layouts.anime(
                   item,
                   trailing: _inEditMode ? IconButton(
                     icon: Icon(Icons.open_in_browser),
                     onPressed: () => _moverAnime(item),
                   ) :
-                  MyLayouts.teste2(item, user),
-                  list: _list, onTap: () => _onItemClick(item))
+                  Layouts.teste2(item, user),
+                  list: _list, onTap: () => _onItemClick(item)),
+            Layouts.adsFooter()
           ]),
         ),
-        floatingActionButton: _inProgress ? CircularProgressIndicator() :
-        !_inEditMode ? FloatingActionButton.extended(
+        floatingActionButton: _inProgress ? Layouts.adsFooter(CircularProgressIndicator()) :
+        !_inEditMode ? Layouts.adsFooter(FloatingActionButton.extended(
             label: Icon(Icons.edit),
             onPressed: () {
               setState(() {
                 _inEditMode = true;
               });
             }
-        ) : null,
+        )) : null,
       ),
     );
   }
@@ -100,7 +101,7 @@ class MyPageState extends State<AnimeListPage> {
   void _moverAnime(Anime item) async {
     _setInProgress(true);
     if (await Import.moverAnime(context, item, _list)) {
-      await Firebase.atualizarUser();
+      await FirebaseOki.atualizarUser();
       RunTime.updateAnimeFragment = true;
       setState(() {
         _inEditMode = false;

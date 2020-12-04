@@ -1,0 +1,320 @@
+import 'package:anime/auxiliar/aplication.dart';
+import 'package:anime/auxiliar/firebase.dart';
+import 'package:anime/auxiliar/import.dart';
+import 'package:anime/auxiliar/logs.dart';
+import 'package:anime/model/config.dart';
+import 'package:anime/model/data_hora.dart';
+import 'package:anime/model/feedback.dart';
+import 'package:anime/pages/info_page.dart';
+import 'package:anime/res/dialog_box.dart';
+import 'package:anime/res/resources.dart';
+import 'package:anime/res/strings.dart';
+import 'package:anime/res/theme.dart';
+import 'package:dynamic_theme/dynamic_theme.dart';
+import 'package:flutter/material.dart';
+
+import 'admin_page.dart';
+import 'login_page.dart';
+
+class ConfigPage extends StatefulWidget{
+  @override
+  State<StatefulWidget> createState() => MyWidgetState();
+}
+class MyWidgetState extends State<ConfigPage> {
+
+  //region Variaveis
+  static const String TAG = 'ConfigPage';
+
+  bool _isAdmin = false;
+  bool inProgress = false;
+  bool _showEcchi = false;
+
+  List<DropdownMenuItem<String>> _dropDownThema;
+  String _currentThema;
+
+  ///Ordem de listagem dos animes
+  List<DropdownMenuItem<String>> _dropDownOrdem;
+  String _currentOrdem;
+
+  //endregion
+
+  //region overrides
+
+  @override
+  void initState() {
+    super.initState();
+    _isAdmin = FirebaseOki.isAdmin;
+    _showEcchi = Config.showEcchi;
+    _dropDownThema = Layouts.dropDownMenuItems(Arrays.thema);
+    _dropDownOrdem = Layouts.dropDownMenuItems(Arrays.ordem);
+    _currentThema = Config.theme;
+    _currentOrdem = Config.listOrder;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    var divider = Divider(color: MyTheme.primary);
+    var borderRadius = BorderRadius.all(Radius.circular(5));
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(Titles.CONFIGURACOES, style: Styles.titleText),
+        actions: [
+          if (_isAdmin)
+            IconButton(
+              tooltip: Titles.ADMIN,
+              icon: Icon(Icons.admin_panel_settings),
+              onPressed: _gotoAdminPage,
+            ),
+          // if (RunTime.semInternet)
+          //   Layouts.icAlertInternet,
+          // Layouts.appBarActionsPadding,
+          IconButton(
+            tooltip: 'Informações',
+              icon: Icon(Icons.info),
+              onPressed: _onInfoClick
+          ),
+          IconButton(
+            tooltip: Strings.LOGOUT,
+            icon: Icon(Icons.logout),
+            onPressed: _onLogout,
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: borderRadius,
+              child: Container(
+                color: MyTheme.textInvert(0.2),
+                padding: EdgeInsets.all(10),
+                child: Column(
+                  children: [
+                    // Theme
+                    Row(
+                      children: [
+                        Text('Tema'),
+                        Padding(padding: EdgeInsets.only(right: 10)),
+                        DropdownButton(
+                          value: _currentThema,
+                          items: _dropDownThema,
+                          onChanged: _onThemeChanged,
+                        ),
+                      ],
+                    ),
+                    // Odem de listagem dos animes
+                    Row(
+                      children: [
+                        Text('Ordem de listagem'),
+                        Padding(padding: EdgeInsets.only(right: 10)),
+                        DropdownButton(
+                          value: _currentOrdem,
+                          items: _dropDownOrdem,
+                          onChanged: _onOrderChanged,
+                        ),
+                        IconButton(
+                            icon: Icon(Icons.help),
+                            onPressed: _onOrderHelpClick
+                        )
+                      ],
+                    ),
+                    Divider(),
+                    CheckboxListTile(
+                        title: Text('Mostrar animes com gênero Ecchi'),
+                        value: _showEcchi,
+                        onChanged: _onEcchiChanged
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Padding(padding: EdgeInsets.all(5)),
+            //Sugestões
+            ClipRRect(
+              borderRadius: borderRadius,
+              child: Container(
+                color: MyTheme.textInvert(0.2),
+                padding: EdgeInsets.all(10),
+                child: Column(
+                  children: [
+                    Text(
+                        'Ajude-nos a melhorar enviando sugestões',
+                        textAlign: TextAlign.center),
+                    Divider(),
+                    FlatButton(
+                      minWidth: 200,
+                      color: MyTheme.accent,
+                      child: Text(MyTexts.ANINE_SUGESTAO, style: Styles.text),
+                      onPressed: () => _onSugestaoCkick(true),
+                    ),
+                    FlatButton(
+                      minWidth: 200,
+                      color: MyTheme.accent,
+                      child: Text(MyTexts.ENVIE_SUGESTAO, style: Styles.text),
+                      onPressed: _onSugestaoCkick,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            if (_isAdmin)...[
+              divider,
+              Text('Admin Área'),
+              divider,
+              ElevatedButton(
+                child: Text('App Versão: ${Aplication.appVersionInDatabase}'),
+                onPressed: !inProgress ? _setAppVersao : null,
+              ),
+              ElevatedButton(
+                child: Text('Abrir Play Story'),
+                onPressed: () {
+                  Aplication.openUrl(MyResources.playStoryLink, context);
+                },
+              ),
+
+              ElevatedButton(
+                child: Text('SnackBar'),
+                onPressed: () {
+                  Log.snack('Teste de snackbar');
+                },
+              ),
+              ElevatedButton(
+                child: Text('SnackBar Erro'),
+                onPressed: () {
+                  Log.snack('Teste de snackbar erro', isError: true);
+                },
+              ),
+            ],
+            Layouts.adsFooter()
+          ],
+        ),
+      ),
+      floatingActionButton: inProgress ? Layouts.adsFooter(CircularProgressIndicator()) : null,
+    );
+  }
+
+  //endregion
+
+  //region Metodos
+
+  void onSalvar() async {
+    Log.snack(MyTexts.DADOS_SALVOS);
+  }
+
+  void _onThemeChanged(String value) async {
+    setState(() {
+      _currentThema = value;
+    });
+    Config.theme = value;
+    Brightness brightness = MyTheme.getBrilho(value);
+    await DynamicTheme.of(context).setBrightness(brightness);
+  }
+  void _onOrderChanged(String value) async {
+    setState(() {
+      _currentOrdem = value;
+    });
+    Config.listOrder = value;
+  }
+  void _onEcchiChanged(bool value) async {
+    setState(() {
+      _showEcchi = value;
+    });
+    Config.showEcchi = value;
+  }
+
+  void _onSugestaoCkick([bool isSugestaoAnime = false]) async {
+    var controller = TextEditingController();
+    var title = MyTexts.ENVIAR_SUGESTAO_TITLE;
+    var content = [
+      if (isSugestaoAnime)
+        Text('Insira corretamente o nome completo do anime'),
+      TextField(
+        controller: controller,
+        decoration: InputDecoration(
+            hintText: MyTexts.DIGITE_AQUI
+        ),
+      )
+    ];
+    var result = await DialogBox.dialogCancelOK(context, title: title, content: content);
+    var desc = controller.text;
+    if (result.isPositive && desc.trim().isNotEmpty) {
+      Sugestao item = Sugestao();
+      item.idUser = FirebaseOki.fUser.uid;
+      item.data = DataHora.now();
+      item.descricao = desc;
+
+      _setInProgress(true);
+      await item.salvar(isSugestaoAnime);
+      _setInProgress(false);
+      Log.snack(MyTexts.ENVIE_SUGESTAO_AGRADECIMENTO);
+    }
+  }
+
+  void _onInfoClick() {
+    Navigate.to(context, InfoPage());
+  }
+
+  void _onLogout() async {
+    _setInProgress(true);
+    await FirebaseOki.finalize();
+    Navigate.toReplacement(context, LoginPage());
+  }
+
+  void _gotoAdminPage() {
+    Navigate.to(context, AdminPage());
+  }
+
+  void _onOrderHelpClick() {
+    var title = 'Info';
+    var content = [
+      Text('Essa listagem não altera a ordem nas listas principais \'Assistindo, Favoritos, Concluidos e Online\''),
+      Text('É alterada na lista de animes com várias temporadas')
+    ];
+    DialogBox.dialogOK(context, title: title, content: content);
+  }
+
+  void _setAppVersao() async {
+    var controler = TextEditingController();
+    int currentVersion = Aplication.appVersionInDatabase;
+
+    controler.text = currentVersion.toString();
+    var title = 'Número da versão do app';
+    var content = TextField(
+      controller: controler,
+      keyboardType: TextInputType.number,
+      textInputAction: TextInputAction.done,
+      decoration: InputDecoration(
+          labelText: 'Número inteiro'
+      ),
+    );
+    var result = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
+    if (!result.isPositive) return;
+    int newVersion = int.parse(controler.text);
+
+    if (newVersion != currentVersion) {
+      Aplication.appVersionInDatabase = newVersion;
+
+      _setInProgress(true);
+      await FirebaseOki.database
+          .child(FirebaseChild.VERSAO)
+          .set(newVersion)
+          .then((value) => Log.snack(MyTexts.DADOS_SALVOS))
+          .catchError((e) => Log.snack(MyErros.ERRO_GENERICO));
+      _setInProgress(false);
+    }
+  }
+
+  void _setInProgress(bool b) {
+    if(!mounted) return;
+    setState(() {
+      inProgress = b;
+    });
+  }
+
+  //endregion
+
+}

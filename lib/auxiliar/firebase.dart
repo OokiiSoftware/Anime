@@ -1,71 +1,70 @@
 import 'dart:io';
 import 'package:anime/model/anime.dart';
-import 'package:anime/model/user.dart';
+import 'package:anime/model/user_oki.dart';
 import 'package:anime/res/strings.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_admob/firebase_admob.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'import.dart';
+import 'admin.dart';
 import 'logs.dart';
+import 'online_data.dart';
 
-class Firebase {
+class FirebaseOki {
   //region Variaveis
-  static const String TAG = 'getFirebase';
+  static const String TAG = 'FirebaseOki';
 
-  static FirebaseApp _firebaseApp;
-  static FirebaseUser _firebaseUser;
-  static DatabaseReference _databaseReference = FirebaseDatabase.instance.reference();
+  // static FirebaseApp _firebaseApp;
+  static User _firebaseUser;
+  static DatabaseReference _database = FirebaseDatabase.instance.reference();
+  static Reference _storage = FirebaseStorage.instance.ref();
   static FirebaseAuth _auth = FirebaseAuth.instance;
   static GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  static User _user;
-  static bool _isAdmin;
-  static Map<String, bool> _admins = Map();// <id, isEnabled>
+  static UserOki _user;
   //endregion
 
   //region Firebase App
 
-  static Future<FirebaseApp> app() async{
-    if (_firebaseApp == null) {
-      var iosOptions = FirebaseOptions(
-        googleAppID: '',
-        gcmSenderID: '',
-        storageBucket: _dataUrl['storageBucket'],
-        databaseURL: _dataUrl['databaseURL'],
-      );
-      var androidOptions = FirebaseOptions(
-        googleAppID: '1:281298385448:android:3a4c74b7c7ae63f297131d',
-        apiKey: 'AIzaSyA5Gwz7yFccSI8rBSams7IAUADOv68wJcQ',
-        storageBucket: _dataUrl['storageBucket'],
-        databaseURL: _dataUrl['databaseURL'],
-      );
-
-      _firebaseApp = await FirebaseApp.configure(
-          name: MyResources.APP_NAME,
-          options: Platform.isIOS ? iosOptions : androidOptions
-      );
-    }
-
-    return _firebaseApp;
+  static Future<bool> app() async{
+      try {
+        var appOptions = FirebaseOptions(
+          appId: _dataUrl['appId'],
+          projectId: _dataUrl['projectId'],
+          messagingSenderId: _dataUrl['messagingSenderId'],
+          apiKey: 'AIzaSyA5Gwz7yFccSI8rBSams7IAUADOv68wJcQ',
+          storageBucket: _dataUrl['storageBucket'],
+          databaseURL: _dataUrl['databaseURL'],
+        );
+        await Firebase.initializeApp(
+            name: MyResources.APP_NAME,
+            options: appOptions
+        );
+      }catch(e) {
+        Log.e(TAG, 'app', e);
+      }
+    return true;
   }
 
   static FirebaseAuth get auth => _auth;
+  static Reference get storage => _storage;
 
-  static FirebaseUser get fUser => _firebaseUser;
+  static User get fUser => _firebaseUser;
 
-  static DatabaseReference get databaseReference => _databaseReference;
+  static DatabaseReference get database => _database;
 
-  static Future<FirebaseUser> googleAuth() async {
+  static Future<User> googleAuth() async {
     final GoogleSignInAccount googleUser = await _googleSignIn.signIn();
     final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
-    final AuthCredential credential = GoogleAuthProvider.getCredential(
+    final AuthCredential credential = GoogleAuthProvider.credential(
       accessToken: googleAuth.accessToken,
       idToken: googleAuth.idToken,
     );
 
-    final FirebaseUser user = (await _auth.signInWithCredential(credential)).user;
+    final User user = (await _auth.signInWithCredential(credential)).user;
     print("signed in " + user.displayName);
     _firebaseUser = user;
     atualizarUser();
@@ -74,39 +73,46 @@ class Firebase {
 
   //endregion
 
-  //region Metodos
+  //region gets
 
   static bool get isLogado => _firebaseUser != null;
 
-  static User get user {
+  static UserOki get user {
     if (_user == null)
-      _user = User();
+      _user = UserOki();
     return _user;
   }
 
   static Map get _dataUrl => {
-    'databaseURL': 'https://anime-oki.firebaseio.com',
+    'appId': Platform.isAndroid ? '1:281298385448:android:3a4c74b7c7ae63f297131d' : '',
+    'projectId': 'anime-oki',
+    'databaseURL': 'AAAAQX6wuig:APA91bF1iiMSFCD5FUXMc9BWw3UjUdRpzMR2tEY1dRIdy_vw1Oa9apsTf3mgN-9U9nqmP9wgXvAE_mzIBU4KPoh0LsoEhcmGAfacdkkLqlYr51kEwJQWB8V4ZqeumQ6NCqvaKZtepgVj',
+    'messagingSenderId': 'https://anime-oki.firebaseio.com',
     'storageBucket': 'gs://anime-oki.appspot.com'
   };
 
-  static bool get isAdmin => _isAdmin ?? false;
+  static bool get isAdmin => Admin.isAdmin;
 
-  static set user(User user) => _user = user;
+  static set user(UserOki user) => _user = user;
+
+  //endregion
+
+  //region Metodos
 
   static Future<void> init() async {
     Log.d(TAG, 'init', 'Firebase Iniciando');
 
     const firebaseUser_Null = 'firebaseUser Null';
     try {
-      await app();
+        await app();
+      FirebaseAdMob.instance.initialize(appId: 'ca-app-pub-8585143969698496~3199903473');
 
-      _firebaseUser = await _auth.currentUser();
+      _firebaseUser = _auth.currentUser;
       if (_firebaseUser == null)
         throw new Exception(firebaseUser_Null);
 
-      await OnlineData.baixarLista();
       await atualizarUser();
-      await _checkAdmin();
+      await Admin.checkAdmin();
       Log.d(TAG, 'init', 'Firebase OK');
     } catch (e) {
       if (e.toString().contains(firebaseUser_Null)) {
@@ -119,34 +125,17 @@ class Firebase {
   static Future<void> finalize() async {
     _firebaseUser = null;
     _user = null;
-    _isAdmin = false;
-    _admins.clear();
+    Admin.finalize();
     await _auth.signOut();
-  }
-
-  static Future<void> _checkAdmin() async {
-    try {
-      var snapshot = await databaseReference.child(FirebaseChild.ADMINISTRADORES).once();
-      Map<dynamic, dynamic> map = snapshot.value;
-      for (dynamic key in map.keys) {
-        _admins[key] = map[key];
-      }
-      if (_admins.containsKey(fUser.uid))
-        _isAdmin = map[fUser.uid];
-      if (isAdmin)
-        getAdmin.init();
-    } catch (e) {
-      Log.e(TAG, '_checkAdmin', e);
-    }
   }
 
   static Future<void> atualizarUser() async {
     String uid = _firebaseUser?.uid;
     if (uid == null) return;
-    User item = await _baixarUser(uid);
+    UserOki item = await _baixarUser(uid);
     if (item == null) {
       if (_user == null)
-        _user = User();
+        _user = UserOki();
     } else {
       _user = item;
 //      _organizarListas();
@@ -201,11 +190,11 @@ class Firebase {
     return itemsAux;
   }
 
-  static Future<User> _baixarUser(String uid) async {
+  static Future<UserOki> _baixarUser(String uid) async {
     try {
-      var snapshot = await Firebase.databaseReference
+      var snapshot = await FirebaseOki.database
           .child(FirebaseChild.USUARIO).child(uid).once();
-      return User.fromJson(snapshot.value);
+      return UserOki.fromJson(snapshot.value);
     } catch (e) {
       Log.e(TAG, 'baixarUser', e);
       return null;
@@ -224,6 +213,7 @@ class FirebaseChild {
   static const String FAVORITOS = 'favoritos';
   static const String ANIMES = 'animes';
   static const String ANIME = 'anime';
+  static const String CAPA = 'capa';
   static const String BASICO = 'basico';
   static const String COMPLEMENTO = 'complemento';
   static const String ITEMS = 'items';
@@ -232,4 +222,5 @@ class FirebaseChild {
   static const String BUG_ANIME = 'bug_anime';
   static const String SUGESTAO = 'sugestao';
   static const String SUGESTAO_ANIME = 'sugestao_anime';
+  static const String VERSAO = 'versao';
 }

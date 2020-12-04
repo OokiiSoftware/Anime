@@ -1,4 +1,5 @@
-import 'package:anime/auxiliar/import.dart';
+import 'package:anime/auxiliar/admin.dart';
+import 'package:anime/auxiliar/online_data.dart';
 import 'package:anime/model/anime.dart';
 import 'package:anime/res/resources.dart';
 import 'package:anime/res/strings.dart';
@@ -22,18 +23,19 @@ class MyPageState extends State<AdminPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(MyTitles.ADMIN, style: MyStyles.titleText)),
+      appBar: AppBar(title: Text(Titles.ADMIN, style: Styles.titleText)),
       body: SingleChildScrollView(
         child: Column(
           children: [
             ElevatedButton(
               child: Text('Atualizar Notas dos Animes'),
               onPressed: _atualizarNotasAnimes,
-            )
+            ),
+            Layouts.adsFooter()
           ],
         ),
       ),
-      floatingActionButton: _inProgress ? CircularProgressIndicator() : null,
+      floatingActionButton: _inProgress ? Layouts.adsFooter(CircularProgressIndicator()) : null,
     );
   }
 
@@ -45,7 +47,7 @@ class MyPageState extends State<AdminPage> {
     _setInProgress(true);
 
     await OnlineData.baixarLista();
-    await getAdmin.baixarUsers();
+    await Admin.baixarUsers();
 /*
 
     //Criar uma lista de classificações juntando todas as classificações de todos os animes

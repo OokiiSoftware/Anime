@@ -1,7 +1,11 @@
+import 'package:anime/auxiliar/aplication.dart';
 import 'package:anime/auxiliar/firebase.dart';
 import 'package:anime/auxiliar/import.dart';
 import 'package:anime/auxiliar/logs.dart';
+import 'package:anime/auxiliar/online_data.dart';
+import 'package:anime/auxiliar/offline_data.dart';
 import 'package:anime/model/anime.dart';
+import 'package:anime/model/classificacao.dart';
 import 'package:anime/model/config.dart';
 import 'package:anime/model/feedback.dart';
 import 'package:anime/model/data_hora.dart';
@@ -108,7 +112,7 @@ class MyPageState extends State<AnimePage> {
       },
       child: Scaffold(
         appBar: AppBar(
-            title: Text(pageTitle, style: MyStyles.titleText),
+            title: Text(pageTitle, style: Styles.titleText),
           actions: [
             if (_isOnline)...[
               IconButton(
@@ -117,7 +121,7 @@ class MyPageState extends State<AnimePage> {
                 onPressed: _onMenuReportBugClick,
               ),
               IconButton(
-                tooltip: MyStrings.EDITAR,
+                tooltip: Strings.EDITAR,
                 icon: Icon(Icons.edit),
                 onPressed: _onMenuEditClick,
               ),
@@ -141,17 +145,17 @@ class MyPageState extends State<AnimePage> {
               ]
               else...[
                 IconButton(
-                  tooltip: MyStrings.EXCLUIR,
+                  tooltip: Strings.EXCLUIR,
                   icon: Icon(Icons.delete_forever),
                   onPressed: () => _deleteItem(anime),
                 ),
                 IconButton(
-                  tooltip: MyStrings.MOVER,
+                  tooltip: Strings.MOVER,
                   icon: Icon(Icons.open_in_browser),
                   onPressed: () => _onMoverItem(anime),
                 ),
                 IconButton(
-                  tooltip: MyStrings.EDITAR,
+                  tooltip: Strings.EDITAR,
                   icon: Icon(Icons.edit),
                   onPressed: () {
                     setState(() {
@@ -167,20 +171,6 @@ class MyPageState extends State<AnimePage> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-//              if (isPortrait)...[
-//                if (_fotoUrl.isNotEmpty)
-//                  image,
-//                _headInfo(),
-//              ] else...[
-//                Row(
-//                  crossAxisAlignment: CrossAxisAlignment.start,
-//                  children: [
-//                    if (_fotoUrl.isNotEmpty)
-//                      image,
-//                    Expanded(child: _headInfo())
-//                  ]
-//                )
-//              ],
               if (_fotoUrl.isNotEmpty)
                 _widgetFoto(),
               _headInfo(),
@@ -193,7 +183,7 @@ class MyPageState extends State<AnimePage> {
                       Container(
                           alignment: Alignment.centerLeft,
                           child: FlatButton(
-                            child: Text('${MyStrings.SINOPSE}: ${_showSinopse ? 'ocultar': 'mostrar'}'),
+                            child: Text('${Strings.SINOPSE}: ${_showSinopse ? 'ocultar': 'mostrar'}'),
                             onPressed: _switchSinopse,
                           )
                       ),
@@ -214,15 +204,15 @@ class MyPageState extends State<AnimePage> {
                       Container(
                         alignment: Alignment.centerLeft,
                         padding: EdgeInsets.all(10),
-                        child: Text('${MyStrings.MEDIA}: $_media'),
+                        child: Text('${Strings.MEDIA}: $_media'),
                       ),
                     if (_votos > 0)
                       Container(
                         alignment: Alignment.centerLeft,
                         padding: EdgeInsets.all(5),
-                        child: Text('${MyStrings.VOTOS}: $_votos'),
+                        child: Text('${Strings.VOTOS}: $_votos'),
                       ),
-                    if(_link.isNotEmpty && Firebase.isAdmin)
+                    if(_link.isNotEmpty && FirebaseOki.isAdmin)
                       Container(
                         alignment: Alignment.centerLeft,
                         padding: EdgeInsets.all(5),
@@ -234,7 +224,7 @@ class MyPageState extends State<AnimePage> {
                     if (_isAvancado)...[
                       Divider(),
                       if (!_isOnline && _inEditMode)...[
-                        Text(MyStrings.AVANCADO),
+                        Text(Strings.AVANCADO),
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(MyTexts.EDICAO_OBS_1),
@@ -245,43 +235,44 @@ class MyPageState extends State<AnimePage> {
                         ),
                       ],
                       if (_inEditMode || _animacaoValue >= 0)
-                        _customSlider(_animacaoValue, label: MyStrings.ANIMACAO, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_animacaoValue = value;});}),
+                        _customSlider(_animacaoValue, label: Strings.ANIMACAO, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_animacaoValue = value;});}),
 
                       if (_inEditMode || _historiaValue >= 0)
-                        _customSlider(_historiaValue, label: MyStrings.HIRTORIA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_historiaValue = value;});}),
+                        _customSlider(_historiaValue, label: Strings.HIRTORIA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_historiaValue = value;});}),
 
                       if (_inEditMode || _ecchiValue >= 0)
-                        _customSlider(_ecchiValue, label: MyStrings.ECCHI, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_ecchiValue = value;});}),
+                        _customSlider(_ecchiValue, label: Strings.ECCHI, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_ecchiValue = value;});}),
 
                       if (_inEditMode || _comediaValue >= 0)
-                        _customSlider(_comediaValue, label: MyStrings.COMEDIA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_comediaValue = value;});}),
+                        _customSlider(_comediaValue, label: Strings.COMEDIA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_comediaValue = value;});}),
 
                       if (_inEditMode || _romanceValue >= 0)
-                        _customSlider(_romanceValue, label: MyStrings.ROMANCE, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_romanceValue = value;});}),
+                        _customSlider(_romanceValue, label: Strings.ROMANCE, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_romanceValue = value;});}),
 
                       if (_inEditMode || _dramaValue >= 0)
-                        _customSlider(_dramaValue, label: MyStrings.DRAMA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_dramaValue = value;});}),
+                        _customSlider(_dramaValue, label: Strings.DRAMA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_dramaValue = value;});}),
 
                       if (_inEditMode || _terrorValue >= 0)
-                        _customSlider(_terrorValue, label: MyStrings.TERROR, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_terrorValue = value;});}),
+                        _customSlider(_terrorValue, label: Strings.TERROR, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_terrorValue = value;});}),
 
                       if (_inEditMode || _acaoValue >= 0)
-                        _customSlider(_acaoValue, label: MyStrings.ACAO, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_acaoValue = value;});}),
+                        _customSlider(_acaoValue, label: Strings.ACAO, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_acaoValue = value;});}),
 
                       if (_inEditMode || _aventuraValue >= 0)
-                        _customSlider(_aventuraValue, label: MyStrings.AVENTURA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_aventuraValue = value;});}),
+                        _customSlider(_aventuraValue, label: Strings.AVENTURA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_aventuraValue = value;});}),
                     ],
                   ],
                 ),
               ),
+              Layouts.adsFooter()
             ],
           ),
         ),
-        floatingActionButton: _inProgress ? CircularProgressIndicator() :
-        _inEditMode ? FloatingActionButton(
+        floatingActionButton: _inProgress ? Layouts.adsFooter(CircularProgressIndicator()) :
+        _inEditMode ? Layouts.adsFooter(FloatingActionButton(
           child: Icon(Icons.save),
           onPressed: _saveManager,
-        ) :
+        )) :
         null,
       ),
     );
@@ -309,7 +300,7 @@ class MyPageState extends State<AnimePage> {
         Container(
           alignment: Alignment.centerLeft,
           padding: EdgeInsets.all(5),
-          child: Text('${MyStrings.TITULO}: $_nome', style: TextStyle(fontSize: 20)),
+          child: Text('${Strings.TITULO}: $_nome', style: TextStyle(fontSize: 20)),
         ),
         if (_nome2.isNotEmpty)
           Container(
@@ -321,8 +312,8 @@ class MyPageState extends State<AnimePage> {
           alignment: Alignment.centerLeft,
           padding: paddingH,
           child: Row(children: [
-            Text('${MyStrings.TIPO}: $_tipo   '),
-            MyLayouts.getIcon(_tipo),
+            Text('${Strings.TIPO}: $_tipo   '),
+            Layouts.getIcon(_tipo),
           ]),
         ),
         Container(
@@ -346,10 +337,10 @@ class MyPageState extends State<AnimePage> {
           Container(
             alignment: Alignment.centerLeft,
             padding: paddingH,
-            child: Text('${MyStrings.GENEROS}: $_generos'),
+            child: Text('${Strings.GENEROS}: $_generos'),
           ),
         if(!_isOnline)
-          _customTextField(_desc, TextInputType.text, MyStrings.OBSERVACAO, isReadOnly: !_inEditMode),
+          _customTextField(_desc, TextInputType.text, Strings.OBSERVACAO, isReadOnly: !_inEditMode),
         if (_list.isAssistindo)
           _customTextField(_ultimo, TextInputType.number, MyTexts.ULTIMO_VISTO, isReadOnly: !_inEditMode),
 
@@ -366,11 +357,11 @@ class MyPageState extends State<AnimePage> {
     var itemPadding = EdgeInsets.only(left: itemPaddingValue, right: itemPaddingValue, top: 7);
     var itemContentPadding = EdgeInsets.fromLTRB(12, 0, 12, 0);
 
-    var itemlBorder = OutlineInputBorder(borderSide: BorderSide(color: MyTheme.textInvert()));
-    var itemDecoration = BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(5)), color: MyTheme.tint());
-    var itemTextStyle = TextStyle(color: MyTheme.primaryDark(), fontSize: 14);
-    var itemPrefixStyle = TextStyle(color: MyTheme.textInvert());
-    var itemPrefixStyleErro = TextStyle(color: MyTheme.textError());
+    // var itemlBorder = OutlineInputBorder(borderSide: BorderSide(color: MyTheme.textInvert()));
+    // var itemDecoration = BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(5)), color: MyTheme.tint);
+    // var itemTextStyle = TextStyle(color: MyTheme.primaryDark, fontSize: 14);
+    // var itemPrefixStyle = TextStyle(color: MyTheme.textInvert());
+    var itemPrefixStyleErro = TextStyle(color: MyTheme.textError);
     //endregion
 
     //endregion
@@ -379,19 +370,19 @@ class MyPageState extends State<AnimePage> {
       height: height,
       margin: EdgeInsets.only(top: 10),
       padding: itemPadding,
-      decoration: itemDecoration,
+      // decoration: itemDecoration,
       child: TextField(
         textInputAction: inputAction,
         controller: _controller,
         readOnly: isReadOnly,
         keyboardType: _inputType,
         maxLines: maxLines,
-        style: itemTextStyle,
+        // style: itemTextStyle,
         decoration: InputDecoration(
           contentPadding: itemContentPadding,
-          enabledBorder: itemlBorder,
-          focusedBorder: itemlBorder,
-          labelStyle: valueIsEmpty ? itemPrefixStyleErro : itemPrefixStyle,
+          // enabledBorder: itemlBorder,
+          // focusedBorder: itemlBorder,
+          labelStyle: valueIsEmpty ? itemPrefixStyleErro : null,
           labelText: labelText.toUpperCase(),
         ),
         onTap: onTap,
@@ -412,8 +403,8 @@ class MyPageState extends State<AnimePage> {
           divisions: 11,
 
           activeColor: (teste == _defaultValue.round()) ?
-          MyTheme.primary() :
-          ((teste < 5) ? MyTheme.textError() : MyTheme.accent()),
+          MyTheme.primary :
+          ((teste < 5) ? MyTheme.textError : MyTheme.accent),
 
           label: currentValue.round().toString(),
           onChanged: isReadOnly ? null : onChanged,
@@ -430,23 +421,21 @@ class MyPageState extends State<AnimePage> {
 
   void _resetValores() {
     if(!_isCopiado) {
-//      _nome = TextEditingController();
-      _link = '';
-      _fotoUrl = '';
+      _link =
+      _fotoUrl =
       _sinopce = '';
-//      _anime = null;
     }
     _desc = TextEditingController();
 
-    _fimValue = _defaultValue;
-    _historiaValue = _defaultValue;
-    _animacaoValue = _defaultValue;
-    _ecchiValue = _defaultValue;
-    _comediaValue = _defaultValue;
-    _romanceValue = _defaultValue;
-    _dramaValue = _defaultValue;
-    _acaoValue = _defaultValue;
-    _aventuraValue = _defaultValue;
+    _fimValue =
+    _historiaValue =
+    _animacaoValue =
+    _ecchiValue =
+    _comediaValue =
+    _romanceValue =
+    _dramaValue =
+    _acaoValue =
+    _aventuraValue =
     _terrorValue = _defaultValue;
 
     _media = _defaultValue;
@@ -461,16 +450,16 @@ class MyPageState extends State<AnimePage> {
     if (await _verificar(item)) {
 
       try {
-        if (Firebase.user.animes[item.idPai] == null)
-          Firebase.user.animes[item.idPai] = AnimeList();
-        Firebase.user.animes[item.idPai].items[item.id] = item;
+        if (FirebaseOki.user.animes[item.idPai] == null)
+          FirebaseOki.user.animes[item.idPai] = AnimeList();
+        FirebaseOki.user.animes[item.idPai].items[item.id] = item;
       } catch(e) {
         Log.e(TAG, 'saveManager', e);
       }
 
       if (OnlineData.isOnline) {
         await item.salvar(_list);
-        await Firebase.atualizarUser();
+        await FirebaseOki.atualizarUser();
       } else {
         item.salvar(_list);
         Log.snack('Você está Offline', isError: true);
@@ -515,11 +504,11 @@ class MyPageState extends State<AnimePage> {
   void _deleteItem(Anime item) async {
     if (item == null) return;
 
-    String lista = _list.isConcluidos ? MyStrings.CONCLUIDOS : _list.isAssistindo ? MyStrings.ASSISTINDO : MyStrings.FAVORITOS;
+    String lista = _list.isConcluidos ? Strings.CONCLUIDOS : _list.isAssistindo ? Strings.ASSISTINDO : Strings.FAVORITOS;
     var title = item.nome;
     var content = Text('${MyTexts.EXCLUIR_ITEM} $lista?');
-    var result = await DialogBox.dialogCancelOK(context, title: title, content: content);
-    if (result.isOK) {
+    var result = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
+    if (result.isPositive) {
       String id = item.id;
       bool deleteAll = (!_desejoRepetido(id) || _list.isAssistindo) &&
           (!_concluidoRepetido(id) || _list.isConcluidos) &&
@@ -527,35 +516,39 @@ class MyPageState extends State<AnimePage> {
 
       _setInProgress(true);
       if (await item.delete(_list, deleteAll: deleteAll)) {
-        await Firebase.atualizarUser();
+        await FirebaseOki.atualizarUser();
         RunTime.updateAnimeFragment = true;
         Navigator.pop(context);
       }
-      else Log.snack(MyErros.ERRO_GERENIRO, isError: true);
+      else Log.snack(MyErros.ERRO_GENERICO, isError: true);
     }
   }
 
-  void _preencherDados(Anime item) {
+  void _preencherDados(Anime item, {bool reload = true}) async {
+    _resetValores();
+
     _nome = item.nome;
     _nome2 = item.nome2 ?? '';
     _link = item.link;
     _data = item.data;
     _tipo = item.tipo;
-    _fotoUrl = item.foto;
+    // _fotoUrl = item.foto;todo
     _sinopce = item.sinopse;
-    _status = item.status ?? '';
+    _status = item.isNoLancado ? 'Ainda não foi ao ar' : '';
     _aviso = item.aviso ?? '';
     _isCopiado = item.isCopiado;
     _episodios = item.episodios;
     _media = item.classificacao.media;
 
+    if (_data.contains('i')) _data = 'Indefinido';
+
     _desc.text = item.desc;
     _ultimo.text = item.ultimoAssistido.toString();
 
-    if(item.link.toLowerCase().contains(MyStrings.CRUNCHYROLL.toLowerCase()))
-      _linkProvider = MyStrings.CRUNCHYROLL;
+    if(item.link.toLowerCase().contains(Strings.CRUNCHYROLL.toLowerCase()))
+      _linkProvider = Strings.CRUNCHYROLL;
     else
-      _linkProvider = MyStrings.LINK;
+      _linkProvider = Strings.LINK;
 
     Classificacao c = item.classificacao;
     _fimValue = c.fim;
@@ -571,44 +564,51 @@ class MyPageState extends State<AnimePage> {
 
     _votos = c.votos ?? 0;
 
+    String mini = item.miniatura;
+    _fotoUrl = mini;
+    item.foto.then((value) => setState(() => _fotoUrl = value ?? mini)).catchError((e) => {});
+
+    _generos = '';
     for (String i in item.generos) {
       _generos += '$i, ';
     }
+    if (reload && !item.isComplete) {
+      _setInProgress(true);
+      await item.complete();
+      _preencherDados(item, reload: false);
+      _setInProgress(false);
+    }
+    setState(() {});
   }
 
   void _onMenuEditClick() async {
-    var title = MyTitles.ADD_ITEM;
-    var content = SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          FlatButton(child: Text(MyStrings.ASSISTINDO), onPressed: () {
-            Navigator.pop(context, DialogResult(DialogResult.nao));
-          }),
-          FlatButton(child: Text(MyStrings.FAVORITOS), onPressed: () {
-            Navigator.pop(context, DialogResult(DialogResult.ok));
-          }),
-          if (anime.status != null && anime.status != 'Ainda não foi ao ar')
-            FlatButton(child: Text(MyStrings.CONCLUIDOS), onPressed: () {
-              Navigator.pop(context, DialogResult(DialogResult.sim));
-            }),
-        ]
-      ),
-    );
+    var title = Titles.ADD_ITEM;
+    var content = [
+      FlatButton(child: Text(Strings.ASSISTINDO), onPressed: () {
+        Navigator.pop(context, DialogResult(DialogResult.negative));
+      }),
+      FlatButton(child: Text(Strings.FAVORITOS), onPressed: () {
+        Navigator.pop(context, DialogResult(DialogResult.aux));
+      }),
+      if (anime.isLancado)
+        FlatButton(child: Text(Strings.CONCLUIDOS), onPressed: () {
+          Navigator.pop(context, DialogResult(DialogResult.positive));
+        }),
+    ];
     var result = await DialogBox.dialogCancel(context, title: title, content: content);
 
     switch(result.result) {
-      case DialogResult.ok:
-        _list = ListType(ListType.favoritos);
+      case DialogResult.aux:
+        _list = ListType.favoritos;
         break;
-      case DialogResult.sim:
-        _list = ListType(ListType.concluidos);
+      case DialogResult.positive:
+        _list = ListType.concluidos;
         break;
-      case DialogResult.nao:
-        _list = ListType(ListType.assistindo);
+      case DialogResult.negative:
+        _list = ListType.assistindo;
         break;
     }
-    if (!result.isNone && !result.isCancel) {
+    if (!result.isNone && !result.isNegative) {
       _isCopiado = true;
       _isOnline = false;
       _inEditMode = true;
@@ -625,29 +625,25 @@ class MyPageState extends State<AnimePage> {
 //        await Import.openUrl(_link, context);
 //    }
 //    else
-      await Import.openUrl(_link, context);
+      await Aplication.openUrl(_link, context);
   }
 
   void _onMenuReportBugClick() async {
     var controller = TextEditingController();
     var title = MyTexts.REPORTAR_PROBLEMA_TITLE;
-    var content = SingleChildScrollView(
-      child: Column(
-        children: [
-          TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: MyTexts.DIGITE_AQUI
-            ),
-          )
-        ],
-      ),
-    );
+    var content = [
+      TextField(
+        controller: controller,
+        decoration: InputDecoration(
+            hintText: MyTexts.DIGITE_AQUI
+        ),
+      )
+    ];
     var result = await DialogBox.dialogCancelOK(context, title: title, content: content);
     var desc = controller.text;
-    if (result.isOK && desc.trim().isNotEmpty) {
+    if (result.isPositive && desc.trim().isNotEmpty) {
       BugAnime item = BugAnime();
-      item.idUser = Firebase.fUser.uid;
+      item.idUser = FirebaseOki.fUser.uid;
       item.data = DataHora.now();
       item.idAnime = anime.id;
       item.descricao = desc;
@@ -661,7 +657,7 @@ class MyPageState extends State<AnimePage> {
   void _onMoverItem(Anime item) async {
     _setInProgress(true);
     if (await Import.moverAnime(context, anime, _list)) {
-      await Firebase.atualizarUser();
+      await FirebaseOki.atualizarUser();
       RunTime.updateAnimeFragment = true;
       Navigator.pop(context);
     }
@@ -670,17 +666,17 @@ class MyPageState extends State<AnimePage> {
 
   String _getTitle() {
     switch(_list.value) {
-      case ListType.assistindo:
-        return MyTitles.DESEJOS;
+      case ListType.assistindoValue:
+        return Titles.DESEJOS;
         break;
-      case ListType.concluidos:
-        return MyTitles.CONCLUIDOS;
+      case ListType.concluidosValue:
+        return Titles.CONCLUIDOS;
         break;
-      case ListType.favoritos:
-        return MyTitles.FAVORITOS;
+      case ListType.favoritosValue:
+        return Titles.FAVORITOS;
         break;
       default:
-        return MyTitles.ONLINE;
+        return Titles.ONLINE;
     }
   }
 
@@ -691,30 +687,30 @@ class MyPageState extends State<AnimePage> {
       var favoritoRepetido = _favoritoRepetido(item.id);
 
       if (_perguntarSalvar) {
-        var title = MyTitles.AVISO_ITEM_REPETIDO;
+        var title = Titles.AVISO_ITEM_REPETIDO;
         var content = Text(MyTexts.AVISO_ITEM_REPETIDO);
         switch(_list.value) {
-          case ListType.assistindo: {
-            title += MyStrings.ASSISTINDO;
+          case ListType.assistindoValue: {
+            title += Strings.ASSISTINDO;
             if (desejoRepetido) {
-              var r = await DialogBox.dialogCancelOK(context, title: title, content: content);
-              return r.isOK;
+              var r = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
+              return r.isPositive;
             }
             break;
           }
-          case ListType.concluidos: {
+          case ListType.concluidosValue: {
             if (concluidoRepetido) {
-              title += MyStrings.CONCLUIDOS;
-              var r = await DialogBox.dialogCancelOK(context, title: title, content: content);
-              return r.isOK;
+              title += Strings.CONCLUIDOS;
+              var r = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
+              return r.isPositive;
             }
             break;
           }
-          case ListType.favoritos:
+          case ListType.favoritosValue:
             if (favoritoRepetido) {
-              title += MyStrings.FAVORITOS;
-              var r = await DialogBox.dialogCancelOK(context, title: title, content: content);
-              return r.isOK;
+              title += Strings.FAVORITOS;
+              var r = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
+              return r.isPositive;
             }
             break;
         }
@@ -726,9 +722,9 @@ class MyPageState extends State<AnimePage> {
     }
   }
 
-  bool _desejoRepetido(String key) => Firebase.user.assistindo.containsKey(key);
-  bool _concluidoRepetido(String key) => Firebase.user.concluidos.containsKey(key);
-  bool _favoritoRepetido(String key) => Firebase.user.favoritos.containsKey(key);
+  bool _desejoRepetido(String key) => FirebaseOki.user.assistindo.containsKey(key);
+  bool _concluidoRepetido(String key) => FirebaseOki.user.concluidos.containsKey(key);
+  bool _favoritoRepetido(String key) => FirebaseOki.user.favoritos.containsKey(key);
 
   void _switchSinopse() {
     setState(() {
@@ -737,6 +733,7 @@ class MyPageState extends State<AnimePage> {
   }
 
   void _setInProgress(bool b) {
+    if (!mounted) return;
     setState(() {
       _inProgress = b;
     });

@@ -25,7 +25,7 @@ class BugAnime extends Sugestao{
 
   @override
   Future<bool> salvar([bool isSugestaoAnime = false]) async {
-    var result = await Firebase.databaseReference
+    var result = await FirebaseOki.database
         .child(FirebaseChild.BUG_ANIME)
         .child(data)
         .set(toJson())
@@ -41,7 +41,7 @@ class BugAnime extends Sugestao{
 
   @override
   Future<bool> delete() async {
-    var result = await Firebase.databaseReference
+    var result = await FirebaseOki.database
         .child(FirebaseChild.BUG_ANIME)
         .child(data)
         .remove()
@@ -88,7 +88,7 @@ class Sugestao {
 
   Future<bool> salvar([bool isSugestaoAnime = false]) async {
     String child = isSugestaoAnime ? FirebaseChild.SUGESTAO_ANIME : FirebaseChild.SUGESTAO;
-    var result = await Firebase.databaseReference
+    var result = await FirebaseOki.database
         .child(child)
         .child(data)
         .set(toJson())
@@ -103,7 +103,7 @@ class Sugestao {
   }
 
   Future<bool> delete() async {
-    var result = await Firebase.databaseReference
+    var result = await FirebaseOki.database
         .child(FirebaseChild.SUGESTAO)
         .child(data)
         .remove()

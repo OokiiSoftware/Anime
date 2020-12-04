@@ -32,7 +32,7 @@ class UserDados {
 
   Future<bool> salvar() async {
     Log.d(TAG, 'salvar', 'Iniciando');
-    var result = await Firebase.databaseReference
+    var result = await FirebaseOki.database
         .child(FirebaseChild.USUARIO)
         .child(id)
         .child(FirebaseChild.DADOS)
