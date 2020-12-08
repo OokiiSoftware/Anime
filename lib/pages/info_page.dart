@@ -1,22 +1,16 @@
-import 'package:anime/auxiliar/aplication.dart';
-import 'package:anime/auxiliar/preferences.dart';
-import 'package:anime/model/anime.dart';
-import 'package:anime/res/my_icons.dart';
-import 'package:anime/res/resources.dart';
-import 'package:anime/res/strings.dart';
-import 'package:anime/res/theme.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:anime/auxiliar/import.dart';
+import 'package:anime/model/import.dart';
+import 'package:anime/res/import.dart';
 
 class InfoPage extends StatefulWidget {
   @override
-  MyPageState createState() => MyPageState();
+  _MyState createState() => _MyState();
 }
-class MyPageState extends State<InfoPage> {
+class _MyState extends State<InfoPage> {
 
   //region Variaveis
 
-  static const String TAG = 'ConfigPage';
+  // static const String TAG = 'ConfigPage';
 
   bool showInfo = false;
   var titleStyle = TextStyle(fontSize: 20);
@@ -43,7 +37,7 @@ class MyPageState extends State<InfoPage> {
             ClipRRect(
               borderRadius: BorderRadius.all(Radius.circular(5)),
               child: Container(
-                color: MyTheme.textInvert(0.05),
+                color: OkiTheme.textInvert(0.05),
                 padding: EdgeInsets.all(10),
                 child: Column(
                   children: [
@@ -64,6 +58,8 @@ class MyPageState extends State<InfoPage> {
                     if (showInfo)...[
                       Text('Esperamos que esse App seja útil a você e à comunidade Otaku.\n\nEstamos adicionando novos animes, seja paciente, se desejar pode sugerir seus animes favoritos e nós trabalharemos para adiciona-lo o mais rápido possível.\n\nOBS: Não disponibilizaremos animes com conteúdo impróprio.'),
                       _iconsInfo(),
+                      // Divider(),
+                      // _doacaoPix(),
                     ],
                   ],
                 ),
@@ -95,21 +91,21 @@ class MyPageState extends State<InfoPage> {
         height: 130,
       ),
       dividerG,
-      Text('${MyResources.APP_NAME}'),
+      Text('${AppResources.APP_NAME}'),
       dividerP,
       Text('${Strings.VERSAO} : ${Aplication.packageInfo.version}'),
       dividerG,
       Text(Strings.CONTATOS),
       dividerP,
       GestureDetector(
-        child: Text(MyResources.app_email, style: TextStyle(color: MyTheme.primary)),
-        onTap: () {Aplication.openEmail(MyResources.app_email, context);},
+        child: Text(AppResources.app_email, style: TextStyle(color: OkiTheme.primary)),
+        onTap: () {Aplication.openEmail(AppResources.app_email, context);},
       ),
       dividerG,
       Text(Strings.POR),
       dividerP,
       Tooltip(
-        message: MyResources.company_name,
+        message: AppResources.company_name,
         child: Image.asset(MyIcons.ic_oki_logo,
           width: 80,
           height: 80,
@@ -184,6 +180,32 @@ class MyPageState extends State<InfoPage> {
       ]
     );
   }
+
+  /*Widget _doacaoPix() {
+    return Column(
+      children: [
+        Text('Doação', style: titleStyle),
+        Padding(padding: EdgeInsets.all(5)),
+        Text('Faça-nos uma doação através do pix'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Jonas S. Ferreira'),
+            FlatButton(
+              child: Text('Copiar chave Pix'),
+              onPressed: () {
+                ClipboardManager.copyToClipBoard(AppResources.pix).then((value) {
+                  Log.snack('Pix copiado');
+                }).catchError((e) {
+                  Log.snack('Erro ao copiar o pix', isError: true);
+                });
+              },
+            )
+          ],
+        )
+      ]
+    );
+  }*/
 
   void _onShowInfoClick() {
     setState(() {

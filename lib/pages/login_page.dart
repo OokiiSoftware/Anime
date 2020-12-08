@@ -1,20 +1,13 @@
 import 'dart:io';
 import 'package:anime/auxiliar/import.dart';
-import 'package:anime/auxiliar/firebase.dart';
-import 'package:anime/auxiliar/logs.dart';
-import 'package:anime/pages/MainPage.dart';
-import 'package:anime/res/my_icons.dart';
-import 'package:anime/res/resources.dart';
-import 'package:anime/res/strings.dart';
-import 'package:anime/res/theme.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:anime/res/import.dart';
+import 'MainPage.dart';
 
 class LoginPage extends StatefulWidget {
   @override
-  MyPageState createState() => MyPageState();
+  _MyState createState() => _MyState();
 }
-class MyPageState extends State<LoginPage> {
+class _MyState extends State<LoginPage> {
 
   //region Variaveis
 
@@ -29,7 +22,7 @@ class MyPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: MyTheme.primary,
+      backgroundColor: OkiTheme.primary,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -80,8 +80,8 @@ class Admin {
       for (dynamic key in map.keys) {
         _admins[key] = map[key];
       }
-      if (_admins.containsKey(FirebaseOki.fUser.uid))
-        _isAdmin = map[FirebaseOki.fUser.uid];
+      if (_admins.containsKey(FirebaseOki.user.uid))
+        _isAdmin = map[FirebaseOki.user.uid];
       if (_isAdmin)
         Admin.init();
     } catch (e) {

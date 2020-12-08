@@ -1,44 +1,31 @@
-import 'package:anime/auxiliar/firebase.dart';
 import 'package:anime/auxiliar/import.dart';
-import 'package:anime/auxiliar/logs.dart';
-import 'package:anime/auxiliar/online_data.dart';
-import 'package:anime/model/anime.dart';
-import 'package:anime/model/config.dart';
-import 'package:anime/model/user_oki.dart';
-import 'package:anime/pages/anime_list_page.dart';
-import 'package:anime/pages/anime_page.dart';
-import 'package:anime/res/dialog_box.dart';
-import 'package:anime/res/resources.dart';
-import 'package:anime/res/strings.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:anime/model/import.dart';
+import 'package:anime/res/import.dart';
+import 'package:anime/pages/import.dart';
 import 'generos_fragment.dart';
 
 class AnimesFragment extends StatefulWidget {
-  final List<AnimeList> items;
   final ListType listType;
   final BuildContext context;
 
-  AnimesFragment(this.context, this.items, this.listType);
+  AnimesFragment(this.context, this.listType);
 
   @override
-  MyPageState createState() => MyPageState(context, items, listType);
+  _MyState createState() => _MyState(context, listType);
 }
-class MyPageState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<AnimesFragment> {
+class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<AnimesFragment> {
 
-  MyPageState(this.context, this.items, this.listType);
+  _MyState(this.context, this.listType);
 
   //region Variaveis
   static const String TAG = 'AnimesFragment';
   static String _filtro = '#';
 
   final BuildContext context;
-  final List<AnimeList> items;
   final ListType listType;
+  List<AnimeCollection> collections = [];
   bool _isOnline = false;
-//  bool _inProgress = false;
 
-  UserOki _user;
   //endregion
 
   //region overrides
@@ -51,40 +38,56 @@ class MyPageState extends State<AnimesFragment> with AutomaticKeepAliveClientMix
     super.initState();
     _isOnline = listType.isOnline;
     _filtro = Config.filtro;
-    if (_isOnline)
-      _setFiltro(_filtro);
+    _preencherLista(ignoreRunTime: true);
   }
 
   @override
   Widget build(BuildContext context) {
    super.build(context);
+   Log.d(TAG, 'build', listType.value);
+
+   _preencherLista();
 
     var isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
     bool isListMode = Config.itemListMode.isListMode;
-    _user = FirebaseOki.user;
+    var user = FirebaseOki.userOki;
 
     return RefreshIndicator(
       child: Scaffold(
-        body: isListMode ?
+        body: (collections.isEmpty && _isOnline) ?
+            // Sem Resultados
+        ListView.builder(
+          itemCount: 1,
+            itemBuilder: (context, index) {
+              return ListTile(
+                title: Text('Sem resultados'),
+                subtitle: Text('Clique aqui para selecionar alguns generos'),
+                onTap: () async {
+                  await Navigate.to(context, GenerosFragment());
+                  if (RunTime.updateOnlineFragment) {
+                    _setFiltro(_filtro);
+                  }
+                },
+              );
+            }
+        ) :
+        isListMode ?
         ListView.builder(
           padding: Layouts.adsPadding(10, 10, 10, _isOnline ? 80 : 10),
-          itemCount: items.length,
+          itemCount: collections.length,
           itemBuilder: (context, index) {
-            var item = items[index];
-            return Layouts.animeItemList(
+            var item = collections[index];
+            if (item.items.isEmpty) return Container();
+            return AnimeItemList(
                 item,
                 onTap: () => _abrirAnime(item),
-                list: listType,
-                trailing: _isOnline ? Layouts.teste(item, _user) : null
-//                IconButton(
-//                  icon: Icon(Icons.open_in_browser),
-//                  onPressed: () => _moverAnime(item),
-//                )
+                listType: listType,
+                trailing: _isOnline ? Layouts.teste(item, user) : null
             );
           },
         ) :
         GridView.builder(
-            itemCount: items.length,
+            itemCount: collections.length,
             padding: Layouts.adsPadding(0, 0, 0, _isOnline ? 80 : 0),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 mainAxisSpacing: 2,
@@ -93,14 +96,13 @@ class MyPageState extends State<AnimesFragment> with AutomaticKeepAliveClientMix
                 childAspectRatio: isPortrait ? 1/2 : 3.5
             ),
             itemBuilder: (context, index) {
-              var item = items[index];
-              return Layouts.animeItemGrid(
+              var item = collections[index];
+              return AnimeItemGrid(
                   item,
                   onTap: () => _abrirAnime(item),
-                  onLongPress: () => _onItemLongPress(item),
                   isOrientationPortrait: isPortrait,
-                  list: listType,
-                  footer: _isOnline ? Layouts.teste(item, _user, isGrid: isPortrait) : null
+                  listType: listType,
+                  footer: _isOnline ? Layouts.teste(item, user, isGrid: isPortrait) : null
               );
             }
         ),
@@ -121,13 +123,14 @@ class MyPageState extends State<AnimesFragment> with AutomaticKeepAliveClientMix
   //region Metodos
 
   Future _onRefresh() async {
-    if (!OnlineData.isOnline)
+    if (!RunTime.isOnline)
       return;
+    Log.d(TAG, 'onRefresh');
     if (listType.isOnline)
       await OnlineData.baixarLista();
     else
       await FirebaseOki.atualizarUser();
-    _preencherLista();
+    _preencherLista(ignoreRunTime: true);
   }
 
   void _alterarFiltro() async {
@@ -169,41 +172,46 @@ class MyPageState extends State<AnimesFragment> with AutomaticKeepAliveClientMix
       var text = controller.text.toUpperCase();
       if (text.isEmpty) text = '#';
       _setFiltro(text);
-    } else if (RunTime.generosAtualizados) {
+      _saveFiltro(text);
+    } else if (RunTime.updateOnlineFragment) {
       _setFiltro(_filtro);
+      _saveFiltro(_filtro);
     }
   }
 
   void _setFiltro(String filtro) {
-    items.clear();
+    collections.clear();
     switch(filtro) {
       case '#':
-        items.addAll(OnlineData.dataList);
+        collections.addAll(OnlineData.dataList);
         break;
       default:
         try {
           if (filtro.length != 4) throw ('');
           int i = int.parse(filtro);
           if (i == 0) {
-            items.addAll(OnlineData.dataList.where((x) => x.itemsToList.where((e) => e.isNoLancado).length > 0));
+            collections.addAll(OnlineData.dataList.where((x) => x.itemsToList.where((e) => e.isNoLancado).length > 0));
             Log.snack('Animes não lançados');
           }
           else {
-            items.addAll(OnlineData.dataList.where((x) => x.itemsToList.where((e) => e.data.contains(filtro)).length > 0));
+            collections.addAll(OnlineData.dataList.where((x) => x.itemsToList.where((e) => e.data.contains(filtro)).length > 0));
             Log.snack('Animes lançados em $filtro');
           }
         } catch(e) {
-          items.addAll(OnlineData.dataList.where((x) => x.nome.toUpperCase().startsWith(filtro.toUpperCase())));
+          collections.addAll(OnlineData.dataList.where((x) => x.nome.toUpperCase().startsWith(filtro.toUpperCase())));
         }
     }
+  }
+
+  _saveFiltro(String filtro) {
     setState(() {
       _filtro = filtro;
     });
     Config.filtro = filtro;
   }
 
-  void _abrirAnime(AnimeList items) async {
-    AnimeList itemsAux = _getList(items);
+  void _abrirAnime(AnimeCollection items) async {
+    AnimeCollection itemsAux = _getList(items);
 
     if (itemsAux.items.length == 0)
       return;
@@ -212,28 +220,14 @@ class MyPageState extends State<AnimesFragment> with AutomaticKeepAliveClientMix
       await Navigate.to(context, AnimePage(listType, anime: item));
     }
     else
-      await Navigate.to(context, AnimeListPage(listType, animeList: itemsAux));
-    if (RunTime.updateAnimeFragment)
-      _preencherLista();
+      await Navigate.to(context, AnimeCollectionPage(listType, animeCollection: itemsAux));
+
+    _preencherLista();
   }
 
-  void _onItemLongPress(AnimeList items) async {
-    AnimeList itemsAux = _getList(items);
-
-    var content = AnimeListPage(listType, animeList: itemsAux);
-    var contentPadding = EdgeInsets.zero;
-    await DialogBox.dialogOK(
-        context, title: null,
-        content: [content],
-        contentPadding: contentPadding,
-//        insetPadding: contentPadding
-    );
-    setState(() {});
-  }
-
-  AnimeList _getList(AnimeList items) {
-    var user = FirebaseOki.user;
-    AnimeList itemsAux = AnimeList.newItem(items);
+  AnimeCollection _getList(AnimeCollection items) {
+    var user = FirebaseOki.userOki;
+    AnimeCollection itemsAux = AnimeCollection.newItem(items);
     if (!listType.isOnline) {
       itemsAux.items.clear();
       Map assistindoMap = user.assistindo[items.id];
@@ -260,21 +254,33 @@ class MyPageState extends State<AnimesFragment> with AutomaticKeepAliveClientMix
     return itemsAux;
   }
 
-  void _preencherLista() {
-    items.clear();
+  void _preencherLista({bool ignoreRunTime = false}) {
+    var user = FirebaseOki.userOki;
     setState(() {
       switch(listType.value) {
         case ListType.onlineValue:
-          _setFiltro(_filtro);
+          if (RunTime.updateOnlineFragment || ignoreRunTime) {
+            collections.clear();
+            _setFiltro(_filtro);
+          }
           break;
         case ListType.assistindoValue:
-          items.addAll(FirebaseOki.user.assistindoList);
+          if (RunTime.updateAssistindoFragment || ignoreRunTime) {
+            collections.clear();
+            collections.addAll(user.assistindoList);
+          }
           break;
         case ListType.concluidosValue:
-          items.addAll(FirebaseOki.user.concluidosList);
+          if (RunTime.updateConcluidosFragment || ignoreRunTime) {
+            collections.clear();
+            collections.addAll(user.concluidosList);
+          }
         break;
         case ListType.favoritosValue:
-          items.addAll(FirebaseOki.user.favoritosList);
+          if (RunTime.updateFavoritosFragment || ignoreRunTime) {
+            collections.clear();
+            collections.addAll(user.favoritosList);
+          }
           break;
       }
     });

@@ -1,10 +1,11 @@
-import 'package:anime/model/config.dart';
-import 'package:anime/res/theme.dart';
+import 'package:anime/auxiliar/import.dart';
+import 'theme.dart';
 
-class MyResources {
+class AppResources {
   static const String APP_NAME = 'Anime';
-  static const String company_name = 'OkiiSoftware';
+  static const String company_name = 'OkiSoftware';
   static const String app_email = 'ookiisoftware@gmail.com';
+  static const String pix = 'e92ebe7c-b87a-4865-ad75-46ab1713e96f';
   static const String playStoryLink = 'https://play.google.com/store/apps/details?id=com.ookiisoftware.anime';
 
   static const String CRUNCHYROLL_PACKAGE = 'com.crunchyroll.crunchyroid';
@@ -82,9 +83,9 @@ class MyTexts {
   static const String FAZER_LOGIN = 'Fazer Login';
   static const String LIMPAR_TUDO = 'Limpar Tudo';
   static const String DIGITE_AQUI = 'Digite aqui';
-  static const String ENVIE_SUGESTAO = 'Envie uma sugestão';
+  static const String ENVIE_SUGESTAO = 'Enviar Sugestão | Critica';
   static const String ANINE_SUGESTAO = 'Sugerir anime';
-  static const String ENVIAR_SUGESTAO_TITLE = 'Qual a sua sugestão?';
+  static const String ENVIAR_SUGESTAO_TITLE = 'Qual a sua sugestão ou critica?';
   static const String REPORTAR_PROBLEMA = 'Reportar problema';
   static const String REPORTAR_PROBLEMA_TITLE = 'Qual o problema deste anime?';
   static const String REPORTAR_PROBLEMA_AGRADECIMENTO = 'Obrigado pelo seu feedback';
@@ -106,9 +107,16 @@ class MyErros {
   static const String ERRO_GENERICO = 'Ocorreu um erro';
 }
 
+class MenuMain {
+  static const String config = 'Configurações';
+  static const String sobre = 'Sobre';
+  static const String logout = 'Logout';
+}
+
 class Arrays {
-  static List thema = [ThemeMode.sistema, ThemeMode.claro, ThemeMode.escuro];
+  static List thema = [OkiThemeMode.sistema, OkiThemeMode.claro, OkiThemeMode.escuro];
 
   ///Ordem de listagem dos animes
   static List ordem = [ListOrder.nome, ListOrder.dataAsc, ListOrder.dataDsc];
+  static List<String> menuMain = [MenuMain.config, MenuMain.sobre, MenuMain.logout];
 }

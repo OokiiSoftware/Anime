@@ -1,16 +1,12 @@
-import 'package:anime/auxiliar/admin.dart';
-import 'package:anime/auxiliar/online_data.dart';
-import 'package:anime/model/anime.dart';
-import 'package:anime/res/resources.dart';
-import 'package:anime/res/strings.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:anime/auxiliar/import.dart';
+import 'package:anime/model/import.dart';
+import 'package:anime/res/import.dart';
 
 class AdminPage extends StatefulWidget {
   @override
-  MyPageState createState() => MyPageState();
+  _MyState createState() => _MyState();
 }
-class MyPageState extends State<AdminPage> {
+class _MyState extends State<AdminPage> {
 
   //region Variaveis
   static const String TAG = 'AdminPage';

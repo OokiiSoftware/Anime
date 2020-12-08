@@ -9,7 +9,7 @@ class UserOki {
   static const String TAG = 'User';
 
   UserDados _dados;
-  Map<String, AnimeList> _animes;
+  Map<String, AnimeCollection> _animes;
   Map<dynamic, dynamic> _assistindo;
   Map<dynamic, dynamic> _concluidos;
   Map<dynamic, dynamic> _favoritos;
@@ -24,23 +24,25 @@ class UserOki {
     try {
       if(map == null) return;
       if (_mapNotNull(map['animes'])) {
-        var itemsList = AnimeList.fromJsonList(map['animes']);
+        var itemsList = AnimeCollection.fromJsonList(map['animes']);
         for (String key in itemsList.keys) {
-          var t = OnlineData.data[key];
-          if (t == null) continue;
-          var items = AnimeList.newItem(t);
-          if (items == null) continue;
+          try {
+            var tempItemCollection = OnlineData.getAsync(key);
+            var itemCollection = AnimeCollection.newItem(tempItemCollection);
 
-          for (var item in items.itemsToList) {
-            var temp = itemsList[key].items[item.id];
-            if (temp != null) {
-              item.id = temp.id;
-              item.desc = temp.desc;
-              item.ultimoAssistido = temp.ultimoAssistido;
-              item.classificacao = temp.classificacao;
+            for (var itemAnime in itemCollection.itemsToList) {
+              var temp = itemsList[key].items[itemAnime.id];
+              if (temp != null) {
+                // itemAnime.id = temp.id;
+                itemAnime.desc = temp.desc;
+                itemAnime.ultimoAssistido = temp.ultimoAssistido;
+                itemAnime.classificacao = temp.classificacao;
+              }
             }
+            animes[key] = itemCollection;
+          } catch(e) {
+            continue;
           }
-          animes[key] = items;
         }
       }
       if (_mapNotNull(map['assistindo']))
@@ -77,12 +79,12 @@ class UserOki {
 
   static bool _mapNotNull(dynamic value) => value != null;
 
-  List<AnimeList> get favoritosList {
-    List<AnimeList> list = [];
+  List<AnimeCollection> get favoritosList {
+    List<AnimeCollection> list = [];
     for (dynamic key in favoritos.keys) {
       var itemAux = animes[key];
       if (itemAux == null) continue;
-      var item = AnimeList.newItem(itemAux);
+      var item = AnimeCollection.newItem(itemAux);
       if (item != null) {
         var aux = favoritos[key];
         item.items.removeWhere((key, value) => !aux.containsKey(key));
@@ -91,12 +93,12 @@ class UserOki {
     }
     return list..sort((a, b) => a.nome.toLowerCase().compareTo(b.nome.toLowerCase()));
   }
-  List<AnimeList> get assistindoList {
-    List<AnimeList> list = [];
+  List<AnimeCollection> get assistindoList {
+    List<AnimeCollection> list = [];
     for (dynamic key in assistindo.keys) {
       var itemAux = animes[key];
       if (itemAux == null) continue;
-      var item = AnimeList.newItem(itemAux);
+      var item = AnimeCollection.newItem(itemAux);
       if (item != null) {
         var aux = assistindo[key];
         item.items.removeWhere((key, value) => !aux.containsKey(key));
@@ -105,12 +107,12 @@ class UserOki {
     }
     return list..sort((a, b) => a.nome.toLowerCase().compareTo(b.nome.toLowerCase()));
   }
-  List<AnimeList> get concluidosList {
-    List<AnimeList> list = [];
+  List<AnimeCollection> get concluidosList {
+    List<AnimeCollection> list = [];
     for (dynamic key in concluidos.keys) {
       var itemAux = animes[key];
       if (itemAux == null) continue;
-      var item = AnimeList.newItem(itemAux);
+      var item = AnimeCollection.newItem(itemAux);
       if(item != null) {
         var aux = concluidos[key];
         item.items.removeWhere((key, value) => !aux.containsKey(key));
@@ -136,13 +138,13 @@ class UserOki {
   }
 
 
-  Map<String, AnimeList> get animes {
+  Map<String, AnimeCollection> get animes {
     if (_animes == null)
       _animes = Map();
     return _animes;
   }
 
-  set animes(Map<String, AnimeList> value) {
+  set animes(Map<String, AnimeCollection> value) {
     _animes = value;
   }
 

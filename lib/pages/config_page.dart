@@ -1,20 +1,7 @@
-import 'package:anime/auxiliar/aplication.dart';
-import 'package:anime/auxiliar/firebase.dart';
 import 'package:anime/auxiliar/import.dart';
-import 'package:anime/auxiliar/logs.dart';
-import 'package:anime/model/config.dart';
-import 'package:anime/model/data_hora.dart';
-import 'package:anime/model/feedback.dart';
-import 'package:anime/pages/info_page.dart';
-import 'package:anime/res/dialog_box.dart';
-import 'package:anime/res/resources.dart';
-import 'package:anime/res/strings.dart';
-import 'package:anime/res/theme.dart';
-import 'package:dynamic_theme/dynamic_theme.dart';
-import 'package:flutter/material.dart';
-
+import 'package:anime/model/import.dart';
+import 'package:anime/res/import.dart';
 import 'admin_page.dart';
-import 'login_page.dart';
 
 class ConfigPage extends StatefulWidget{
   @override
@@ -53,7 +40,7 @@ class MyWidgetState extends State<ConfigPage> {
 
   @override
   Widget build(BuildContext context) {
-    var divider = Divider(color: MyTheme.primary);
+    var divider = Divider(color: OkiTheme.primary);
     var borderRadius = BorderRadius.all(Radius.circular(5));
 
     return Scaffold(
@@ -69,16 +56,16 @@ class MyWidgetState extends State<ConfigPage> {
           // if (RunTime.semInternet)
           //   Layouts.icAlertInternet,
           // Layouts.appBarActionsPadding,
-          IconButton(
-            tooltip: 'Informações',
-              icon: Icon(Icons.info),
-              onPressed: _onInfoClick
-          ),
-          IconButton(
-            tooltip: Strings.LOGOUT,
-            icon: Icon(Icons.logout),
-            onPressed: _onLogout,
-          ),
+          // IconButton(
+          //   tooltip: 'Informações',
+          //     icon: Icon(Icons.info),
+          //     onPressed: _onInfoClick
+          // ),
+          // IconButton(
+          //   tooltip: Strings.LOGOUT,
+          //   icon: Icon(Icons.logout),
+          //   onPressed: _onLogout,
+          // ),
         ],
       ),
       body: SingleChildScrollView(
@@ -89,7 +76,7 @@ class MyWidgetState extends State<ConfigPage> {
             ClipRRect(
               borderRadius: borderRadius,
               child: Container(
-                color: MyTheme.textInvert(0.2),
+                color: OkiTheme.textInvert(0.2),
                 padding: EdgeInsets.all(10),
                 child: Column(
                   children: [
@@ -136,7 +123,7 @@ class MyWidgetState extends State<ConfigPage> {
             ClipRRect(
               borderRadius: borderRadius,
               child: Container(
-                color: MyTheme.textInvert(0.2),
+                color: OkiTheme.textInvert(0.2),
                 padding: EdgeInsets.all(10),
                 child: Column(
                   children: [
@@ -146,13 +133,13 @@ class MyWidgetState extends State<ConfigPage> {
                     Divider(),
                     FlatButton(
                       minWidth: 200,
-                      color: MyTheme.accent,
+                      color: OkiTheme.accent,
                       child: Text(MyTexts.ANINE_SUGESTAO, style: Styles.text),
                       onPressed: () => _onSugestaoCkick(true),
                     ),
                     FlatButton(
                       minWidth: 200,
-                      color: MyTheme.accent,
+                      color: OkiTheme.accent,
                       child: Text(MyTexts.ENVIE_SUGESTAO, style: Styles.text),
                       onPressed: _onSugestaoCkick,
                     ),
@@ -172,7 +159,7 @@ class MyWidgetState extends State<ConfigPage> {
               ElevatedButton(
                 child: Text('Abrir Play Story'),
                 onPressed: () {
-                  Aplication.openUrl(MyResources.playStoryLink, context);
+                  Aplication.openUrl(AppResources.playStoryLink, context);
                 },
               ),
 
@@ -186,6 +173,14 @@ class MyWidgetState extends State<ConfigPage> {
                 child: Text('SnackBar Erro'),
                 onPressed: () {
                   Log.snack('Teste de snackbar erro', isError: true);
+                },
+              ),
+              ElevatedButton(
+                child: Text('Ads: ${RunTime.mostrandoAds ? 'On' : 'Off'}'),
+                onPressed: () {
+                  setState(() {
+                    RunTime.mostrandoAds = !RunTime.mostrandoAds;
+                  });
                 },
               ),
             ],
@@ -210,7 +205,7 @@ class MyWidgetState extends State<ConfigPage> {
       _currentThema = value;
     });
     Config.theme = value;
-    Brightness brightness = MyTheme.getBrilho(value);
+    Brightness brightness = OkiTheme.getBrilho(value);
     await DynamicTheme.of(context).setBrightness(brightness);
   }
   void _onOrderChanged(String value) async {
@@ -243,25 +238,17 @@ class MyWidgetState extends State<ConfigPage> {
     var desc = controller.text;
     if (result.isPositive && desc.trim().isNotEmpty) {
       Sugestao item = Sugestao();
-      item.idUser = FirebaseOki.fUser.uid;
+      item.idUser = FirebaseOki.user.uid;
       item.data = DataHora.now();
       item.descricao = desc;
 
       _setInProgress(true);
-      await item.salvar(isSugestaoAnime);
+      if (await item.salvar(isSugestaoAnime))
+        Log.snack(MyTexts.ENVIE_SUGESTAO_AGRADECIMENTO);
+      else
+        Log.snack(MyErros.ERRO_GENERICO, isError: true);
       _setInProgress(false);
-      Log.snack(MyTexts.ENVIE_SUGESTAO_AGRADECIMENTO);
     }
-  }
-
-  void _onInfoClick() {
-    Navigate.to(context, InfoPage());
-  }
-
-  void _onLogout() async {
-    _setInProgress(true);
-    await FirebaseOki.finalize();
-    Navigate.toReplacement(context, LoginPage());
   }
 
   void _gotoAdminPage() {

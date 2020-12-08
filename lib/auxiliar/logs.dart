@@ -1,9 +1,6 @@
-import 'package:anime/model/data_hora.dart';
-import 'package:anime/model/feedback.dart';
-import 'package:anime/res/resources.dart';
-import 'package:anime/res/theme.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:anime/auxiliar/import.dart';
+import 'package:anime/model/import.dart';
+import 'package:anime/res/import.dart';
 
 class Log {
   static final scaffKey = GlobalKey<ScaffoldState>();
@@ -12,7 +9,7 @@ class Log {
     try {
       scaffKey.currentState.hideCurrentSnackBar();
 
-      var textColor = MyTheme.text;
+      var textColor = OkiTheme.text;
       var snack = SnackBar(
         content: Container(
           margin: Layouts.adsPadding(0),
@@ -25,7 +22,7 @@ class Log {
             ],
           ),
         ),
-        backgroundColor: isError ? Colors.red : MyTheme.accent,
+        backgroundColor: isError ? Colors.red : OkiTheme.accent,
         action: onTap == null ? null: SnackBarAction(
           label: actionLabel,
           onPressed: onTap,
@@ -43,7 +40,7 @@ class Log {
     if (value1 != null) msg += ': ' + value1.toString();
     if (value2 != null) msg += ': ' + value2.toString();
     if (value3 != null) msg += ': ' + value3.toString();
-    print('D: $tag: $metodo: $msg');
+    print('AnimeApp D: $tag: $metodo: $msg');
   }
   static void e(String tag, String metodo, dynamic e, [dynamic value, dynamic value1, dynamic value2, dynamic value3]) {
     String msg = e.toString();
@@ -57,7 +54,7 @@ class Log {
     if (value1 != null) msg += ': ' + value1.toString();
     if (value2 != null) msg += ': ' + value2.toString();
     if (value3 != null) msg += ': ' + value3.toString();
-    print('E: $tag: $metodo: $msg');
+    print('AnimeApp E: $tag: $metodo: $msg');
 
     if (send)
       _sendError(tag, metodo, msg);

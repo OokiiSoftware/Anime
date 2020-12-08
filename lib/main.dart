@@ -1,11 +1,6 @@
-import 'package:anime/auxiliar/logs.dart';
-import 'package:anime/auxiliar/preferences.dart';
+import 'package:anime/auxiliar/import.dart';
+import 'package:anime/res/import.dart';
 import 'package:anime/pages/MainPage.dart';
-import 'package:anime/res/strings.dart';
-import 'package:anime/res/theme.dart';
-import 'package:dynamic_theme/dynamic_theme.dart';
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() => runApp(Main());
 
@@ -30,7 +25,7 @@ class MyState extends State<Main> {
       themedWidgetBuilder: (context, theme) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: MyResources.APP_NAME,
+          title: AppResources.APP_NAME,
           theme: theme,
           home: MainPage(),
           builder: (c, widget) => Scaffold(
@@ -49,25 +44,25 @@ class MyState extends State<Main> {
 
   ThemeData setTheme(Brightness brightness) {
     bool darkModeOn = brightness == Brightness.dark;
-    MyTheme.darkModeOn = darkModeOn;
+    OkiTheme.darkModeOn = darkModeOn;
 
     return ThemeData(
       brightness: brightness,
       // primaryColorLight: MyTheme.primaryLight,
       // primaryColorDark: MyTheme.primaryDark,
-      primaryColor: MyTheme.primary,
-      accentColor: MyTheme.accent,
-      primaryIconTheme: IconThemeData(color: MyTheme.tint),
+      primaryColor: OkiTheme.primary,
+      accentColor: OkiTheme.accent,
+      primaryIconTheme: IconThemeData(color: OkiTheme.tint),
       tabBarTheme: TabBarTheme(
-          labelColor: MyTheme.tint,
-          unselectedLabelColor: MyTheme.tint
+          labelColor: OkiTheme.tint,
+          unselectedLabelColor: OkiTheme.tint
       ),
       tooltipTheme: TooltipThemeData(
           decoration: BoxDecoration(
-              color: MyTheme.primary
+              color: OkiTheme.primary
           )
       ),
-      backgroundColor: MyTheme.background,
+      backgroundColor: OkiTheme.background,
       visualDensity: VisualDensity.adaptivePlatformDensity,
       textTheme: TextTheme(
         headline6: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -80,7 +75,7 @@ class MyState extends State<Main> {
     Preferences.instance = await SharedPreferences.getInstance();
     var savedTheme = Preferences.getString(PreferencesKey.THEME, padrao: Arrays.thema[0]);
 
-    Brightness brightness = MyTheme.getBrilho(savedTheme);
+    Brightness brightness = OkiTheme.getBrilho(savedTheme);
     setTheme(brightness);
   }
 }

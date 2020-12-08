@@ -1,15 +1,11 @@
-import 'package:anime/auxiliar/logs.dart';
-import 'package:anime/auxiliar/online_data.dart';
-import 'package:anime/model/config.dart';
-import 'package:anime/res/resources.dart';
-import 'package:anime/res/strings.dart';
-import 'package:flutter/material.dart';
+import 'package:anime/auxiliar/import.dart';
+import 'package:anime/res/import.dart';
 
 class GenerosFragment extends StatefulWidget {
   @override
-  MyPageState createState() => MyPageState();
+  _MyState createState() => _MyState();
 }
-class MyPageState extends State<GenerosFragment> {
+class _MyState extends State<GenerosFragment> {
 
   //region variaveis
   bool _allSelected = true;
@@ -102,7 +98,7 @@ class MyPageState extends State<GenerosFragment> {
         temp += '$key,';
     }
     Config.generos = temp;
-    RunTime.generosAtualizados = true;
+    RunTime.updateOnlineFragment = true;
 
     Log.snack('Dados Salvos');
 

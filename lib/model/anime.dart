@@ -1,10 +1,6 @@
 import 'dart:io';
-import 'package:anime/auxiliar/firebase.dart';
-import 'package:anime/auxiliar/offline_data.dart';
-import 'package:anime/auxiliar/logs.dart';
-import 'package:anime/model/config.dart';
-import 'package:anime/model/data_hora.dart';
-
+import 'package:anime/auxiliar/import.dart';
+import 'data_hora.dart';
 import 'classificacao.dart';
 
 class ListType {
@@ -28,28 +24,17 @@ class ListType {
 }
 
 class AnimeType {
-
   static const String TV = 'TV';
   static const String OVA = 'OVA';
   static const String ONA = 'ONA';
   static const String MOVIE = 'MOVIE';
   static const String SPECIAL = 'SPECIAL';
   static const String INDEFINIDO = 'INDEFINIDO';
-
-  // AnimeType(this.value);
-  // String value;
-
-  // bool get isTV => value == TV;
-  // bool get isOVA => value == OVA;
-  // bool get isONA => value == ONA;
-  // bool get isMOVIE => value == MOVIE;
-  // bool get isSPECIAL => value == SPECIAL;
-  // bool get isINDEFINIDO => (!isTV && !isOVA && !isOVA && !isMOVIE && !isSPECIAL);
 }
 
-class AnimeList {
+class AnimeCollection {
 
-  static const String TAG = 'AnimeList';
+  static const String TAG = 'AnimeCollection';
 
   //region variaveis
   String _id;
@@ -57,25 +42,48 @@ class AnimeList {
   String _nome;
   String _nome2;
   Map<String, Anime> _items;
+  List<dynamic> _parentes;
   List<dynamic> _generos;
   //endregion
 
   //region Construttores
 
-  AnimeList();
+  AnimeCollection();
 
-  static AnimeList newItem(AnimeList item) => AnimeList.fromJson(item.toJson(), item.id);
+  static AnimeCollection newItem(AnimeCollection item) {
+    var novo = AnimeCollection();
+    novo.id = item.id;
+    novo.nome = item.nome;
+    novo.nome2 = item.nome2;
+    novo.idUser = item.idUser;
+    novo.generos.addAll(item.generos);
+    novo.parentes.addAll(item.parentes);
+    novo.items.addAll(item.items);
+    return novo;
+  }
 
-  AnimeList.fromJson(Map<dynamic, dynamic> map, String idPai) {
+  static Map<String, AnimeCollection> fromJsonList(Map map) {
+    Map<String, AnimeCollection> items = Map();
+    if (map == null) return items;
+
+    for (String key in map.keys)
+      items[key] = AnimeCollection.fromJson(map[key], key);
+
+    return items;
+  }
+
+  AnimeCollection.fromJson(Map<dynamic, dynamic> map, String idPai) {
     try {
       id = idPai;
-//    id = map['id'];
       nome = map['nome'];
       nome2 = map['nome2'];
       idUser = map['idUser'];
       generos = map['generos'];
       if(map['items'] != null) {
-        items = Anime.fromJsonList(map['items']/*, idPai*/);
+        items = Anime.fromJsonList(map['items']);
+      }
+      if(map['parentes'] != null) {
+        parentes = map['parentes'];
       }
       for (var item in items.values) {
         if (item.generos.length == 0)
@@ -92,18 +100,9 @@ class AnimeList {
     'nome2': nome2,
     'items': items,
     "idUser": idUser,
-    'generos': generos
+    'generos': generos,
+    'parentes': parentes,
   };
-
-  static Map<String, AnimeList> fromJsonList(Map map) {
-    Map<String, AnimeList> items = Map();
-    if (map == null) return items;
-
-    for (String key in map.keys)
-      items[key] = AnimeList.fromJson(map[key], key);
-
-    return items;
-  }
 
    //endregion
 
@@ -166,6 +165,7 @@ class AnimeList {
   //region metodos
 
   Anime getItem(int position) {
+    if (position < 0) return null;
     return itemsToList[position];
   }
 
@@ -177,12 +177,14 @@ class AnimeList {
         .once();
     var map = snapshot.value;
     if(map == null) return;
-    map = map['items'];
-    if(map == null) return;
+    var items = map['items'];
+    if(items == null) return;
+    if (valueNotNull(map['parentes']))
+      parentes = map['parentes'];
+
     for (Anime item in itemsToList) {
-      if (valueNotNull(map[item.id])) {
-        Log.d(TAG, 'completar', map[item.id]);
-        Anime aux = Anime.fromJson(map[item.id]);
+      if (valueNotNull(items[item.id])) {
+        Anime aux = Anime.fromJson(items[item.id]);
         if (aux != null) item._completar(aux);
       }
     }
@@ -195,48 +197,37 @@ class AnimeList {
   //region get set
 
   String get id => _id ?? '';
-
-  set id(String value) {
-    _id = value;
-  }
+  set id(String value) => _id = value;
 
   String get idUser => _idUser ?? null;
-
-  set idUser(String value) {
-    _idUser = value;
-  }
+  set idUser(String value) => _idUser = value;
 
   String get nome => _nome ?? '';
-
-  set nome(String value) {
-    _nome = value;
-  }
+  set nome(String value) => _nome = value;
 
   Map<String, Anime> get items {
     if (_items == null)
       _items = Map();
     return _items;
   }
-
-  set items(Map<String, Anime> value) {
-    _items = value;
-  }
+  set items(Map<String, Anime> value) => _items = value;
 
   String get nome2 => _nome2 ?? null;
-
-  set nome2(String value) {
-    _nome2 = value;
-  }
+  set nome2(String value) => _nome2 = value;
 
   List<dynamic> get generos {
     if (_generos == null)
       _generos = [];
     return _generos;
   }
+  set generos(List<dynamic> value) => _generos = value;
 
-  set generos(List<dynamic> value) {
-    _generos = value;
+  List<dynamic> get parentes {
+    if (_parentes == null)
+      _parentes = [];
+    return _parentes;
   }
+  set parentes(List<dynamic> value) => _parentes = value;
 
   //endregion
 
@@ -248,7 +239,6 @@ class Anime {
   static const String TAG = 'Anime';
 
   String _id;
-//  String _idPai;
   String _nome;
   String _nome2;
   String _desc;
@@ -282,7 +272,6 @@ class Anime {
     if (mapIsNoNull(map['tipo'])) tipo = map['tipo'];
     // if (mapIsNoNull(map['foto'])) foto = map['foto'];todo
     if (mapIsNoNull(map['aviso'])) aviso = map['aviso'];
-    // if (mapIsNoNull(map['status'])) status = map['status'];
     if (mapIsNoNull(map['sinopse'])) sinopse = map['sinopse'];
     if (mapIsNoNull(map['generos'])) generos = map['generos'];
     if (mapIsNoNull(map['isCopiado'])) isCopiado = map['isCopiado'];
@@ -302,9 +291,8 @@ class Anime {
     "link": link,
     "data": data,
     "tipo": tipo,
-    "foto": foto,
+    // "foto": foto,
     "aviso": aviso,
-    // "status": status,
     "sinopse": sinopse,
     "generos": generos,
     "isCopiado": isCopiado,
@@ -343,6 +331,7 @@ class Anime {
     // status = item.status;
     sinopse = item.sinopse;
     episodios = item.episodios;
+    episodios = item.episodios;
   }
 
   Future<bool> complete() async {
@@ -370,15 +359,15 @@ class Anime {
 
     switch(list.value) {
       case ListType.assistindoValue:
-        FirebaseOki.user.assistindo[id] = id;
+        FirebaseOki.userOki.assistindo[id] = id;
         child = FirebaseChild.DESEJOS;
         break;
       case ListType.concluidosValue:
-        FirebaseOki.user.concluidos[id] = id;
+        FirebaseOki.userOki.concluidos[id] = id;
         child = FirebaseChild.CONCLUIDOS;
         break;
       case ListType.favoritosValue:
-        FirebaseOki.user.favoritos[id] = id;
+        FirebaseOki.userOki.favoritos[id] = id;
         child = FirebaseChild.FAVORITOS;
         break;
     }
@@ -423,7 +412,7 @@ class Anime {
       return false;
     }
   }
-  Future<bool> salvarAdmin() async {
+  Future<bool> salvarAdmin1() async {
     try {
       return await FirebaseOki.database
           .child(FirebaseChild.ANIMES)
@@ -448,30 +437,30 @@ class Anime {
 
     switch(list.value) {
       case ListType.assistindoValue:
-        FirebaseOki.user.assistindo[id] = id;
+        FirebaseOki.userOki.assistindo[id] = id;
         childNew = FirebaseChild.DESEJOS;
         break;
       case ListType.concluidosValue:
-        FirebaseOki.user.concluidos[id] = id;
+        FirebaseOki.userOki.concluidos[id] = id;
         childNew = FirebaseChild.CONCLUIDOS;
         break;
       case ListType.favoritosValue:
-        FirebaseOki.user.favoritos[id] = id;
+        FirebaseOki.userOki.favoritos[id] = id;
         childNew = FirebaseChild.FAVORITOS;
         break;
     }
 
     switch(old.value) {
       case ListType.assistindoValue:
-        FirebaseOki.user.assistindo.remove(id);
+        FirebaseOki.userOki.assistindo.remove(id);
         childOld = FirebaseChild.DESEJOS;
         break;
       case ListType.concluidosValue:
-        FirebaseOki.user.concluidos.remove(id);
+        FirebaseOki.userOki.concluidos.remove(id);
         childOld = FirebaseChild.CONCLUIDOS;
         break;
       case ListType.favoritosValue:
-        FirebaseOki.user.favoritos.remove(id);
+        FirebaseOki.userOki.favoritos.remove(id);
         childOld = FirebaseChild.FAVORITOS;
         break;
     }
@@ -517,7 +506,7 @@ class Anime {
   Future<bool> delete(ListType list, {bool save = true, bool deleteAll = false}) async {
     var result = await _deleteAux(list, id);
     if (deleteAll) {
-      await FirebaseOki.database
+      result = await FirebaseOki.database
           .child(FirebaseChild.USUARIO)
           .child(idUser)
           .child(FirebaseChild.ANIMES)
@@ -539,15 +528,15 @@ class Anime {
     String child = '';
     switch(list.value) {
       case ListType.assistindoValue:
-        FirebaseOki.user.assistindo.remove(key);
+        FirebaseOki.userOki.assistindo.remove(key);
         child = FirebaseChild.DESEJOS;
         break;
       case ListType.concluidosValue:
-        FirebaseOki.user.concluidos.remove(key);
+        FirebaseOki.userOki.concluidos.remove(key);
         child = FirebaseChild.CONCLUIDOS;
         break;
       case ListType.favoritosValue:
-        FirebaseOki.user.favoritos.remove(key);
+        FirebaseOki.userOki.favoritos.remove(key);
         child = FirebaseChild.FAVORITOS;
         break;
     }
@@ -580,9 +569,7 @@ class Anime {
   bool get isNoLancado => !isLancado;
   bool get isLancado => data.compareTo(DataHora.now()) < 0;
 
-  File get fotoToFile {
-    return File(OfflineData.localPath + '/' + fotoLocal);
-  }
+  File get fotoToFile => File(OfflineData.localPath + '/' + fotoLocal);
 
   String get fotoLocal {
     if (_fotoLocal == null)
@@ -603,7 +590,7 @@ class Anime {
   String get id => _id ?? '';
   set id(String value) => _id = value;
 
-  String get idUser => FirebaseOki.fUser.uid;
+  String get idUser => FirebaseOki.user.uid;
   String get idPai {
     if (id[0] == '_') {
       var temp = id.substring(1, id.length);

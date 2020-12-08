@@ -1,5 +1,4 @@
-import 'package:anime/auxiliar/firebase.dart';
-import 'package:anime/auxiliar/logs.dart';
+import 'package:anime/auxiliar/import.dart';
 
 class UserDados {
 

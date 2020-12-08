@@ -1,11 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-import 'package:anime/model/data_hora.dart';
-import 'package:anime/model/user_oki.dart';
-import 'package:path_provider/path_provider.dart';
-import 'firebase.dart';
-import 'logs.dart';
-import 'online_data.dart';
+import 'package:anime/auxiliar/import.dart';
+import 'package:anime/model/import.dart';
 
 class OfflineData {
   static const String TAG = 'OfflineData';
@@ -22,13 +18,14 @@ class OfflineData {
   static Future<bool> saveOfflineData() async {
 //    await deleteOfflineData();
     try {
-      File pathUser = _getDataFile(localPath, FILE_USER);
-      File pathAnimes = _getDataFile(localPath, FILE_ANIMES);
-      String dataUser = jsonEncode(FirebaseOki.user.toJson());
+      // Log.d(TAG, 'saveOfflineData', 'Init', OnlineData.data);
+      File fileUser = _getDataFile(localPath, FILE_USER);
+      File fileAnimes = _getDataFile(localPath, FILE_ANIMES);
+      String dataUser = jsonEncode(FirebaseOki.userOki.toJson());
       String dataAnimes = jsonEncode(OnlineData.data);
-      await pathUser.writeAsString(dataUser);
-      await pathAnimes.writeAsString(dataAnimes);
-      Log.d(TAG, 'saveOfflineData', 'OK', pathUser.path);
+      await fileUser.writeAsString(dataUser);
+      await fileAnimes.writeAsString(dataAnimes);
+      Log.d(TAG, 'saveOfflineData', 'OK', fileUser.path);
       return true;
     } catch(e) {
       Log.e(TAG, 'saveOfflineData', e);
@@ -48,8 +45,8 @@ class OfflineData {
         String dataUser = await pathUser.readAsString();
         UserOki itemUser = UserOki.fromJson(jsonDecode(dataUser));
         if (itemUser != null) {
-          FirebaseOki.user = itemUser;
-          FirebaseOki.organizarListas();
+          FirebaseOki.userOki = itemUser;
+          // FirebaseOki.organizarListas();
         }
         Log.d(TAG, 'readOfflineData', 'user', 'OK', pathUser.path);
       }

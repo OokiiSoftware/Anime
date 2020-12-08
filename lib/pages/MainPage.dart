@@ -1,27 +1,18 @@
-import 'package:anime/auxiliar/aplication.dart';
-import 'package:anime/auxiliar/firebase.dart';
 import 'package:anime/auxiliar/import.dart';
-import 'package:anime/auxiliar/logs.dart';
-import 'package:anime/auxiliar/online_data.dart';
-import 'package:anime/model/anime.dart';
-import 'package:anime/model/config.dart';
-import 'package:anime/model/user_oki.dart';
-import 'package:anime/pages/anime_page.dart';
-import 'package:anime/pages/config_page.dart';
-import 'package:anime/pages/login_page.dart';
-import 'package:anime/res/resources.dart';
-import 'package:anime/res/strings.dart';
-import 'package:anime/res/theme.dart';
-import 'package:anime/sub_pages/animes_fragment.dart';
-import 'package:firebase_admob/firebase_admob.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:anime/model/import.dart';
+import 'package:anime/res/import.dart';
+import 'package:anime/sub_pages/import.dart';
+import '../auxiliar/config.dart';
+import 'anime_page.dart';
+import 'config_page.dart';
+import 'info_page.dart';
+import 'login_page.dart';
 
 class MainPage extends StatefulWidget {
   @override
-  MyPageState createState() => MyPageState();
+  _MyState createState() => _MyState();
 }
-class MyPageState extends State<MainPage> with SingleTickerProviderStateMixin {
+class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
 
   //region Variaveis
 
@@ -59,9 +50,9 @@ class MyPageState extends State<MainPage> with SingleTickerProviderStateMixin {
 
     bool isListMode = Config.itemListMode.isListMode;
 
-    if (!_isIniciado) return Layouts.splashScreen(mostrarLog: _mostrarLog);
+    if (!_isIniciado) return SplashScreen(mostrarLog: _mostrarLog);
 
-    var tintColor = _isOnline ? MyTheme.tint : MyTheme.textError;
+    var tintColor = _isOnline ? OkiTheme.tint : OkiTheme.textError;
 
     final List<Widget> tabs = [
       Tooltip(message: Titles.main_page[0], child: Tab(icon: Icon(Icons.list, color: tintColor))),
@@ -70,11 +61,10 @@ class MyPageState extends State<MainPage> with SingleTickerProviderStateMixin {
       Tooltip(message: Titles.main_page[3], child: Tab(icon: Icon(Icons.online_prediction, color: tintColor))),
     ];
 
-    final user = FirebaseOki.user;
-    final assistindoFragment = AnimesFragment(context, user.assistindoList, ListType.assistindo);
-    final favoritosFragment = AnimesFragment(context, user.favoritosList, ListType.favoritos);
-    final concluidosFragment = AnimesFragment(context, user.concluidosList, ListType.concluidos);
-    final onlineFragment = AnimesFragment(context, OnlineData.dataList, ListType.online);
+    final assistindoFragment = AnimesFragment(context, ListType.assistindo);
+    final favoritosFragment = AnimesFragment(context, ListType.favoritos);
+    final concluidosFragment = AnimesFragment(context, ListType.concluidos);
+    final onlineFragment = AnimesFragment(context, ListType.online);
 
     final List<Widget> tabViews = [assistindoFragment, favoritosFragment, concluidosFragment, onlineFragment];
 
@@ -115,14 +105,20 @@ class MyPageState extends State<MainPage> with SingleTickerProviderStateMixin {
                   });
                 },
               ),
-            IconButton(
-              tooltip: 'Configurações',
-              icon: Icon(Icons.settings, color: tintColor),
-              onPressed: () {
-                Navigate.to(context, ConfigPage());
+            // IconButton(
+            //   tooltip: 'Configurações',
+            //   icon: Icon(Icons.settings, color: tintColor),
+            //   onPressed: () {
+            //     Navigate.to(context, ConfigPage());
+            //   },
+            // ),
+            PopupMenuButton<String> (
+              itemBuilder: (context) {
+                return Arrays.menuMain.map((e) => PopupMenuItem(child: Text(e), value: e)).toList();
               },
+              onSelected: _onMenuItemSelected,
             ),
-            Padding(padding: EdgeInsets.only(right: 10))
+            // Padding(padding: EdgeInsets.only(right: 10))
           ],
         ),
         body: TabBarView(
@@ -143,7 +139,7 @@ class MyPageState extends State<MainPage> with SingleTickerProviderStateMixin {
 
     //region OfflineData pode ter uma lista offline, se tiver a lista a inicializacão é mais rapida
     bool onlineDataBaixados = false;
-    if (OnlineData.data.length == 0) {
+    if (OnlineData.data.isEmpty) {
       await OnlineData.baixarLista();
       onlineDataBaixados = true;
     }
@@ -156,7 +152,7 @@ class MyPageState extends State<MainPage> with SingleTickerProviderStateMixin {
 
     setState(() {
       _mostrarLog = false;
-      _isIniciado = _isOnline = OnlineData.isOnline = true;
+      _isIniciado = _isOnline = RunTime.isOnline = true;
     });
     if (!onlineDataBaixados)
       await OnlineData.baixarLista();
@@ -178,9 +174,24 @@ class MyPageState extends State<MainPage> with SingleTickerProviderStateMixin {
     });
   }
 
+  void _onMenuItemSelected(String value) async {
+    switch(value) {
+      case MenuMain.config:
+        Navigate.to(context, ConfigPage());
+        break;
+      case MenuMain.sobre:
+        Navigate.to(context, InfoPage());
+        break;
+      case MenuMain.logout:
+        await FirebaseOki.finalize();
+        Navigate.toReplacement(context, LoginPage());
+        break;
+    }
+  }
+
   void _onPageChanged(int index) {
     String quantAnimes = '';
-    final user = FirebaseOki.user;
+    final user = FirebaseOki.userOki;
     switch(index) {
       case ListType.assistindoValue:
         quantAnimes = user.assistindo.length.toString();
@@ -211,7 +222,7 @@ class MyPageState extends State<MainPage> with SingleTickerProviderStateMixin {
         size: AdSize.banner,
         targetingInfo: targetingInfo,
         listener: (MobileAdEvent event) {
-          Log.d(TAG, 'testAdMob', "BannerAd event is $event");
+          Log.d(TAG, 'loadAdMob', "BannerAd event is $event");
           switch(event) {
             case MobileAdEvent.loaded:
               RunTime.mostrandoAds = true;
@@ -252,7 +263,7 @@ class DataSearch extends SearchDelegate<String> {
   @override
   ThemeData appBarTheme(BuildContext context) => ThemeData(
     brightness: Brightness.dark,
-    primaryColor: MyTheme.primary,
+    primaryColor: OkiTheme.primary,
   );
 
   @override
@@ -269,6 +280,9 @@ class DataSearch extends SearchDelegate<String> {
 
   @override
   Widget buildResults(BuildContext context) {
+    if (listResults.length == 0) {
+      return _msgSemResultados;
+    }
     return listView(listResults);
   }
 
@@ -282,24 +296,26 @@ class DataSearch extends SearchDelegate<String> {
     ).toList());
 
     if (listResults.length == 0 && query.length > 0) {
-      return ListTile(
-        title: Text('Sem resultados'),
-        subtitle: Text('Tente selecionar alguns generos na guia \'Online\''),
-      );
+      return _msgSemResultados;
     }
 
     return listView(listResults);
   }
 
+  Widget get _msgSemResultados => ListTile(
+    title: Text('Sem resultados'),
+    subtitle: Text('Tente selecionar alguns generos na guia \'Online\''),
+  );
+
   ListView listView(List<Anime> list) {
-    UserOki user = FirebaseOki.user;
+    UserOki user = FirebaseOki.userOki;
     return ListView.builder(
       padding: Layouts.adsPadding(10),
       itemBuilder: (context, index) {
         Anime item = list[index];
-        return Layouts.anime(
+        return AnimeItemLayout(
             item,
-            list: ListType.online,
+            listType: ListType.online,
             showSeconfName: true,
             trailing: Layouts.teste2(item, user),
             onTap: () => _onItemTap(context, item));

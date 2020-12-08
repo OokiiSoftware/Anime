@@ -1,12 +1,8 @@
 import 'dart:ui';
-import 'package:anime/auxiliar/preferences.dart';
-import 'package:anime/model/config.dart';
-import 'package:anime/res/strings.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:package_info/package_info.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:anime/model/import.dart';
+import 'package:anime/res/import.dart';
 import 'firebase.dart';
+import 'import.dart';
 import 'logs.dart';
 import 'offline_data.dart';
 
@@ -101,4 +97,46 @@ class Aplication {
     }
   }
 
+  static Future<bool> moverAnime(BuildContext context, Anime item, ListType listType) async {
+    var title = Titles.MOVER_ITEM;
+    var content = [
+      if (!listType.isAssistindo)
+        FlatButton(child: Text(Strings.ASSISTINDO), onPressed: () {
+          Navigator.pop(context, DialogResult.aux2);
+        }),
+      if (!listType.isFavoritos)
+        FlatButton(child: Text(Strings.FAVORITOS), onPressed: () {
+          Navigator.pop(context, DialogResult.aux);
+        }),
+      if (!listType.isConcluidos && item.isLancado)
+        FlatButton(child: Text(Strings.CONCLUIDOS), onPressed: () {
+          Navigator.pop(context, DialogResult.positive);
+        }),
+    ];
+    var result = await DialogBox.dialogCancel(context, title: title, content: content);
+
+    ListType novaList;
+    switch(result.value) {
+      case DialogResult.auxValue:
+        novaList = ListType.favoritos;
+        break;
+      case DialogResult.positiveValue:
+        novaList = ListType.concluidos;
+        break;
+      case DialogResult.aux2Value:
+        novaList = ListType.assistindo;
+        break;
+      default:
+        return false;
+    }
+    if (!result.isNone) {
+      RunTime.updateFragment(listType);
+      RunTime.updateFragment(novaList);
+    }
+
+    if (await item.mover(novaList, listType)) {
+      return true;
+    }
+    return false;
+  }
 }

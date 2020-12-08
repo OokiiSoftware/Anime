@@ -1,41 +1,27 @@
-import 'package:anime/auxiliar/aplication.dart';
-import 'package:anime/auxiliar/firebase.dart';
 import 'package:anime/auxiliar/import.dart';
-import 'package:anime/auxiliar/logs.dart';
-import 'package:anime/auxiliar/online_data.dart';
-import 'package:anime/auxiliar/offline_data.dart';
-import 'package:anime/model/anime.dart';
-import 'package:anime/model/classificacao.dart';
-import 'package:anime/model/config.dart';
-import 'package:anime/model/feedback.dart';
-import 'package:anime/model/data_hora.dart';
-import 'package:anime/res/dialog_box.dart';
-import 'package:anime/res/resources.dart';
-import 'package:anime/res/strings.dart';
-import 'package:anime/res/theme.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:anime/model/import.dart';
+import 'package:anime/res/import.dart';
 
 class AnimePage extends StatefulWidget {
   final Anime anime;
-  final ListType _list;
-  AnimePage(this._list, {this.anime});
+  final ListType listType;
+  AnimePage(this.listType, {this.anime});
   @override
-  MyPageState createState() => MyPageState(anime, _list);
+  _MyState createState() => _MyState(anime, listType);
 }
-class MyPageState extends State<AnimePage> {
+class _MyState extends State<AnimePage> {
 
-  MyPageState(Anime anime, this._list) {
+  _MyState(Anime anime, this.listType) {
     this._anime = new Anime.fromJson(anime.toJson());
-    _isOnline = _list.isOnline;
-    _perguntarSalvar = _list.isOnline;
+    _isOnline = listType.isOnline;
+    _perguntarSalvar = listType.isOnline;
     if (_isOnline) _isAvancado = true;
   }
 
   //region Variaveis
   static const String TAG = 'AnimePage';
 
-  ListType _list;
+  ListType listType;
   Anime _anime;
   Anime get anime => _anime;
 
@@ -341,7 +327,7 @@ class MyPageState extends State<AnimePage> {
           ),
         if(!_isOnline)
           _customTextField(_desc, TextInputType.text, Strings.OBSERVACAO, isReadOnly: !_inEditMode),
-        if (_list.isAssistindo)
+        if (listType.isAssistindo)
           _customTextField(_ultimo, TextInputType.number, MyTexts.ULTIMO_VISTO, isReadOnly: !_inEditMode),
 
       ],
@@ -361,7 +347,7 @@ class MyPageState extends State<AnimePage> {
     // var itemDecoration = BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(5)), color: MyTheme.tint);
     // var itemTextStyle = TextStyle(color: MyTheme.primaryDark, fontSize: 14);
     // var itemPrefixStyle = TextStyle(color: MyTheme.textInvert());
-    var itemPrefixStyleErro = TextStyle(color: MyTheme.textError);
+    var itemPrefixStyleErro = TextStyle(color: OkiTheme.textError);
     //endregion
 
     //endregion
@@ -403,8 +389,8 @@ class MyPageState extends State<AnimePage> {
           divisions: 11,
 
           activeColor: (teste == _defaultValue.round()) ?
-          MyTheme.primary :
-          ((teste < 5) ? MyTheme.textError : MyTheme.accent),
+          OkiTheme.primary :
+          ((teste < 5) ? OkiTheme.textError : OkiTheme.accent),
 
           label: currentValue.round().toString(),
           onChanged: isReadOnly ? null : onChanged,
@@ -450,26 +436,26 @@ class MyPageState extends State<AnimePage> {
     if (await _verificar(item)) {
 
       try {
-        if (FirebaseOki.user.animes[item.idPai] == null)
-          FirebaseOki.user.animes[item.idPai] = AnimeList();
-        FirebaseOki.user.animes[item.idPai].items[item.id] = item;
+        if (FirebaseOki.userOki.animes[item.idPai] == null)
+          FirebaseOki.userOki.animes[item.idPai] = AnimeCollection();
+        FirebaseOki.userOki.animes[item.idPai].items[item.id] = item;
       } catch(e) {
         Log.e(TAG, 'saveManager', e);
       }
 
-      if (OnlineData.isOnline) {
-        await item.salvar(_list);
+      if (RunTime.isOnline) {
+        await item.salvar(listType);
         await FirebaseOki.atualizarUser();
       } else {
-        item.salvar(_list);
+        item.salvar(listType);
         Log.snack('Você está Offline', isError: true);
       }
       setState(() {
         _media = item.classificacao.media;
         _inEditMode = false;
       });
-      RunTime.updateAnimeFragment = true;
 
+      RunTime.updateFragment(listType);
       await OfflineData.saveOfflineData();
       Log.snack('Dados Salvos');
     }
@@ -504,23 +490,24 @@ class MyPageState extends State<AnimePage> {
   void _deleteItem(Anime item) async {
     if (item == null) return;
 
-    String lista = _list.isConcluidos ? Strings.CONCLUIDOS : _list.isAssistindo ? Strings.ASSISTINDO : Strings.FAVORITOS;
+    String lista = listType.isConcluidos ? Strings.CONCLUIDOS : listType.isAssistindo ? Strings.ASSISTINDO : Strings.FAVORITOS;
     var title = item.nome;
     var content = Text('${MyTexts.EXCLUIR_ITEM} $lista?');
     var result = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
     if (result.isPositive) {
       String id = item.id;
-      bool deleteAll = (!_desejoRepetido(id) || _list.isAssistindo) &&
-          (!_concluidoRepetido(id) || _list.isConcluidos) &&
-          (!_favoritoRepetido(id) || _list.isFavoritos);
+      bool deleteAll = (!_desejoRepetido(id) || listType.isAssistindo) &&
+          (!_concluidoRepetido(id) || listType.isConcluidos) &&
+          (!_favoritoRepetido(id) || listType.isFavoritos);
 
       _setInProgress(true);
-      if (await item.delete(_list, deleteAll: deleteAll)) {
+      if (await item.delete(listType, deleteAll: deleteAll)) {
         await FirebaseOki.atualizarUser();
-        RunTime.updateAnimeFragment = true;
-        Navigator.pop(context);
+        RunTime.updateFragment(listType);
+        Navigator.pop(context, _voidRetornoOnDelete);
       }
       else Log.snack(MyErros.ERRO_GENERICO, isError: true);
+      _setInProgress(false);
     }
   }
 
@@ -585,34 +572,33 @@ class MyPageState extends State<AnimePage> {
     var title = Titles.ADD_ITEM;
     var content = [
       FlatButton(child: Text(Strings.ASSISTINDO), onPressed: () {
-        Navigator.pop(context, DialogResult(DialogResult.negative));
+        Navigator.pop(context, DialogResult.aux2);
       }),
       FlatButton(child: Text(Strings.FAVORITOS), onPressed: () {
-        Navigator.pop(context, DialogResult(DialogResult.aux));
+        Navigator.pop(context, DialogResult.aux);
       }),
       if (anime.isLancado)
         FlatButton(child: Text(Strings.CONCLUIDOS), onPressed: () {
-          Navigator.pop(context, DialogResult(DialogResult.positive));
+          Navigator.pop(context, DialogResult.positive);
         }),
     ];
     var result = await DialogBox.dialogCancel(context, title: title, content: content);
 
-    switch(result.result) {
-      case DialogResult.aux:
-        _list = ListType.favoritos;
+    switch(result.value) {
+      case DialogResult.auxValue:
+        listType = ListType.favoritos;
         break;
-      case DialogResult.positive:
-        _list = ListType.concluidos;
+      case DialogResult.positiveValue:
+        listType = ListType.concluidos;
         break;
-      case DialogResult.negative:
-        _list = ListType.assistindo;
+      case DialogResult.aux2Value:
+        listType = ListType.assistindo;
         break;
     }
     if (!result.isNone && !result.isNegative) {
       _isCopiado = true;
       _isOnline = false;
       _inEditMode = true;
-//      _isReadOnly = false;
       _resetValores();
     }
   }
@@ -643,7 +629,7 @@ class MyPageState extends State<AnimePage> {
     var desc = controller.text;
     if (result.isPositive && desc.trim().isNotEmpty) {
       BugAnime item = BugAnime();
-      item.idUser = FirebaseOki.fUser.uid;
+      item.idUser = FirebaseOki.user.uid;
       item.data = DataHora.now();
       item.idAnime = anime.id;
       item.descricao = desc;
@@ -656,16 +642,24 @@ class MyPageState extends State<AnimePage> {
 
   void _onMoverItem(Anime item) async {
     _setInProgress(true);
-    if (await Import.moverAnime(context, anime, _list)) {
+    if (await Aplication.moverAnime(context, anime, listType)) {
       await FirebaseOki.atualizarUser();
-      RunTime.updateAnimeFragment = true;
       Navigator.pop(context);
     }
     _setInProgress(false);
   }
 
+  _voidRetornoOnDelete(context, AnimeCollection animeCollection) {
+    Log.d(TAG, 'voidRetorno', 'AnimeId', anime.id);
+    setState(() {
+      animeCollection.items.remove(anime.id);
+    });
+    if (animeCollection.items.length == 0)
+      Navigator.pop(context);
+  }
+
   String _getTitle() {
-    switch(_list.value) {
+    switch(listType.value) {
       case ListType.assistindoValue:
         return Titles.DESEJOS;
         break;
@@ -689,7 +683,7 @@ class MyPageState extends State<AnimePage> {
       if (_perguntarSalvar) {
         var title = Titles.AVISO_ITEM_REPETIDO;
         var content = Text(MyTexts.AVISO_ITEM_REPETIDO);
-        switch(_list.value) {
+        switch(listType.value) {
           case ListType.assistindoValue: {
             title += Strings.ASSISTINDO;
             if (desejoRepetido) {
@@ -722,9 +716,9 @@ class MyPageState extends State<AnimePage> {
     }
   }
 
-  bool _desejoRepetido(String key) => FirebaseOki.user.assistindo.containsKey(key);
-  bool _concluidoRepetido(String key) => FirebaseOki.user.concluidos.containsKey(key);
-  bool _favoritoRepetido(String key) => FirebaseOki.user.favoritos.containsKey(key);
+  bool _desejoRepetido(String key) => FirebaseOki.userOki.assistindo.containsKey(key);
+  bool _concluidoRepetido(String key) => FirebaseOki.userOki.concluidos.containsKey(key);
+  bool _favoritoRepetido(String key) => FirebaseOki.userOki.favoritos.containsKey(key);
 
   void _switchSinopse() {
     setState(() {

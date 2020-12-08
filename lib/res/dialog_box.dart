@@ -1,19 +1,27 @@
+import 'package:anime/auxiliar/import.dart';
 import 'package:anime/res/strings.dart';
-import 'package:flutter/material.dart';
 
 class DialogResult {
-  static const int none = 0;
-  static const int positive = 1;
-  static const int negative = 2;
-  static const int aux = 3;
+  static const int noneValue = 50;
+  static const int positiveValue = 12;
+  static const int negativeValue = 22;
+  static const int auxValue = 33;
+  static const int aux2Value = 54;
 
-  DialogResult(this.result);
+  static DialogResult get none => DialogResult(noneValue);
+  static DialogResult get positive => DialogResult(positiveValue);
+  static DialogResult get negative => DialogResult(negativeValue);
+  static DialogResult get aux => DialogResult(auxValue);
+  static DialogResult get aux2 => DialogResult(aux2Value);
 
-  int result;
-  bool get isPositive => result == positive;
-  bool get isNegative => result == negative;
-  bool get isAux => result == aux;
-  bool get isNone => result == none;
+  DialogResult(this.value);
+
+  int value;
+  bool get isPositive => value == positiveValue;
+  bool get isNegative => value == negativeValue;
+  bool get isAux => value == auxValue;
+  bool get isAux2 => value == aux2Value;
+  bool get isNone => value == noneValue;
 }
 
 enum DialogType {
@@ -114,24 +122,24 @@ class DialogBox {
                       child: Text(auxBtnText),
                       onPressed: () =>
                           Navigator.pop(
-                              context, DialogResult(DialogResult.aux)),
+                              context, DialogResult.aux),
                     ),
                     if (cancelButton) FlatButton(
                       child: Text(negativeButton),
                       onPressed: () =>
                           Navigator.pop(
-                              context, DialogResult(DialogResult.negative)),
+                              context, DialogResult.negative),
                     ),
                     if (okButton) FlatButton(
                       child: Text(positiveButton),
                       onPressed: () =>
                           Navigator.pop(
-                              context, DialogResult(DialogResult.positive)),
+                              context, DialogResult.positive),
                     ),
                   ],
                 ),
           ),
-    ) ?? DialogResult(DialogResult.none);
+    ) ?? DialogResult.none;
   }
 
   static bool _showPositiveButton(DialogType dialogType) {

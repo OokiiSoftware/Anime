@@ -1,9 +1,7 @@
 import 'dart:ui';
-import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/scheduler.dart';
+import 'package:anime/auxiliar/import.dart';
 
-class MyColors {
+class OkiColors {
   static Color primaryLight = Colors.orangeAccent;
   static Color primaryDark = Colors.deepOrange;
   static Color primary = Colors.orange;
@@ -15,30 +13,30 @@ class MyColors {
   static Color tint = Colors.white;
 }
 
-class ThemeMode {
+class OkiThemeMode {
   static const sistema = 'Sistema';
   static const claro = 'Claro';
   static const escuro = 'Escuro';
 }
 
-class MyTheme {
+class OkiTheme {
   static bool darkModeOn = false;
 
-  static Color get primaryLight => MyColors.primaryLight;
-  static Color get primaryDark => MyColors.primaryDark;
-  static Color get primary => MyColors.primary;
-  static Color get accent => MyColors.accent;
-  static Color get text => MyColors.text;
-  static Color textInvert([double alfa = 1]) => MyColors.textInvert(alfa);
-  static Color get textError => MyColors.textError;
-  static Color get background => MyColors.background;
-  static Color get tint => MyColors.tint;
+  static Color get primaryLight => OkiColors.primaryLight;
+  static Color get primaryDark => OkiColors.primaryDark;
+  static Color get primary => OkiColors.primary;
+  static Color get accent => OkiColors.accent;
+  static Color get text => OkiColors.text;
+  static Color textInvert([double alfa = 1]) => OkiColors.textInvert(alfa);
+  static Color get textError => OkiColors.textError;
+  static Color get background => OkiColors.background;
+  static Color get tint => OkiColors.tint;
 
   static Brightness getBrilho(String theme) {
     Brightness brightness;
-    if (theme == ThemeMode.sistema)
+    if (theme == OkiThemeMode.sistema)
       brightness = SchedulerBinding.instance.window.platformBrightness;
-    else if (theme == ThemeMode.claro)
+    else if (theme == OkiThemeMode.claro)
       brightness = Brightness.light;
     else
       brightness = Brightness.dark;
