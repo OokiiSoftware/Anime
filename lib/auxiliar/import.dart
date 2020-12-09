@@ -1,6 +1,7 @@
 export 'admin.dart';
 export 'aplication.dart';
 export 'config.dart';
+export 'criptografia.dart';
 export 'firebase.dart';
 export 'logs.dart';
 export 'navigate.dart';

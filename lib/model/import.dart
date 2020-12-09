@@ -1,6 +1,7 @@
-export 'package:anime/model/anime.dart';
-export 'package:anime/model/classificacao.dart';
-export 'package:anime/model/data_hora.dart';
-export 'package:anime/model/feedback.dart';
-export 'package:anime/model/user_dados.dart';
-export 'package:anime/model/user_oki.dart';
+export 'anime.dart';
+export 'classificacao.dart';
+export 'cript_data.dart';
+export 'data_hora.dart';
+export 'feedback.dart';
+export 'user_dados.dart';
+export 'user_oki.dart';

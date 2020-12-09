@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:anime/auxiliar/criptografia.dart';
 import 'package:anime/model/import.dart';
 import 'package:anime/res/import.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -29,13 +30,16 @@ class FirebaseOki {
 
   static Future<bool> app() async{
       try {
+
+        String decript(String value) => Cript.decript(_dataUrl[value]);
+
         var appOptions = FirebaseOptions(
-          appId: _dataUrl['appId'],
-          projectId: _dataUrl['projectId'],
-          messagingSenderId: _dataUrl['messagingSenderId'],
-          apiKey: 'AIzaSyA5Gwz7yFccSI8rBSams7IAUADOv68wJcQ',
-          storageBucket: _dataUrl['storageBucket'],
-          databaseURL: _dataUrl['databaseURL'],
+          appId: decript('appId'),
+          projectId: decript('projectId'),
+          messagingSenderId: decript('messagingSenderId'),
+          apiKey: decript('apiKey'),
+          storageBucket: decript('storageBucket'),
+          databaseURL: decript('databaseURL'),
         );
         await Firebase.initializeApp(
             name: AppResources.APP_NAME,
@@ -83,11 +87,12 @@ class FirebaseOki {
   }
 
   static Map get _dataUrl => {
-    'appId': Platform.isAndroid ? '1:281298385448:android:3a4c74b7c7ae63f297131d' : '',
-    'projectId': 'anime-oki',
-    'databaseURL': 'AAAAQX6wuig:APA91bF1iiMSFCD5FUXMc9BWw3UjUdRpzMR2tEY1dRIdy_vw1Oa9apsTf3mgN-9U9nqmP9wgXvAE_mzIBU4KPoh0LsoEhcmGAfacdkkLqlYr51kEwJQWB8V4ZqeumQ6NCqvaKZtepgVj',
-    'messagingSenderId': 'https://anime-oki.firebaseio.com',
-    'storageBucket': 'gs://anime-oki.appspot.com'
+    'apiKey': '®PU✕ⅱD❘ⅆZFCー÷KKEⅲ‥W¿ⅉWH‥§Gⅸ✕VℙⅈRFF〝¦Lⅉ⟨IJOⅰ⨉QSⅸ‥L®ⅰEY⟩✕KGH®ⅱB§▁NZⅸ▁TFW¿¦MQ®¦V✕ⅈTO´⨉TE´ℙKBⅉⅈQI[✕ªKⅱ~BONⅆ❘F÷ⅸWⅆⅈZXⅱERGXℚSO§£QQRーℙCDR£ⅉKTOⅸ⟨YHZ÷£C§ⅆW⟩⟩ZUⅈ⟨HEⅲ',
+    'appId': Platform.isAndroid ? '✕Yⅸ¿OHT☡ªDℚ⟨T⟨✕SEVℙ,SLF¿⟨NV〝ⅰQHP✕ⅸG~〝Uー⟨Lℚ§V⟩§CMHℚ⟩ZXⅰKBN~ーOEYⅈ❘DY☡ⅉHMV⨉⨉QⅱⅸVYV¦ⅰFBⅰⅆNZQ⨉¦NK⟨‥I®⟩W〝❘Y⟩ⅈCNX⟨Y[WⅉⅲP¿£NC▁¦EQⅆ,ONW❘´P▁‥WNVªⅰOCⅆ~HC[®ⅸF⟩ℙEⅉ〝T‥£C⟩❘FYF⨉¦LDⅉⅸNⅲ÷NBMℚ⨉Cℙ' : '',
+    'projectId': 'ⅱEⅱ⟩SOℚℚL☡ーPFY~〝CZ[▁〝CJYℚ´PS⟨⟩RQPℙ‥P¿',
+    'databaseURL': 'ⅱZ❘£JIℚⅉM´,WSC⨉☡CPZ▁ⅆTTⅲℚNℙ‥QROⅉ´RGW®⟨HFⅈℚDI÷ªODⅲªLVW〝ⅱGGJ☡⟨KG´☡UPℚ✕PCI¿ⅸFRª£Kℙ⟨CRℙⅸYC,ⅈZP〝XDZⅉ÷TO❘ªKⅱ▁D‥ⅱRR☡ⅈZⅲⅉC£ⅉYZⅉ´HGIⅰ⟨AB®',
+    'messagingSenderId': 'ⅈBG~ⅱERGXⅸL,⟨RG✕ⅈWDℙーERMⅸーQFUⅰ£C§☡N÷XYⅰ´YEW‥÷E§ⅰP¿ⅉYⅈ®C❘÷WW¦£Qⅉ®JPQ®▁ZTⅉ~H☡▁WLDX´NUDⅈⅆY[Wⅰ®O▁ℙFHWⅸ⟨JUIX~JH¿XROF÷¦HℙⅈK[´ⅈISV,ⅈCRF⟩´ZH£⟩UUG⨉´TOー§UGV§¿DDZ✕ⅸFKDℙⅱWUY⟨ℙRS§▁CFK®❘AUT£⟨TTⅱ✕YUMⅈ§CG❘§HOWーⅱK§ⅲRK[▁ªVH‥¦VT⨉✕Oー‥DEFª✕DYEⅲ⟨RB⟩ⅉCQVⅸ®EWⅰ⟨WNⅉ⟩ID✕⨉I✕÷H▁ⅲNL⨉ⅆDHℙ¦DⅈⅈI§⟩KBⅸ´S[,ーQ❘❘FOO®®BQZ§ⅰZR§☡CNL~ⅉEⅈ⨉DFFⅆ‥NQ®❘K÷ⅰFHFⅱ®R⟩▁S~ーJℙXRQ¦§EX~SHIªªAIª~DPDⅱ§N®´IWW☡⨉IGⅰ§ZⅱⅸLYWⅰ¦WℚℙBⅈⅲZDFℚℚB÷ⅱIMU〝®VF~✕PB¿ⅰCⅸⅉVM⨉⟩OOPª¿FLK®▁KOⅲⅰORⅱ❘WM[〝ⅱFⅸⅆERTⅸⅰEX¿ZMD〝,OGZªⅸLP☡⨉UDZ⟩ⅱVⅸ÷Kⅈ✕DYEⅲⅆOTH~✕L§÷LKSℚⅈHZJⅰ¿UKCⅉⅲY¿ⅸKQZ,ℚPOG☡¿QKYⅰ¿Uª〝BⅱªPℚªYVQ✕ⅉQDOⅸⅸQ[S¦‥UMIℚXJJ⟨ーIXℚQTYーⅸNM‥´H´¦N´ⅆL¦´YUⅲⅉDDX´NL®¦Mⅆ',
+    'storageBucket': 'ªTQUℙ‥Sⅈ‥O☡〝FYC✕⟩VHー÷R£⟨GI®®YⅸⅱL▁⟩PQZ£▁TN⟨ⅰCⅰ,BO´ⅱTFF⟨ⅆZRP¿ーOEYⅈ¦HOK✕ℙQI~¿INI®XPYEℙⅸEJDℚªZªⅆJT✕~IHL❘¿BV£ⅉL§'
   };
 
   static bool get isAdmin => Admin.isAdmin;
