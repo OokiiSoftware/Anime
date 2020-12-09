@@ -31,7 +31,7 @@ class FirebaseOki {
   static Future<bool> app() async{
       try {
 
-        String decript(String value) => Cript.decript(_dataUrl[value]);
+        String decript(String value) => Cript.decript(_firebaseData[value]);
 
         var appOptions = FirebaseOptions(
           appId: decript('appId'),
@@ -86,7 +86,7 @@ class FirebaseOki {
     return _userOki;
   }
 
-  static Map get _dataUrl => {
+  static Map get _firebaseData => {
     'apiKey': '®PU✕ⅱD❘ⅆZFCー÷KKEⅲ‥W¿ⅉWH‥§Gⅸ✕VℙⅈRFF〝¦Lⅉ⟨IJOⅰ⨉QSⅸ‥L®ⅰEY⟩✕KGH®ⅱB§▁NZⅸ▁TFW¿¦MQ®¦V✕ⅈTO´⨉TE´ℙKBⅉⅈQI[✕ªKⅱ~BONⅆ❘F÷ⅸWⅆⅈZXⅱERGXℚSO§£QQRーℙCDR£ⅉKTOⅸ⟨YHZ÷£C§ⅆW⟩⟩ZUⅈ⟨HEⅲ',
     'appId': Platform.isAndroid ? '✕Yⅸ¿OHT☡ªDℚ⟨T⟨✕SEVℙ,SLF¿⟨NV〝ⅰQHP✕ⅸG~〝Uー⟨Lℚ§V⟩§CMHℚ⟩ZXⅰKBN~ーOEYⅈ❘DY☡ⅉHMV⨉⨉QⅱⅸVYV¦ⅰFBⅰⅆNZQ⨉¦NK⟨‥I®⟩W〝❘Y⟩ⅈCNX⟨Y[WⅉⅲP¿£NC▁¦EQⅆ,ONW❘´P▁‥WNVªⅰOCⅆ~HC[®ⅸF⟩ℙEⅉ〝T‥£C⟩❘FYF⨉¦LDⅉⅸNⅲ÷NBMℚ⨉Cℙ' : '',
     'projectId': 'ⅱEⅱ⟩SOℚℚL☡ーPFY~〝CZ[▁〝CJYℚ´PS⟨⟩RQPℙ‥P¿',
