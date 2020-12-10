@@ -160,6 +160,7 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
             Text('A (Uma letra)'),
             Text('AB (Várias letras)'),
             Text('A-Z (Listar de A a Z)'),
+            Text('A,B,C.. (Listar A,B,C..)'),
             Text('VAZIO ou # (Listar tudo)'),
             Text('2020 (Lançados em 2020)'),
             Text('0000 (Animes não lançados)'),
@@ -195,6 +196,11 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
           if (init.isEmpty) init = '';
           if (fim.isEmpty) fim = 'Z';
           collections.addAll(OnlineData.dataList.where((x) => (x.nome[0].compareTo(init) >= 0) && (x.nome[0].compareTo(fim) <= 0)));
+          break;
+        } else if (filtro.contains(',')) {
+          List<String> sp = filtro.split(',').toSet().toList()..sort((a, b) => a.compareTo(b));
+          for (String s in sp)
+            collections.addAll(OnlineData.dataList.where((x) => x.nome.toUpperCase().startsWith(s.toUpperCase())));
           break;
         }
         try {
