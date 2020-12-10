@@ -1,4 +1,5 @@
 import 'package:anime/auxiliar/import.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class UserDados {
 
@@ -13,18 +14,23 @@ class UserDados {
   String _senha;
   //endregion
 
-  UserDados();
+  UserDados(User user) {
+    id = user.uid;
+    nome = user.displayName;
+    foto = user.photoURL;
+    email = user.email;
+  }
   UserDados.fromJson(Map<dynamic, dynamic> map) {
     id = map['id'];
     nome = map['nome'];
-    email = map['email'];
+    // email = map['email'];
     foto = map['foto'];
   }
   Map<String, dynamic> toJson() => {
     "id": id,
     "foto": foto,
     "nome": nome,
-    "email": email,
+    // "email": email,
   };
 
   //region Metodos

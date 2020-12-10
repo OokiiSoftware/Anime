@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:anime/auxiliar/import.dart';
+import 'package:anime/model/import.dart';
 import 'package:anime/res/import.dart';
 import 'MainPage.dart';
 
@@ -60,7 +61,7 @@ class _MyState extends State<LoginPage> {
           ],
         ),
       ),
-      floatingActionButton: _inProgress ? Layouts.adsFooter(CircularProgressIndicator()) : null,
+      floatingActionButton: _inProgress ? AdsFooter(child: CircularProgressIndicator()) : null,
     );
   }
 
@@ -74,6 +75,7 @@ class _MyState extends State<LoginPage> {
       Log.d(TAG, 'Login com Google');
       await FirebaseOki.googleAuth();
       Log.d(TAG, 'Login com Google', 'OK');
+      UserDados(FirebaseOki.user).salvar();
       Navigate.toReplacement(context, MainPage());
     } catch (e) {
       Log.e(TAG, 'Login com Google Fail', e);

@@ -1,6 +1,6 @@
 import 'package:anime/auxiliar/import.dart';
+import 'package:anime/pages/import.dart';
 import 'package:anime/res/import.dart';
-import 'package:anime/pages/MainPage.dart';
 
 void main() => runApp(Main());
 
@@ -10,6 +10,9 @@ class Main extends StatefulWidget {
 }
 class MyState extends State<Main> {
   static const String TAG = 'Main';
+
+  bool _isIniciado = false;
+  bool _mostrarLog = false;
 
   @override
   void initState() {
@@ -27,7 +30,7 @@ class MyState extends State<Main> {
           debugShowCheckedModeBanner: false,
           title: AppResources.APP_NAME,
           theme: theme,
-          home: MainPage(),
+          home: _getBody,
           builder: (c, widget) => Scaffold(
               key: Log.scaffKey,
               body: widget
@@ -38,8 +41,50 @@ class MyState extends State<Main> {
   }
 
   void init() async {
-    // await GlobalData.init();
     loadTheme();
+
+    _checkInitTimeout();
+    await Aplication.init();
+    await FirebaseOki.init();
+
+    //region OfflineData pode ter uma lista offline, se tiver a lista a inicializacão é mais rapida
+    bool onlineDataBaixados = false;
+    if (OnlineData.data.isEmpty) {
+      await OnlineData.baixarLista();
+      onlineDataBaixados = true;
+    }
+    //endregion
+
+    setState(() {
+      _mostrarLog = false;
+      _isIniciado = RunTime.isOnline = true;
+    });
+    if (!onlineDataBaixados)
+      await OnlineData.baixarLista();
+  }
+
+  Future _checkInitTimeout() async {
+    await Future.delayed(Duration(seconds: 10));
+    if (!mounted) return;
+    if (!_isIniciado) {
+      setState(() {
+        _mostrarLog = true;
+      });
+    }
+    await Future.delayed(Duration(seconds: 5));
+    if (!mounted) return;
+    setState(() {
+      _isIniciado = true;
+    });
+  }
+
+  Widget get _getBody {
+    if (!_isIniciado)
+      return SplashScreen(mostrarLog: _mostrarLog);
+    else if (!FirebaseOki.isLogado)
+      return LoginPage();
+    else
+      return MainPage();
   }
 
   ThemeData setTheme(Brightness brightness) {

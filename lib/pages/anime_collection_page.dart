@@ -62,7 +62,7 @@ class _MyState extends State<AnimeCollectionPage> {
                     icon: Icon(Icons.open_in_browser),
                     onPressed: () => _moverAnime(item),
                   ) :
-                  Layouts.teste2(item, user),
+                  Layouts.markerAnime(item, user),
                   listType: listType, onTap: () => _onItemClick(item)),
             if (_parentesOK)...[
               Divider(color: OkiTheme.accent),
@@ -73,21 +73,21 @@ class _MyState extends State<AnimeCollectionPage> {
               for (var item in parentes)
                 AnimeItemList(
                     item,
-                    trailing: Layouts.teste(item, user),
+                    trailing: Layouts.markerCollection(item, user),
                     listType: listType, onTap: () => _onParentClick(item)
                 ),
               for (var item in parentesItem)
                 AnimeItemLayout(
                     item,
-                    trailing: Layouts.teste2(item, user),
+                    trailing: Layouts.markerAnime(item, user),
                     listType: listType, onTap: () => _onParentItemClick(item)
                 ),
             ],
-            Layouts.adsFooter()
+            AdsFooter()
           ]),
         ),
-        floatingActionButton: _inProgress ? Layouts.adsFooter(CircularProgressIndicator()) :
-        !_inEditMode ? Layouts.adsFooter(FloatingActionButton.extended(
+        floatingActionButton: _inProgress ? AdsFooter(child: CircularProgressIndicator()) :
+        !_inEditMode ? AdsFooter(child: FloatingActionButton.extended(
             label: Icon(Icons.edit),
             onPressed: () {
               setState(() {
@@ -134,7 +134,8 @@ class _MyState extends State<AnimeCollectionPage> {
   }
 
   void _onItemClick(Anime item) async {
-    var result = await Navigate.to(context, AnimePage(listType, anime: item));
+    int init = animeCollection.itemsToList.indexOf(item);
+    var result = await Navigate.to(context, AnimePage(anime: animeCollection, listType: listType, inicialItem: init));
     setState(() {});
     if (result != null && result is Function)
       result(context, animeCollection);
@@ -146,13 +147,14 @@ class _MyState extends State<AnimeCollectionPage> {
   }
 
   void _onParentItemClick(Anime item) {
-    Navigate.to(context, AnimePage(listType, anime: item));
+    int init = animeCollection.itemsToList.indexOf(item);
+    Navigate.to(context, AnimePage(anime: animeCollection, listType: listType, inicialItem: init));
   }
 
   void _moverAnime(Anime item) async {
     _setInProgress(true);
     if (await Aplication.moverAnime(context, item, listType)) {
-      await FirebaseOki.atualizarUser();
+      await FirebaseOki.userOki.atualizar();
       setState(() {
         _inEditMode = false;
         if (!listType.isOnline)

@@ -16,11 +16,11 @@ class MyWidgetState extends State<ConfigPage> {
   bool inProgress = false;
   bool _showEcchi = false;
 
-  List<DropdownMenuItem<String>> _dropDownThema;
+  // List<DropdownMenuItem<String>> _dropDownThema;
   String _currentThema;
 
   ///Ordem de listagem dos animes
-  List<DropdownMenuItem<String>> _dropDownOrdem;
+  // List<DropdownMenuItem<String>> _dropDownOrdem;
   String _currentOrdem;
 
   //endregion
@@ -32,8 +32,8 @@ class MyWidgetState extends State<ConfigPage> {
     super.initState();
     _isAdmin = FirebaseOki.isAdmin;
     _showEcchi = Config.showEcchi;
-    _dropDownThema = Layouts.dropDownMenuItems(Arrays.thema);
-    _dropDownOrdem = Layouts.dropDownMenuItems(Arrays.ordem);
+    // _dropDownThema = Layouts.dropDownMenuItems(Arrays.thema);
+    // _dropDownOrdem = Layouts.dropDownMenuItems(Arrays.ordem);
     _currentThema = Config.theme;
     _currentOrdem = Config.listOrder;
   }
@@ -85,9 +85,9 @@ class MyWidgetState extends State<ConfigPage> {
                       children: [
                         Text('Tema'),
                         Padding(padding: EdgeInsets.only(right: 10)),
-                        DropdownButton(
+                        DropDownMenu(
                           value: _currentThema,
-                          items: _dropDownThema,
+                          items: Arrays.thema,
                           onChanged: _onThemeChanged,
                         ),
                       ],
@@ -97,9 +97,9 @@ class MyWidgetState extends State<ConfigPage> {
                       children: [
                         Text('Ordem de listagem'),
                         Padding(padding: EdgeInsets.only(right: 10)),
-                        DropdownButton(
+                        DropDownMenu(
                           value: _currentOrdem,
-                          items: _dropDownOrdem,
+                          items: Arrays.ordem,
                           onChanged: _onOrderChanged,
                         ),
                         IconButton(
@@ -184,11 +184,11 @@ class MyWidgetState extends State<ConfigPage> {
                 },
               ),
             ],
-            Layouts.adsFooter()
+            AdsFooter()
           ],
         ),
       ),
-      floatingActionButton: inProgress ? Layouts.adsFooter(CircularProgressIndicator()) : null,
+      floatingActionButton: inProgress ? AdsFooter(child: CircularProgressIndicator()) : null,
     );
   }
 

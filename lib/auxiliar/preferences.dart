@@ -34,6 +34,7 @@ class PreferencesKey {
   static const String FILTRO = 'filtro';
   static const String TUTORIAL = 'tutorial_01';
   static const String ITEM_LIST_MODE = 'itemListMode';
+  static const String CURRENT_TAB_IN_MAIN_PAGE = 'CURRENT_TAB_IN_MAIN_PAGE';
   static const String GENEROS = 'generos';
   static const String SHOW_ECCHI = 'show_ecchi';
 

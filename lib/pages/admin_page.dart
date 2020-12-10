@@ -21,17 +21,22 @@ class _MyState extends State<AdminPage> {
     return Scaffold(
       appBar: AppBar(title: Text(Titles.ADMIN, style: Styles.titleText)),
       body: SingleChildScrollView(
+        padding: Layouts.adsPadding(10),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             ElevatedButton(
               child: Text('Atualizar Notas dos Animes'),
               onPressed: _atualizarNotasAnimes,
             ),
-            Layouts.adsFooter()
+            ElevatedButton(
+              child: Text('Excluir Testes do banco de dados'),
+              onPressed: _delete,
+            ),
           ],
         ),
       ),
-      floatingActionButton: _inProgress ? Layouts.adsFooter(CircularProgressIndicator()) : null,
+      floatingActionButton: _inProgress ? AdsFooter(child: CircularProgressIndicator()) : null,
     );
   }
 
@@ -44,46 +49,47 @@ class _MyState extends State<AdminPage> {
 
     await OnlineData.baixarLista();
     await Admin.baixarUsers();
-/*
 
     //Criar uma lista de classificações juntando todas as classificações de todos os animes
     //Ex: List<idAnime, <historia, list<valores>>>
     //region List<Categorias> animes = [];
-    List<Categorias> animes = [];
+    List<Categorias> categorias = [];
 
-    for (Anime item in getOnlineData.dataList) {
+    for (Anime item in OnlineData.dataAnimes) {
       String itemId = item.id;
       item.classificacao.votos = 0;
 
-      for (User user in getAdmin.usersList) {
-        Anime itemUser = user.concluidos[itemId];
+      for (UserOki user in Admin.usersList) {
+        if (user.concluidos.length == 0) continue;
 
-        if (itemUser == null)
-          continue;
-        if (itemUser.classificacao.mediaValues(tudo: true).length == 0)
+        AnimeCollection collection = user.animes[item.idPai];
+        if (collection == null) continue;
+        Anime itemUser = collection.items[itemId];
+
+        if (itemUser == null || itemUser.classificacao.mediaValues(tudo: true).length == 0)
           continue;
 
-        if (animes.where((x) => x.anime.id == itemUser.id).length == 0) {
-          animes.add(Categorias(itemUser));
+        if (categorias.where((x) => x.anime.id == itemUser.id).length == 0) {
+          categorias.add(Categorias(itemUser));
         }
-        var anime = animes.firstWhere((x) => x.anime.id == itemId, orElse: null);
+        var categoria = categorias.firstWhere((x) => x.anime.id == itemId, orElse: null);
 
         var c = itemUser.classificacao;
-        if (c.historia >= 0) anime.historia.add(c.historia);
-        if (c.fim >= 0) anime.fim.add(c.fim);
-        if (c.animacao >= 0) anime.animacao.add(c.animacao);
-        if (c.ecchi >= 0) anime.ecchi.add(c.ecchi);
-        if (c.comedia >= 0) anime.comedia.add(c.comedia);
-        if (c.romance >= 0) anime.romance.add(c.romance);
-        if (c.drama >= 0) anime.drama.add(c.drama);
-        if (c.acao >= 0) anime.acao.add(c.acao);
-        anime.votos++;
+        if (c.historia >= 0) categoria.historia.add(c.historia);
+        if (c.fim >= 0) categoria.fim.add(c.fim);
+        if (c.animacao >= 0) categoria.animacao.add(c.animacao);
+        if (c.ecchi >= 0) categoria.ecchi.add(c.ecchi);
+        if (c.comedia >= 0) categoria.comedia.add(c.comedia);
+        if (c.romance >= 0) categoria.romance.add(c.romance);
+        if (c.drama >= 0) categoria.drama.add(c.drama);
+        if (c.acao >= 0) categoria.acao.add(c.acao);
+        categoria.votos++;
       }
     }
     //endregion
 
     //region Somar todos os valores de cada anime
-    for (var anime in animes) {
+    for (var categoria in categorias) {
       //region Variaveis
       double defValue = -1.0;
       double historiaV = defValue;
@@ -99,34 +105,35 @@ class _MyState extends State<AdminPage> {
       //endregion
 
       //region Somar
-      for (var i in anime.historia) historiaV = (historiaV == defValue) ? i : historiaV + i;
-      for (var i in anime.fim) fimV = (fimV == defValue) ? i : fimV + i;
-      for (var i in anime.animacao) animacaoV = (animacaoV == defValue) ? i : animacaoV + i;
-      for (var i in anime.ecchi) ecchiV = (ecchiV == defValue) ? i : ecchiV + i;
-      for (var i in anime.comedia) comediaV = (comediaV == defValue) ? i : comediaV + i;
-      for (var i in anime.romance) romanceV = (romanceV == defValue) ? i : romanceV + i;
-      for (var i in anime.drama) dramaV = (dramaV == defValue) ? i : dramaV + i;
-      for (var i in anime.acao) acaoV = (acaoV == defValue) ? i : acaoV + i;
-      for (var i in anime.terror) terrorV = (terrorV == defValue) ? i : terrorV + i;
-      for (var i in anime.aventura) aventuraV = (aventuraV == defValue) ? i : aventuraV + i;
+      for (var i in categoria.historia) historiaV = (historiaV == defValue) ? i : historiaV + i;
+      for (var i in categoria.fim) fimV = (fimV == defValue) ? i : fimV + i;
+      for (var i in categoria.animacao) animacaoV = (animacaoV == defValue) ? i : animacaoV + i;
+      for (var i in categoria.ecchi) ecchiV = (ecchiV == defValue) ? i : ecchiV + i;
+      for (var i in categoria.comedia) comediaV = (comediaV == defValue) ? i : comediaV + i;
+      for (var i in categoria.romance) romanceV = (romanceV == defValue) ? i : romanceV + i;
+      for (var i in categoria.drama) dramaV = (dramaV == defValue) ? i : dramaV + i;
+      for (var i in categoria.acao) acaoV = (acaoV == defValue) ? i : acaoV + i;
+      for (var i in categoria.terror) terrorV = (terrorV == defValue) ? i : terrorV + i;
+      for (var i in categoria.aventura) aventuraV = (aventuraV == defValue) ? i : aventuraV + i;
       //endregion
 
       //region Calcular a média
-      if (anime.historia.length > 0) historiaV = historiaV/ anime.historia.length;
-      if (anime.fim.length > 0) fimV = fimV/ anime.fim.length;
-      if (anime.animacao.length > 0) animacaoV = animacaoV/ anime.animacao.length;
-      if (anime.ecchi.length > 0) ecchiV = ecchiV/ anime.ecchi.length;
-      if (anime.comedia.length > 0) comediaV = comediaV/ anime.comedia.length;
-      if (anime.romance.length > 0) romanceV = romanceV/ anime.romance.length;
-      if (anime.drama.length > 0) dramaV = dramaV/ anime.drama.length;
-      if (anime.acao.length > 0) acaoV = acaoV/ anime.acao.length;
-      if (anime.aventura.length > 0) aventuraV = aventuraV/ anime.aventura.length;
-      if (anime.terror.length > 0) terrorV = terrorV/ anime.terror.length;
+      if (categoria.historia.length > 0) historiaV = historiaV/ categoria.historia.length;
+      if (categoria.fim.length > 0) fimV = fimV/ categoria.fim.length;
+      if (categoria.animacao.length > 0) animacaoV = animacaoV/ categoria.animacao.length;
+      if (categoria.ecchi.length > 0) ecchiV = ecchiV/ categoria.ecchi.length;
+      if (categoria.comedia.length > 0) comediaV = comediaV/ categoria.comedia.length;
+      if (categoria.romance.length > 0) romanceV = romanceV/ categoria.romance.length;
+      if (categoria.drama.length > 0) dramaV = dramaV/ categoria.drama.length;
+      if (categoria.acao.length > 0) acaoV = acaoV/ categoria.acao.length;
+      if (categoria.aventura.length > 0) aventuraV = aventuraV/ categoria.aventura.length;
+      if (categoria.terror.length > 0) terrorV = terrorV/ categoria.terror.length;
       //endregion
 
       //region Atribuir os novos valores ao anime
-      String itemId = anime.anime.id;
-      var c = getOnlineData.data[itemId].classificacao;
+      String itemId = categoria.anime.id;
+      String itemIdPai = categoria.anime.idPai;
+      var c = OnlineData.getAsync(itemIdPai).items[itemId].classificacao;
       c.historia = historiaV;
       c.fim = fimV;
       c.animacao = animacaoV;
@@ -143,12 +150,22 @@ class _MyState extends State<AdminPage> {
     //endregion
 
     //Salvar todos os valores
-    for (Anime item in getOnlineData.dataList) {
-      item.salvarAdmin();
+    for (Anime item in OnlineData.dataAnimes) {
+      item.salvarClassificacao();
     }
-    Log.toast('Dados salvos');
+    Log.snack('Dados salvos');
     Log.d(TAG, 'atualizarAnimes', 'OK');
-*/
+
+    _setInProgress(false);
+  }
+
+  void _delete() async {
+    _setInProgress(true);
+
+    await FirebaseOki.database
+        .child(FirebaseChild.TESTE)
+        .remove().then((value) => Log.snack('Delete OK'))
+        .catchError((e) => Log.snack('Delete Fail', isError: true));
 
     _setInProgress(false);
   }

@@ -114,9 +114,9 @@ class MenuMain {
 }
 
 class Arrays {
-  static List thema = [OkiThemeMode.sistema, OkiThemeMode.claro, OkiThemeMode.escuro];
+  static List<String> thema = [OkiThemeMode.sistema, OkiThemeMode.claro, OkiThemeMode.escuro];
 
   ///Ordem de listagem dos animes
-  static List ordem = [ListOrder.nome, ListOrder.dataAsc, ListOrder.dataDsc];
+  static List<String> ordem = [ListOrder.nome, ListOrder.dataAsc, ListOrder.dataDsc];
   static List<String> menuMain = [MenuMain.config, MenuMain.sobre, MenuMain.logout];
 }

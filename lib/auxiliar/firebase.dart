@@ -70,7 +70,7 @@ class FirebaseOki {
     final User user = (await _auth.signInWithCredential(credential)).user;
     Log.d(TAG, 'googleAuth OK', user.displayName);
     _user = user;
-    atualizarUser();
+    _atualizarUser();
     return true;
   }
 
@@ -115,7 +115,7 @@ class FirebaseOki {
       if (_user == null)
         throw new Exception(firebaseUser_Null);
 
-      atualizarUser();
+      _atualizarUser();
       Admin.checkAdmin();
       Log.d(TAG, 'init', 'Firebase OK');
     } catch (e) {
@@ -130,7 +130,7 @@ class FirebaseOki {
     await _auth.signOut();
   }
 
-  static Future<void> atualizarUser() async {
+  static Future<void> _atualizarUser() async {
     String uid = _user?.uid;
     if (uid == null) return;
     UserOki item = await _baixarUser(uid);
@@ -206,6 +206,7 @@ class FirebaseOki {
 }
 
 class FirebaseChild {
+  static const String TESTE = 'teste';
   static const String USUARIO = 'usuario';
   static const String DADOS = '_dados';
   static const String DESEJOS = 'assistindo';

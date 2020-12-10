@@ -15,12 +15,7 @@ class MainPage extends StatefulWidget {
 class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
 
   //region Variaveis
-
   static const String TAG = 'MainPage';
-
-  bool _isIniciado = false;
-  bool _isOnline = false;
-  bool _mostrarLog = false;
 
   TabController _tabController;
   String _currentTitle = Titles.main_page[0];
@@ -42,36 +37,29 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
   void initState() {
     super.initState();
     _init();
+    _loadAdMob();
   }
 
   @override
   Widget build(BuildContext context) {
     //region Variaveis
 
+    bool _isOnline = RunTime.isOnline;
     bool isListMode = Config.itemListMode.isListMode;
 
-    if (!_isIniciado) return SplashScreen(mostrarLog: _mostrarLog);
-
     var tintColor = _isOnline ? OkiTheme.tint : OkiTheme.textError;
-
-    final List<Widget> tabs = [
+    List<Widget> tabs = [
       Tooltip(message: Titles.main_page[0], child: Tab(icon: Icon(Icons.list, color: tintColor))),
       Tooltip(message: Titles.main_page[1], child: Tab(icon: Icon(Icons.favorite, color: tintColor))),
       Tooltip(message: Titles.main_page[2], child: Tab(icon: Icon(Icons.offline_pin, color: tintColor))),
       Tooltip(message: Titles.main_page[3], child: Tab(icon: Icon(Icons.online_prediction, color: tintColor))),
     ];
-
-    final assistindoFragment = AnimesFragment(context, ListType.assistindo);
-    final favoritosFragment = AnimesFragment(context, ListType.favoritos);
-    final concluidosFragment = AnimesFragment(context, ListType.concluidos);
-    final onlineFragment = AnimesFragment(context, ListType.online);
-
-    final List<Widget> tabViews = [assistindoFragment, favoritosFragment, concluidosFragment, onlineFragment];
-
-    if (_tabController == null) {
-      _tabController = TabController(length: tabs.length, initialIndex: 0, vsync: this);
-      _tabController.addListener(() => _onPageChanged(_tabController.index));
-    }
+    List<Widget> tabViews = [
+      AnimesFragment(context, ListType.assistindo),
+      AnimesFragment(context, ListType.favoritos),
+      AnimesFragment(context, ListType.concluidos),
+      AnimesFragment(context, ListType.online),
+    ];
 
     if (!_isOnline) Config.itemListMode = ListMode.list;
 
@@ -132,46 +120,13 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
 
   //region Metodos
 
-  void _init() async {
-    _checkInitTimeout();
-    await Aplication.init();
-    await FirebaseOki.init();
-
-    //region OfflineData pode ter uma lista offline, se tiver a lista a inicializacão é mais rapida
-    bool onlineDataBaixados = false;
-    if (OnlineData.data.isEmpty) {
-      await OnlineData.baixarLista();
-      onlineDataBaixados = true;
+  void _init() {
+    if (_tabController == null) {
+      int initIndex = Config.currentTabInMainPage;
+      _tabController = TabController(length: 4, initialIndex: initIndex, vsync: this);
+      _tabController.addListener(_onPageChanged);
     }
-    //endregion
-
-    if (!FirebaseOki.isLogado) {
-      Navigate.toReplacement(context, LoginPage());
-      return;
-    }
-
-    setState(() {
-      _mostrarLog = false;
-      _isIniciado = _isOnline = RunTime.isOnline = true;
-    });
-    if (!onlineDataBaixados)
-      await OnlineData.baixarLista();
-    _loadAdMob();
-  }
-
-  Future _checkInitTimeout() async {
-    await Future.delayed(Duration(seconds: 10));
-    if (!mounted) return;
-    if (!_isIniciado) {
-      setState(() {
-        _mostrarLog = true;
-      });
-    }
-    await Future.delayed(Duration(seconds: 5));
-    if (!mounted) return;
-    setState(() {
-      _isIniciado = true;
-    });
+    _onPageChanged();
   }
 
   void _onMenuItemSelected(String value) async {
@@ -189,7 +144,8 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
     }
   }
 
-  void _onPageChanged(int index) {
+  void _onPageChanged() {
+    int index = _tabController.index;
     String quantAnimes = '';
     final user = FirebaseOki.userOki;
     switch(index) {
@@ -206,6 +162,7 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
     setState(() {
       _currentTitle = Titles.main_page[index] + (quantAnimes.isEmpty ? '' : ' ($quantAnimes)');
     });
+    Config.currentTabInMainPage = index;
   }
 
   void _loadAdMob() async {
@@ -317,7 +274,7 @@ class DataSearch extends SearchDelegate<String> {
             item,
             listType: ListType.online,
             showSeconfName: true,
-            trailing: Layouts.teste2(item, user),
+            trailing: Layouts.markerAnime(item, user),
             onTap: () => _onItemTap(context, item));
       },
       itemCount: list.length,
@@ -325,7 +282,10 @@ class DataSearch extends SearchDelegate<String> {
   }
 
   void _onItemTap(BuildContext context, Anime item) async {
-      await Navigate.to(context, AnimePage(ListType.online, anime: item));
+    var collection = OnlineData.getAsync(item.idPai);
+    if (collection != null) {
+      int init = collection.itemsToList.indexOf(item);
+      await Navigate.to(context, AnimePage(anime: collection, listType: ListType.online, inicialItem: init));
+    }
   }
-
 }

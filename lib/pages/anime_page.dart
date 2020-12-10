@@ -3,18 +3,118 @@ import 'package:anime/model/import.dart';
 import 'package:anime/res/import.dart';
 
 class AnimePage extends StatefulWidget {
+  final AnimeCollection anime;
+  final ListType listType;
+  final int inicialItem;
+  AnimePage({@required this.anime, @required  this.listType, this.inicialItem = 0});
+  @override
+  _MyState createState() => _MyState(anime, listType, inicialItem);
+}
+class _MyState extends State<AnimePage> with SingleTickerProviderStateMixin {
+
+  _MyState(this.animeCollection, this.listType, this.inicialItem);
+
+  //region variaveis
+  final AnimeCollection animeCollection;
+  final ListType listType;
+  final int inicialItem;
+
+  final List<Widget> tabViews = [];
+
+  TabController tabController;
+  Anime currentItem;
+
+  String title = '';
+  //endregion
+
+  //region overrides
+
+  @override
+  void dispose() {
+    super.dispose();
+    tabController?.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    for (Anime item in animeCollection.itemsToList)
+      tabViews.add(_AnimeFragment(item, listType));
+
+    currentItem = animeCollection.getItem(inicialItem);
+    tabController = TabController(
+      vsync: this,
+      initialIndex: inicialItem,
+      length: animeCollection.items.length,
+    );
+    tabController.addListener(_onTabChanged);
+
+    _setTitle(inicialItem);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        elevation: 0.1,
+          title: Text(title, style: Styles.titleText)
+      ),
+      body: TabBarView(
+        controller: tabController,
+        children: tabViews,
+      ),
+    );
+  }
+
+  //endregion
+
+  //region Metodos
+
+  _onTabChanged() {
+    int index = tabController.index;
+    currentItem = animeCollection.getItem(index);
+    _setTitle(index);
+  }
+
+  _setTitle(int index) {
+    setState(() {
+      title = '$_getTitle ${index + 1}/${animeCollection.items.length}';
+    });
+  }
+
+  String get _getTitle {
+    switch(listType.value) {
+      case ListType.assistindoValue:
+        return Titles.DESEJOS;
+        break;
+      case ListType.concluidosValue:
+        return Titles.CONCLUIDOS;
+        break;
+      case ListType.favoritosValue:
+        return Titles.FAVORITOS;
+        break;
+      default:
+        return Titles.ONLINE;
+    }
+  }
+
+  //endregion
+
+}
+
+class _AnimeFragment extends StatefulWidget {
   final Anime anime;
   final ListType listType;
-  AnimePage(this.listType, {this.anime});
+  _AnimeFragment(this.anime, this.listType);
   @override
-  _MyState createState() => _MyState(anime, listType);
+  _MyStateFragment createState() => _MyStateFragment(anime, listType);
 }
-class _MyState extends State<AnimePage> {
+class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClientMixin<_AnimeFragment> {
 
-  _MyState(Anime anime, this.listType) {
+  _MyStateFragment(Anime anime, this.listType) {
     this._anime = new Anime.fromJson(anime.toJson());
     _isOnline = listType.isOnline;
-    _perguntarSalvar = listType.isOnline;
+    _perguntarSalvar = _isOnline;
     if (_isOnline) _isAvancado = true;
   }
 
@@ -74,18 +174,18 @@ class _MyState extends State<AnimePage> {
   //region overrides
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   void initState() {
     super.initState();
     if (anime != null)
       _preencherDados(anime);
-//    else if (_anime != null)
-//      _preencherDados(_anime);
   }
 
   @override
   Widget build(BuildContext context) {
-    String pageTitle = _getTitle();
-
+    super.build(context);
     return WillPopScope(
       onWillPop: () async {
         if (_inEditMode) {
@@ -97,165 +197,179 @@ class _MyState extends State<AnimePage> {
         else return true;
       },
       child: Scaffold(
-        appBar: AppBar(
-            title: Text(pageTitle, style: Styles.titleText),
-          actions: [
-            if (_isOnline)...[
-              IconButton(
-                tooltip: MyTexts.REPORTAR_PROBLEMA,
-                icon: Icon(Icons.bug_report),
-                onPressed: _onMenuReportBugClick,
-              ),
-              IconButton(
-                tooltip: Strings.EDITAR,
-                icon: Icon(Icons.edit),
-                onPressed: _onMenuEditClick,
-              ),
-            ]
-            else ...[
-              if (_inEditMode)...[
-//                IconButton(
-//                  icon: Icon(_isAvancado ? Icons.visibility : Icons.visibility_off),
-//                  tooltip: _isAvancado ? MyStrings.SIMPLES : MyStrings.AVANCADO,
-//                  onPressed: () {
-//                    setState(() {
-//                      _isAvancado = !_isAvancado;
-//                    });
-//                  },
-//                ),
-                IconButton(
-                  icon: Icon(Icons.refresh),
-                  tooltip: MyTexts.LIMPAR_TUDO,
-                  onPressed: _resetValores,
-                ),
-              ]
-              else...[
-                IconButton(
-                  tooltip: Strings.EXCLUIR,
-                  icon: Icon(Icons.delete_forever),
-                  onPressed: () => _deleteItem(anime),
-                ),
-                IconButton(
-                  tooltip: Strings.MOVER,
-                  icon: Icon(Icons.open_in_browser),
-                  onPressed: () => _onMoverItem(anime),
-                ),
-                IconButton(
-                  tooltip: Strings.EDITAR,
-                  icon: Icon(Icons.edit),
-                  onPressed: () {
-                    setState(() {
-                      _inEditMode = true;
-//                      _isReadOnly = false;
-                    });
-                  },
-                ),
-              ]
-            ],
-          ],
-        ),
+        // appBar: AppBar(
+        //   automaticallyImplyLeading: false,
+        //   backgroundColor: OkiTheme.background,
+        //   // title: Text(pageTitle, style: Styles.titleText),
+        //   // flexibleSpace: Text(pageTitle, style: Styles.titleText),
+        //   actions: [
+        //
+        //   ],
+        // ),
         body: SingleChildScrollView(
-          child: Column(
+          child: Stack(
             children: [
-              if (_fotoUrl.isNotEmpty)
-                _widgetFoto(),
-              _headInfo(),
+              Column(
+                children: [
+                  if (_fotoUrl.isNotEmpty)
+                    _widgetFoto(),
+                  _headInfo(),
 
-              Padding(
-                padding: EdgeInsets.fromLTRB(10, 10, 10, 70),
-                child: Column(
-                  children: [
-                    if (_sinopce.isNotEmpty)...[
-                      Container(
-                          alignment: Alignment.centerLeft,
-                          child: FlatButton(
-                            child: Text('${Strings.SINOPSE}: ${_showSinopse ? 'ocultar': 'mostrar'}'),
-                            onPressed: _switchSinopse,
-                          )
-                      ),
-                      if(_showSinopse)...[
-                        Container(
-                          padding: EdgeInsets.all(5),
-                          child: Text(_sinopce),
-                        ),
-                        if (_aviso.isNotEmpty)
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(10, 10, 10, 70),
+                    child: Column(
+                      children: [
+                        if (_sinopce.isNotEmpty)...[
                           Container(
-                            padding: EdgeInsets.all(5),
-                            child: Text('Info: $_aviso', style: TextStyle(color: Colors.red)),
+                              alignment: Alignment.centerLeft,
+                              child: FlatButton(
+                                child: Text('${Strings.SINOPSE}: ${_showSinopse ? 'ocultar': 'mostrar'}'),
+                                onPressed: _switchSinopse,
+                              )
                           ),
-                      ]
-                    ],
+                          if(_showSinopse)...[
+                            Container(
+                              padding: EdgeInsets.all(5),
+                              child: Text(_sinopce),
+                            ),
+                            if (_aviso.isNotEmpty)
+                              Container(
+                                padding: EdgeInsets.all(5),
+                                child: Text('Info: $_aviso', style: TextStyle(color: Colors.red)),
+                              ),
+                          ]
+                        ],
 
-                    if(_media >= 0)
-                      Container(
-                        alignment: Alignment.centerLeft,
-                        padding: EdgeInsets.all(10),
-                        child: Text('${Strings.MEDIA}: $_media'),
-                      ),
-                    if (_votos > 0)
-                      Container(
-                        alignment: Alignment.centerLeft,
-                        padding: EdgeInsets.all(5),
-                        child: Text('${Strings.VOTOS}: $_votos'),
-                      ),
-                    if(_link.isNotEmpty && FirebaseOki.isAdmin)
-                      Container(
-                        alignment: Alignment.centerLeft,
-                        padding: EdgeInsets.all(5),
-                        child: ElevatedButton(
-                          child: Text(_linkProvider),
-                          onPressed: _onOpenLinkClick,
-                        ),
-                      ),
-                    if (_isAvancado)...[
-                      Divider(),
-                      if (!_isOnline && _inEditMode)...[
-                        Text(Strings.AVANCADO),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(MyTexts.EDICAO_OBS_1),
-                        ),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(MyTexts.EDICAO_OBS_2),
-                        ),
+                        if(_media >= 0)
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.all(10),
+                            child: Text('${Strings.MEDIA}: $_media'),
+                          ),
+                        if (_votos > 0)
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.all(5),
+                            child: Text('${Strings.VOTOS}: $_votos'),
+                          ),
+                        if(_link.isNotEmpty && FirebaseOki.isAdmin)
+                          Container(
+                            alignment: Alignment.centerLeft,
+                            padding: EdgeInsets.all(5),
+                            child: ElevatedButton(
+                              child: Text(_linkProvider),
+                              onPressed: _onOpenLinkClick,
+                            ),
+                          ),
+                        if (_isAvancado)...[
+                          Divider(),
+                          if (!_isOnline && _inEditMode)...[
+                            Text(Strings.AVANCADO),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(MyTexts.EDICAO_OBS_1),
+                            ),
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(MyTexts.EDICAO_OBS_2),
+                            ),
+                          ],
+                          if (_inEditMode || _animacaoValue >= 0)
+                            _customSlider(_animacaoValue, label: Strings.ANIMACAO, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_animacaoValue = value;});}),
+
+                          if (_inEditMode || _historiaValue >= 0)
+                            _customSlider(_historiaValue, label: Strings.HIRTORIA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_historiaValue = value;});}),
+
+                          if (_inEditMode || _ecchiValue >= 0)
+                            _customSlider(_ecchiValue, label: Strings.ECCHI, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_ecchiValue = value;});}),
+
+                          if (_inEditMode || _comediaValue >= 0)
+                            _customSlider(_comediaValue, label: Strings.COMEDIA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_comediaValue = value;});}),
+
+                          if (_inEditMode || _romanceValue >= 0)
+                            _customSlider(_romanceValue, label: Strings.ROMANCE, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_romanceValue = value;});}),
+
+                          if (_inEditMode || _dramaValue >= 0)
+                            _customSlider(_dramaValue, label: Strings.DRAMA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_dramaValue = value;});}),
+
+                          if (_inEditMode || _terrorValue >= 0)
+                            _customSlider(_terrorValue, label: Strings.TERROR, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_terrorValue = value;});}),
+
+                          if (_inEditMode || _acaoValue >= 0)
+                            _customSlider(_acaoValue, label: Strings.ACAO, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_acaoValue = value;});}),
+
+                          if (_inEditMode || _aventuraValue >= 0)
+                            _customSlider(_aventuraValue, label: Strings.AVENTURA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_aventuraValue = value;});}),
+                        ],
                       ],
-                      if (_inEditMode || _animacaoValue >= 0)
-                        _customSlider(_animacaoValue, label: Strings.ANIMACAO, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_animacaoValue = value;});}),
-
-                      if (_inEditMode || _historiaValue >= 0)
-                        _customSlider(_historiaValue, label: Strings.HIRTORIA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_historiaValue = value;});}),
-
-                      if (_inEditMode || _ecchiValue >= 0)
-                        _customSlider(_ecchiValue, label: Strings.ECCHI, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_ecchiValue = value;});}),
-
-                      if (_inEditMode || _comediaValue >= 0)
-                        _customSlider(_comediaValue, label: Strings.COMEDIA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_comediaValue = value;});}),
-
-                      if (_inEditMode || _romanceValue >= 0)
-                        _customSlider(_romanceValue, label: Strings.ROMANCE, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_romanceValue = value;});}),
-
-                      if (_inEditMode || _dramaValue >= 0)
-                        _customSlider(_dramaValue, label: Strings.DRAMA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_dramaValue = value;});}),
-
-                      if (_inEditMode || _terrorValue >= 0)
-                        _customSlider(_terrorValue, label: Strings.TERROR, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_terrorValue = value;});}),
-
-                      if (_inEditMode || _acaoValue >= 0)
-                        _customSlider(_acaoValue, label: Strings.ACAO, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_acaoValue = value;});}),
-
-                      if (_inEditMode || _aventuraValue >= 0)
-                        _customSlider(_aventuraValue, label: Strings.AVENTURA, isReadOnly: !_inEditMode, onChanged: (value) {setState(() {_aventuraValue = value;});}),
+                    ),
+                  ),
+                  AdsFooter()
+                ],
+              ),
+              Container(
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: OkiTheme.textInvert(0.3),
+                      blurRadius: 30,
+                    ),
+                  ]
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_isOnline)...[
+                      IconButton(
+                        tooltip: MyTexts.REPORTAR_PROBLEMA,
+                        icon: Icon(Icons.bug_report),
+                        onPressed: _onMenuReportBugClick,
+                      ),
+                      IconButton(
+                        tooltip: Strings.EDITAR,
+                        icon: Icon(Icons.edit),
+                        onPressed: _onMenuEditClick,
+                      ),
+                    ]
+                    else ...[
+                      if (_inEditMode)...[
+                        IconButton(
+                          icon: Icon(Icons.refresh),
+                          tooltip: MyTexts.LIMPAR_TUDO,
+                          onPressed: _resetValores,
+                        ),
+                      ]
+                      else...[
+                        IconButton(
+                          tooltip: Strings.EXCLUIR,
+                          icon: Icon(Icons.delete_forever),
+                          onPressed: () => _deleteItem(anime),
+                        ),
+                        IconButton(
+                          tooltip: Strings.MOVER,
+                          icon: Icon(Icons.open_in_browser),
+                          onPressed: () => _onMoverItem(anime),
+                        ),
+                        IconButton(
+                          tooltip: Strings.EDITAR,
+                          icon: Icon(Icons.edit),
+                          onPressed: () {
+                            setState(() {
+                              _inEditMode = true;
+//                      _isReadOnly = false;
+                            });
+                          },
+                        ),
+                      ]
                     ],
                   ],
                 ),
               ),
-              Layouts.adsFooter()
             ],
           ),
         ),
-        floatingActionButton: _inProgress ? Layouts.adsFooter(CircularProgressIndicator()) :
-        _inEditMode ? Layouts.adsFooter(FloatingActionButton(
+        floatingActionButton: _inProgress ? AdsFooter(child: CircularProgressIndicator()) :
+        _inEditMode ? AdsFooter(child: FloatingActionButton(
           child: Icon(Icons.save),
           onPressed: _saveManager,
         )) :
@@ -299,7 +413,7 @@ class _MyState extends State<AnimePage> {
           padding: paddingH,
           child: Row(children: [
             Text('${Strings.TIPO}: $_tipo   '),
-            Layouts.getIcon(_tipo),
+            Layouts.getAnimeTypeIcon(_tipo),
           ]),
         ),
         Container(
@@ -445,7 +559,7 @@ class _MyState extends State<AnimePage> {
 
       if (RunTime.isOnline) {
         await item.salvar(listType);
-        await FirebaseOki.atualizarUser();
+        await FirebaseOki.userOki.atualizar();
       } else {
         item.salvar(listType);
         Log.snack('Você está Offline', isError: true);
@@ -502,7 +616,7 @@ class _MyState extends State<AnimePage> {
 
       _setInProgress(true);
       if (await item.delete(listType, deleteAll: deleteAll)) {
-        await FirebaseOki.atualizarUser();
+        await FirebaseOki.userOki.atualizar();
         RunTime.updateFragment(listType);
         Navigator.pop(context, _voidRetornoOnDelete);
       }
@@ -643,7 +757,7 @@ class _MyState extends State<AnimePage> {
   void _onMoverItem(Anime item) async {
     _setInProgress(true);
     if (await Aplication.moverAnime(context, anime, listType)) {
-      await FirebaseOki.atualizarUser();
+      await FirebaseOki.userOki.atualizar();
       Navigator.pop(context);
     }
     _setInProgress(false);
@@ -656,22 +770,6 @@ class _MyState extends State<AnimePage> {
     });
     if (animeCollection.items.length == 0)
       Navigator.pop(context);
-  }
-
-  String _getTitle() {
-    switch(listType.value) {
-      case ListType.assistindoValue:
-        return Titles.DESEJOS;
-        break;
-      case ListType.concluidosValue:
-        return Titles.CONCLUIDOS;
-        break;
-      case ListType.favoritosValue:
-        return Titles.FAVORITOS;
-        break;
-      default:
-        return Titles.ONLINE;
-    }
   }
 
   Future<bool> _verificar(Anime item) async {

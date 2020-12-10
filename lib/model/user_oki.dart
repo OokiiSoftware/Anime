@@ -1,5 +1,4 @@
-import 'package:anime/auxiliar/logs.dart';
-import 'package:anime/auxiliar/online_data.dart';
+import 'package:anime/auxiliar/import.dart';
 import 'package:anime/model/anime.dart';
 import 'package:anime/model/user_dados.dart';
 
@@ -33,7 +32,6 @@ class UserOki {
             for (var itemAnime in itemCollection.itemsToList) {
               var temp = itemsList[key].items[itemAnime.id];
               if (temp != null) {
-                // itemAnime.id = temp.id;
                 itemAnime.desc = temp.desc;
                 itemAnime.ultimoAssistido = temp.ultimoAssistido;
                 itemAnime.classificacao = temp.classificacao;
@@ -51,13 +49,15 @@ class UserOki {
         concluidos = map['concluidos'];
       if (_mapNotNull(map['favoritos']))
         favoritos = map['favoritos'];
+      if (_mapNotNull(map['_dados']))
+        dados = UserDados.fromJson(map['_dados']);
     } catch (e) {
       Log.e(TAG, 'User.fromJson', e);
     }
   }
 
   Map<String, dynamic> toJson() => {
-//    "dados": dados.toJson(),
+   "_dados": dados.toJson(),
     "animes": animes,
     "assistindo": assistindo,
     "concluidos": concluidos,
@@ -76,6 +76,25 @@ class UserOki {
   //endregion
 
   //region Metodos
+
+  Future<bool> atualizar() async {
+    try {
+      var snapshot = await FirebaseOki.database
+          .child(FirebaseChild.USUARIO).child(dados.id).once();
+      var item = UserOki.fromJson(snapshot.value);
+      if (item != null) {
+        dados = item.dados;
+        animes = item.animes;
+        favoritos = item.favoritos;
+        assistindo = item.assistindo;
+        concluidos = item.concluidos;
+      }
+      return true;
+    } catch (e) {
+      Log.e(TAG, 'atualizar', e);
+      return false;
+    }
+  }
 
   static bool _mapNotNull(dynamic value) => value != null;
 
@@ -123,13 +142,17 @@ class UserOki {
     return list..sort((a, b) => a.nome.toLowerCase().compareTo(b.nome.toLowerCase()));
   }
 
+  Map<dynamic, dynamic> getAssistindo(String key) => assistindo[key] ?? Map();
+  Map<dynamic, dynamic> getConcluido(String key) => concluidos[key] ?? Map();
+  Map<dynamic, dynamic> getFavorito(String key) => favoritos[key] ?? Map();
+
   //endregion
 
   //region get set
 
   UserDados get dados {
     if (_dados == null)
-      _dados = UserDados();
+      _dados = UserDados(FirebaseOki.user);
     return _dados;
   }
 

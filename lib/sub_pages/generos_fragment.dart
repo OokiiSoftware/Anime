@@ -63,11 +63,11 @@ class _MyState extends State<GenerosFragment> {
                     });
                   },
                 ),
-              Layouts.adsFooter()
+              AdsFooter()
             ]
         ),
       ),
-      floatingActionButton: _mostrarFab ? Layouts.adsFooter(FloatingActionButton(
+      floatingActionButton: _mostrarFab ? AdsFooter(child: FloatingActionButton(
         child: Icon(Icons.save),
         onPressed: _onSave,
       )) : null,

@@ -32,8 +32,8 @@ class Classificacao {
 
   Classificacao.fromJson(Map<dynamic, dynamic> map) {
     if (map == null) return;
-    //A forma que eu usava antes <map[ACAO]?.toString()> não estava funcionando
-    //então fiz essa verificação <_mapNotNull>
+    //A forma que eu usava antes [map[ACAO]?.toString()] não estava funcionando
+    //então fiz essa verificação [_mapNotNull]
     if(_mapNotNull(map[ACAO])) acao = double.tryParse(map[ACAO]?.toString());
     if(_mapNotNull(map[DRAMA])) drama = double.tryParse(map[DRAMA]?.toString());
     if(_mapNotNull(map[TERROR])) terror = double.tryParse(map[TERROR]?.toString());
@@ -68,13 +68,14 @@ class Classificacao {
   double get media {
     List<double> values = mediaValues();
 
+    // Log.d('Classificacao', 'media', values);
     if (values.length == 0)
       return -1.0;
     double value = 0;
     double total = 0;
-    for (double v in values) {
+    for (double v in values)
       value += v;
-    }
+
     total = value / values.length;
     return double.parse(total.toStringAsFixed(2));
   }
@@ -106,71 +107,38 @@ class Classificacao {
   //region get set
 
   double get historia => _historia ?? -1.0;
-
-  set historia(double value) {
-    _historia = value;
-  }
+  set historia(double value) => _historia = value;
 
   double get fim => _fim ?? -1.0;
-
-  set fim(double value) {
-    _fim = value;
-  }
+  set fim(double value) => _fim = value;
 
   double get animacao => _animacao ?? -1.0;
-
-  set animacao(double value) {
-    _animacao = value;
-  }
+  set animacao(double value) => _animacao = value;
 
   double get ecchi => _ecchi ?? -1.0;
-
-  set ecchi(double value) {
-    _ecchi = value;
-  }
+  set ecchi(double value) => _ecchi = value;
 
   double get comedia => _comedia ?? -1.0;
-
-  set comedia(double value) {
-    _comedia = value;
-  }
+  set comedia(double value) => _comedia = value;
 
   double get romance => _romance ?? -1.0;
-
-  set romance(double value) {
-    _romance = value;
-  }
+  set romance(double value) => _romance = value;
 
   double get drama => _drama ?? -1.0;
-
-  set drama(double value) {
-    _drama = value;
-  }
+  set drama(double value) => _drama = value;
 
   double get acao => _acao ?? -1.0;
-
-  set acao(double value) {
-    _acao = value;
-  }
+  set acao(double value) => _acao = value;
 
   double get aventura => _aventura ?? -1.0;
-
-  set aventura(double value) {
-    _aventura = value;
-  }
+  set aventura(double value) => _aventura = value;
 
   double get terror => _terror ?? -1.0;
-
-  set terror(double value) {
-    _terror = value;
-  }
+  set terror(double value) => _terror = value;
 
   int get votos => _votos ?? null;
+  set votos(int value) => _votos = value;
 
-  set votos(int value) {
-    _votos = value;
-  }
-
-//endregion
+  //endregion
 
 }

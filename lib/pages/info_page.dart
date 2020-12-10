@@ -70,7 +70,7 @@ class _MyState extends State<InfoPage> {
             _appInfo(),
             Padding(padding: EdgeInsets.only(top: 100)),
 
-            Layouts.adsFooter()
+            AdsFooter()
           ],
         ),
       ),
@@ -125,7 +125,7 @@ class _MyState extends State<InfoPage> {
         ),
        Row(
          children: [
-           Layouts.getIcon(AnimeType.TV),
+           Layouts.getAnimeTypeIcon(AnimeType.TV),
            Padding(
              padding: padding,
              child: Text('${AnimeType.TV}: Televisão'),
@@ -134,7 +134,7 @@ class _MyState extends State<InfoPage> {
        ),
        Row(
          children: [
-           Layouts.getIcon(AnimeType.OVA),
+           Layouts.getAnimeTypeIcon(AnimeType.OVA),
            Padding(
              padding: padding,
              child: Text('${AnimeType.OVA}: Original Video Animation'),
@@ -143,7 +143,7 @@ class _MyState extends State<InfoPage> {
        ),
        Row(
          children: [
-           Layouts.getIcon(AnimeType.ONA),
+           Layouts.getAnimeTypeIcon(AnimeType.ONA),
            Padding(
              padding: padding,
              child: Text('${AnimeType.ONA}: Original Net Animation'),
@@ -152,7 +152,7 @@ class _MyState extends State<InfoPage> {
        ),
        Row(
          children: [
-           Layouts.getIcon(AnimeType.MOVIE),
+           Layouts.getAnimeTypeIcon(AnimeType.MOVIE),
            Padding(
              padding: padding,
              child: Text('${AnimeType.MOVIE}: Filme'),
@@ -161,7 +161,7 @@ class _MyState extends State<InfoPage> {
        ),
        Row(
          children: [
-           Layouts.getIcon(AnimeType.SPECIAL),
+           Layouts.getAnimeTypeIcon(AnimeType.SPECIAL),
            Padding(
              padding: padding,
              child: Text('${AnimeType.SPECIAL}: Especial'),
@@ -170,7 +170,7 @@ class _MyState extends State<InfoPage> {
        ),
        Row(
          children: [
-           Layouts.getIcon(AnimeType.INDEFINIDO),
+           Layouts.getAnimeTypeIcon(AnimeType.INDEFINIDO),
            Padding(
              padding: padding,
              child: Text('${AnimeType.INDEFINIDO}: Indefinido'),

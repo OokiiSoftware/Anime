@@ -34,9 +34,9 @@ class AnimeType {
 
 class AnimeCollection {
 
+  //region variaveis
   static const String TAG = 'AnimeCollection';
 
-  //region variaveis
   String _id;
   String _idUser;
   String _nome;
@@ -58,7 +58,8 @@ class AnimeCollection {
     novo.idUser = item.idUser;
     novo.generos.addAll(item.generos);
     novo.parentes.addAll(item.parentes);
-    novo.items.addAll(item.items);
+    for (Anime anime in item.items.values)
+      novo.items[anime.id] = Anime.fromJson(anime.toJson());
     return novo;
   }
 
@@ -145,6 +146,11 @@ class AnimeCollection {
   String get anoFim {
     var item = itemsToList[itemsToList.length-1];
     return item.ano;
+  }
+
+  Anime get ultimoAnimeTV {
+    var animesTV = itemsToList.where((e) => e.tipo == AnimeType.TV).toList();
+    return animesTV.length > 0 ? animesTV[animesTV.length -1] : getItem(items.length -1);
   }
 
   List<Anime> get itemsToList {
@@ -278,7 +284,7 @@ class Anime {
     if (mapIsNoNull(map['episodios'])) episodios = map['episodios'];
     if (mapIsNoNull(map['miniatura'])) miniatura = map['miniatura'];
     if (mapIsNoNull(map['ultimoAssistido'])) ultimoAssistido = map['ultimoAssistido'];
-    if (mapIsNoNull(map['classificacao'])) classificacao = new Classificacao.fromJson(map['classificacao']);
+    if (mapIsNoNull(map['classificacao'])) classificacao = Classificacao.fromJson(map['classificacao']);
   }
 
   bool mapIsNoNull(dynamic map) => map != null;
@@ -331,7 +337,7 @@ class Anime {
     // status = item.status;
     sinopse = item.sinopse;
     episodios = item.episodios;
-    episodios = item.episodios;
+    classificacao = item.classificacao;
   }
 
   Future<bool> complete() async {
@@ -412,22 +418,83 @@ class Anime {
       return false;
     }
   }
-  Future<bool> salvarAdmin1() async {
+  Future<bool> salvarAdmin() async {
     try {
-      return await FirebaseOki.database
-          .child(FirebaseChild.ANIMES)
-          .child(id)
-          .set(toJson()).then((value) {
-        Log.d(TAG, 'salvarAdmin', id, 'OK');
-        return true;
-      }).catchError((e) {
-        Log.e(TAG, 'salvarAdmin fail', id, e);
-        return false;
-      });
+      Map basico = {
+        'data': data,
+        'id': id,
+        'nome': nome,
+        'nome2': nome2,
+        'miniatura': miniatura,
+      };
+      Map complemento = {
+        'episodios': episodios,
+        'id': id,
+        'link': link,
+        'sinopse': sinopse,
+        'tipo': tipo,
+        'generos': generos,
+        'classificacao': classificacao.toJson(),
+      };
+
+      Future<bool> salvarBasico() async {
+        return await FirebaseOki.database
+            .child(FirebaseChild.TESTE)
+            .child(FirebaseChild.BASICO)
+            .child(idPai)
+            .child(FirebaseChild.ITEMS)
+            .child(id)
+            .set(basico).then((value) async {
+          Log.d(TAG, 'salvarAdmin', 'salvarBasico', id, 'OK');
+          return true;
+        }).catchError((e) {
+          Log.e(TAG, 'salvarAdmin fail', 'salvarBasico', id, e);
+          return false;
+        });
+      }
+      Future<bool> salvarComplemento() async {
+        return await FirebaseOki.database
+            .child(FirebaseChild.TESTE)
+            .child(FirebaseChild.COMPLEMENTO)
+            .child(idPai)
+            .child(FirebaseChild.ITEMS)
+            .child(id)
+            .set(complemento).then((value) {
+          Log.d(TAG, 'salvarAdmin', 'salvarComplemento', id, 'OK');
+          return true;
+        }).catchError((e) {
+          Log.e(TAG, 'salvarAdmin fail', 'salvarComplemento', id, e);
+          return false;
+        });
+      }
+
+      if (await salvarBasico())
+        return await salvarComplemento();
+      return false;
     } catch (e) {
       Log.e(TAG, 'salvarAdmin', id, e);
       return false;
     }
+  }
+  Future<bool> salvarClassificacao() async {
+    Future<bool> salvarComplemento() async {
+      return await FirebaseOki.database
+          .child(FirebaseChild.ANIME)
+          .child(FirebaseChild.COMPLEMENTO)
+          .child(idPai)
+          .child(FirebaseChild.ITEMS)
+          .child(id)
+          .child(FirebaseChild.CLASSIFICACAO)
+          .set(classificacao.toJson()).then((value) {
+        Log.d(TAG, 'salvarAdmin', 'salvarComplemento', id, 'OK');
+        return true;
+      }).catchError((e) {
+        Log.e(TAG, 'salvarAdmin fail', 'salvarComplemento', id, e);
+        return false;
+      });
+    }
+
+    return await salvarComplemento();
   }
 
   Future<bool> mover(ListType list, ListType old) async {

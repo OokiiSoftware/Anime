@@ -82,7 +82,7 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
                 item,
                 onTap: () => _abrirAnime(item),
                 listType: listType,
-                trailing: _isOnline ? Layouts.teste(item, user) : null
+                trailing: _isOnline ? Layouts.markerCollection(item, user) : null
             );
           },
         ) :
@@ -102,16 +102,17 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
                   onTap: () => _abrirAnime(item),
                   isOrientationPortrait: isPortrait,
                   listType: listType,
-                  footer: _isOnline ? Layouts.teste(item, user, isGrid: isPortrait) : null
+                  footer: _isOnline ? Layouts.markerCollection(item, user, isGrid: isPortrait) : null
               );
             }
         ),
         floatingActionButton: _isOnline ?
-        Layouts.adsFooter(FloatingActionButton.extended(
-          label: Text(_filtro),
-          onPressed: _alterarFiltro,
-        )) :
-        RunTime.changeListMode ? Layouts.adsFooter(CircularProgressIndicator()) :
+        AdsFooter(
+            child: FloatingActionButton.extended(
+              label: Text(_filtro),
+              onPressed: _alterarFiltro
+            )) :
+        RunTime.changeListMode ? AdsFooter(child: CircularProgressIndicator()) :
         null,
       ),
       onRefresh: _onRefresh,
@@ -129,7 +130,7 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
     if (listType.isOnline)
       await OnlineData.baixarLista();
     else
-      await FirebaseOki.atualizarUser();
+      await FirebaseOki.userOki.atualizar();
     _preencherLista(ignoreRunTime: true);
   }
 
@@ -213,11 +214,10 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
   void _abrirAnime(AnimeCollection items) async {
     AnimeCollection itemsAux = _getList(items);
 
-    if (itemsAux.items.length == 0)
-      return;
+    if (itemsAux.items.length == 0) return;
     else if (itemsAux.items.length == 1) {
-      Anime item = itemsAux.getItem(0);
-      await Navigate.to(context, AnimePage(listType, anime: item));
+      // Anime item = itemsAux.getItem(0);
+      await Navigate.to(context, AnimePage(anime: items, listType: listType));
     }
     else
       await Navigate.to(context, AnimeCollectionPage(listType, animeCollection: itemsAux));

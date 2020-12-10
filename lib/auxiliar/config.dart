@@ -23,6 +23,7 @@ class ListOrder {
 
 class Config {
   static int _itemListMode;
+  static int _currentTabInMainPage;
   static String _filtro;
   static String _generos;
   static String _listOrder;
@@ -45,25 +46,31 @@ class Config {
   static ListMode get itemListMode => ListMode(_itemListMode);
   static set itemListMode(ListMode value) {
     _itemListMode = value.value;
-    Preferences.setInt(PreferencesKey.ITEM_LIST_MODE, _itemListMode);
+    Preferences.setInt(PreferencesKey.ITEM_LIST_MODE, value.value);
+  }
+
+  static int get currentTabInMainPage => _currentTabInMainPage;
+  static set currentTabInMainPage(int value) {
+    _currentTabInMainPage = value;
+    Preferences.setInt(PreferencesKey.CURRENT_TAB_IN_MAIN_PAGE, value);
   }
 
   static String get filtro => _filtro ?? '#';
   static set filtro(String value) {
     _filtro = value;
-    Preferences.setString(PreferencesKey.FILTRO, _filtro);
+    Preferences.setString(PreferencesKey.FILTRO, value);
   }
 
   static String get generos => _generos ?? '';
   static set generos(String value) {
     _generos = value;
-    Preferences.setString(PreferencesKey.GENEROS, _generos);
+    Preferences.setString(PreferencesKey.GENEROS, value);
   }
 
   static bool get showEcchi => _showEcchi ?? false;
   static set showEcchi(bool value) {
     _showEcchi = value;
-    Preferences.setBool(PreferencesKey.SHOW_ECCHI, _showEcchi);
+    Preferences.setBool(PreferencesKey.SHOW_ECCHI, value);
   }
 
   //endregion
@@ -72,6 +79,7 @@ class Config {
     _theme = Preferences.getString(PreferencesKey.THEME, padrao: OkiThemeMode.sistema);
     _listOrder = Preferences.getString(PreferencesKey.LIST_ORDER, padrao: ListOrder.dataDsc);
     _itemListMode = Preferences.getInt(PreferencesKey.ITEM_LIST_MODE, padrao: ListMode.listValue);
+    _currentTabInMainPage = Preferences.getInt(PreferencesKey.CURRENT_TAB_IN_MAIN_PAGE, padrao: 0);
     _showEcchi = Preferences.getBool(PreferencesKey.SHOW_ECCHI, padrao: false);
     _generos = Preferences.getString(PreferencesKey.GENEROS, padrao: '');
     _filtro = Preferences.getString(PreferencesKey.FILTRO, padrao: '#');
