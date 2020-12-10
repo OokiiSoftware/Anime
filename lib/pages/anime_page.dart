@@ -115,6 +115,7 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
     this._anime = new Anime.fromJson(anime.toJson());
     _isOnline = listType.isOnline;
     _perguntarSalvar = _isOnline;
+    _IS_ONLINE_FINAL = _isOnline;
     if (_isOnline) _isAvancado = true;
   }
 
@@ -139,7 +140,9 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
 
   int _episodios = 0;
 
+  bool _IS_ONLINE_FINAL;
   bool _isOnline = false;
+  bool _isSalvo = false;
   bool _isCopiado = false;
   bool _inEditMode = false;
   bool _inProgress = false;
@@ -189,6 +192,10 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
     return WillPopScope(
       onWillPop: () async {
         if (_inEditMode) {
+          if (_IS_ONLINE_FINAL && !_isSalvo)
+            setState(() {
+              _isOnline = true;
+            });
           setState(() {
             _inEditMode = false;
           });
@@ -572,6 +579,7 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
       RunTime.updateFragment(listType);
       await OfflineData.saveOfflineData();
       Log.snack('Dados Salvos');
+      _isSalvo = true;
     }
 
     _setInProgress(false);

@@ -153,12 +153,13 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
         },
       ),
       ElevatedButton(
-        child: Text('Ajuda'),
+        child: Text('Exemplos'),
         onPressed: () {
           var title = 'Exemplos de Filtros';
           var content = [
             Text('A (Uma letra)'),
             Text('AB (Várias letras)'),
+            Text('A-Z (Listar de A a Z)'),
             Text('VAZIO ou # (Listar tudo)'),
             Text('2020 (Lançados em 2020)'),
             Text('0000 (Animes não lançados)'),
@@ -187,6 +188,15 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
         collections.addAll(OnlineData.dataList);
         break;
       default:
+        if (filtro.contains('-')) {
+          List<String> sp = filtro.split('-');
+          String init = sp[0] ?? '';
+          String fim = sp[1] ?? 'Z';
+          if (init.isEmpty) init = '';
+          if (fim.isEmpty) fim = 'Z';
+          collections.addAll(OnlineData.dataList.where((x) => (x.nome[0].compareTo(init) >= 0) && (x.nome[0].compareTo(fim) <= 0)));
+          break;
+        }
         try {
           if (filtro.length != 4) throw ('');
           int i = int.parse(filtro);
