@@ -50,14 +50,16 @@ class _MyState extends State<AnimePage> with SingleTickerProviderStateMixin {
     tabController.addListener(_onTabChanged);
 
     _setTitle(inicialItem);
+
+    _mostrarSetasDeslise();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        elevation: 0.1,
-          title: Text(title, style: Styles.titleText)
+          elevation: 0.1,
+          title: Text(title, style: Styles.titleText),
       ),
       body: TabBarView(
         controller: tabController,
@@ -96,6 +98,74 @@ class _MyState extends State<AnimePage> with SingleTickerProviderStateMixin {
       default:
         return Titles.ONLINE;
     }
+  }
+
+  // Mostra uma popup com dicas para deslizar
+  _mostrarSetasDeslise() async {
+    if (animeCollection.items.length <= 1) return;
+
+    bool mostreiEssaDica = Preferences.getBool(PreferencesKey.PAGE_ANIME_DICA_DESLIZE);
+
+    if (mostreiEssaDica) return;
+
+    Preferences.setBool(PreferencesKey.PAGE_ANIME_DICA_DESLIZE, true);
+
+    await Future.delayed(Duration(milliseconds: 500));
+    if (!mounted) {
+      await Future.delayed(Duration(milliseconds: 100));
+      if (!mounted) {
+        _mostrarSetasDeslise();
+        return;
+      }
+    }
+
+    showGeneralDialog(
+      context: context,
+      barrierColor: Colors.black12.withOpacity(0.3),
+      pageBuilder: (context, anim1, anim2) { // your widget implementation
+        return SizedBox.expand( // makes widget fullscreen
+          child: Column(
+            children: <Widget>[
+              Expanded(
+                flex: 5,
+                child: SizedBox.expand(
+                    child: Row(
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Icon(Icons.arrow_back),
+                        ),
+                        Expanded(
+                          child: Text(
+                            "Deslize entre os animes",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 20, color: Colors.white),
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Icon(Icons.arrow_forward),
+                        ),
+                      ],
+                    )
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: GestureDetector(
+                  child: Text(
+                    "Fechar",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 20, color: Colors.white),
+                  ),
+                  onTap: () => Navigator.pop(context),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   //endregion
