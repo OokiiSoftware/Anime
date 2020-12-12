@@ -119,7 +119,46 @@ class _MyState extends State<AnimePage> with SingleTickerProviderStateMixin {
       }
     }
 
-    showGeneralDialog(
+    var content = [
+      Expanded(
+        flex: 5,
+        child: SizedBox.expand(
+            child: Row(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Icon(Icons.arrow_back),
+                ),
+                Expanded(
+                  child: Text(
+                    "Deslize entre os animes",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 20, color: Colors.white),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Icon(Icons.arrow_forward),
+                ),
+              ],
+            )
+        ),
+      ),
+      Expanded(
+        flex: 1,
+        child: GestureDetector(
+          child: Text(
+            "Fechar",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 20, color: Colors.white),
+          ),
+          onTap: () => Navigator.pop(context),
+        ),
+      ),
+    ];
+    DialogFullScreen.show(context, content);
+
+    /*showGeneralDialog(
       context: context,
       barrierColor: Colors.black12.withOpacity(0.3),
       pageBuilder: (context, anim1, anim2) { // your widget implementation
@@ -165,7 +204,7 @@ class _MyState extends State<AnimePage> with SingleTickerProviderStateMixin {
           ),
         );
       },
-    );
+    );*/
   }
 
   //endregion

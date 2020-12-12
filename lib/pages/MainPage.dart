@@ -24,6 +24,8 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
 
   //endregion
 
+  AnimesFragment animesFragmentOnline;
+
   //region overrides
 
   @override
@@ -54,11 +56,12 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
       Tooltip(message: Titles.main_page[2], child: Tab(icon: Icon(Icons.offline_pin, color: tintColor))),
       Tooltip(message: Titles.main_page[3], child: Tab(icon: Icon(Icons.online_prediction, color: tintColor))),
     ];
+    animesFragmentOnline = AnimesFragment(context, ListType.online);
     List<Widget> tabViews = [
       AnimesFragment(context, ListType.assistindo),
       AnimesFragment(context, ListType.favoritos),
       AnimesFragment(context, ListType.concluidos),
-      AnimesFragment(context, ListType.online),
+      animesFragmentOnline,
     ];
 
     if (!_isOnline) Config.itemListMode = ListMode.list;
@@ -123,10 +126,12 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
   void _init() {
     if (_tabController == null) {
       int initIndex = Config.currentTabInMainPage;
+      if (initIndex == 3) initIndex = 0;
       _tabController = TabController(length: 4, initialIndex: initIndex, vsync: this);
       _tabController.addListener(_onPageChanged);
     }
     _onPageChanged();
+    _mostrarDicas();
   }
 
   void _onMenuItemSelected(String value) async {
@@ -165,6 +170,20 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
     Config.currentTabInMainPage = index;
   }
 
+  void _mostrarDicas() async {
+    bool mostreiEssaDica = Preferences.getBool(PreferencesKey.PAGE_MAIN_DICA_FILTROS);
+
+    if (mostreiEssaDica) return;
+
+    await Future.delayed(Duration(milliseconds: 500));
+
+    Preferences.setBool(PreferencesKey.PAGE_MAIN_DICA_FILTROS, true);
+
+    var title = 'Novos filtros';
+    var content = Text("Veja na guia 'Online'");
+    DialogBox.dialogOK(context, title: title, content: [content]);
+  }
+
   void _loadAdMob() async {
     MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
       // keywords: <String>['flutterio', 'Anime'],
@@ -191,18 +210,6 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
     );
     if (await myBanner.load())
       await myBanner.show();
-
-    // InterstitialAd myInterstitial = InterstitialAd(
-    //   adUnitId: 'ca-app-pub-8585143969698496/1877059427',
-    //   targetingInfo: targetingInfo,
-    // );
-    // myInterstitial.listener = (MobileAdEvent event) {
-    //   // print("BannerAd event is $event");
-    //   if (event == MobileAdEvent.loaded) {
-    //     // myBanner.show();
-    //     // myInterstitial.dispose();
-    //   }
-    // };
   }
 
   //endregion

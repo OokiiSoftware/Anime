@@ -152,3 +152,19 @@ class DialogBox {
         (dialogType == DialogType.cancel || dialogType == DialogType.okCancel);
   }
 }
+
+class DialogFullScreen {
+  static void show(BuildContext context, List<Widget> content) {
+    showGeneralDialog(
+      context: context,
+      barrierColor: Colors.black12.withOpacity(0.3),
+      pageBuilder: (context, anim1, anim2) { // your widget implementation
+        return SizedBox.expand( // makes widget fullscreen
+          child: Column(
+            children: content,
+          ),
+        );
+      },
+    );
+  }
+}

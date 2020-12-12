@@ -31,6 +31,7 @@ class PreferencesKey {
   static const String ABRIR_CONFIG_PAGE = "ABRIR_CONFIG_PAGE";
   static const String LIST_ORDER = "LIST_ORDER_2";
   static const String PAGE_ANIME_DICA_DESLIZE = "PAGE_ANIME_DICA_DESLIZE";
+  static const String PAGE_MAIN_DICA_FILTROS = "PAGE_MAIN_DICA_FILTROS_1";
 
   static const String FILTRO = 'filtro';
   static const String TUTORIAL = 'tutorial_01';

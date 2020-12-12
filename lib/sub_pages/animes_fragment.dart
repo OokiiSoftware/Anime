@@ -12,6 +12,7 @@ class AnimesFragment extends StatefulWidget {
 
   @override
   _MyState createState() => _MyState(context, listType);
+
 }
 class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<AnimesFragment> {
 
@@ -190,7 +191,7 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
         break;
       default:
         if (filtro.contains('-')) {
-          List<String> sp = filtro.split('-');
+          List<String> sp = filtro.split('-').toSet().toList()..sort((a, b) => a.compareTo(b));
           String init = sp[0] ?? '';
           String fim = sp[1] ?? 'Z';
           if (init.isEmpty) init = '';
