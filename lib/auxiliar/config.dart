@@ -147,8 +147,3 @@ class RunTime {
   }
 
 }
-
-abstract class AdChanged {
-  void onAdsShow();
-  void onAdsHide();
-}
