@@ -173,13 +173,12 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
 
     var result = await DialogBox.dialogCancelOK(context, title: title, content: content);
     if (result.isPositive) {
-      var text = controller.text.toUpperCase();
+      var text = controller.text.trim().toUpperCase();
       if (text.isEmpty) text = '#';
       _setFiltro(text);
       _saveFiltro(text);
     } else if (RunTime.updateOnlineFragment) {
       _setFiltro(_filtro);
-      _saveFiltro(_filtro);
     }
   }
 
