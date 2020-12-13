@@ -159,9 +159,9 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
           var title = 'Exemplos de Filtros';
           var content = [
             Text('A (Uma letra)'),
-            Text('AB (Várias letras)'),
+            Text('An (Várias letras)'),
             Text('A-Z (Listar de A a Z)'),
-            Text('A,B,C.. (Listar A,B,C..)'),
+            Text('A,Ba,C.. (Listar A,Ba,C..)'),
             Text('VAZIO ou # (Listar tudo)'),
             Text('2020 (Lançados em 2020)'),
             Text('0000 (Animes não lançados)'),

@@ -97,7 +97,7 @@ class MyTexts {
   static const String EDICAO_OBS_1 = 'Obs: -1 == Não se aplica';
   static const String EDICAO_OBS_2 = 'Obs: Defina os valores de acordo com a \'sua\' opnião';
 
-  static const String ALTERAR_FILTRO = 'Uma letra, uma sequência ou um ano';
+  static const String ALTERAR_FILTRO = 'Veja exemplos de como usar os filtros clicando em \'Exemplos\'';
   static const String AVISO_ITEM_REPETIDO = 'Deseja sobrescreve-lo?';
 }
 
