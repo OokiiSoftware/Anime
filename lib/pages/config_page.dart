@@ -40,7 +40,6 @@ class MyWidgetState extends State<ConfigPage> {
 
   @override
   Widget build(BuildContext context) {
-    var divider = Divider(color: OkiTheme.primary);
     var borderRadius = BorderRadius.all(Radius.circular(5));
 
     return Scaffold(
@@ -147,43 +146,6 @@ class MyWidgetState extends State<ConfigPage> {
                 ),
               ),
             ),
-
-            if (_isAdmin)...[
-              divider,
-              Text('Admin Área'),
-              divider,
-              ElevatedButton(
-                child: Text('App Versão: ${Aplication.appVersionInDatabase}'),
-                onPressed: !inProgress ? _setAppVersao : null,
-              ),
-              ElevatedButton(
-                child: Text('Abrir Play Story'),
-                onPressed: () {
-                  Aplication.openUrl(AppResources.playStoryLink, context);
-                },
-              ),
-
-              ElevatedButton(
-                child: Text('SnackBar'),
-                onPressed: () {
-                  Log.snack('Teste de snackbar');
-                },
-              ),
-              ElevatedButton(
-                child: Text('SnackBar Erro'),
-                onPressed: () {
-                  Log.snack('Teste de snackbar erro', isError: true);
-                },
-              ),
-              ElevatedButton(
-                child: Text('Ads: ${RunTime.mostrandoAds ? 'On' : 'Off'}'),
-                onPressed: () {
-                  setState(() {
-                    RunTime.mostrandoAds = !RunTime.mostrandoAds;
-                  });
-                },
-              ),
-            ],
             AdsFooter()
           ],
         ),
@@ -262,37 +224,6 @@ class MyWidgetState extends State<ConfigPage> {
       Text('É alterada na lista de animes com várias temporadas')
     ];
     DialogBox.dialogOK(context, title: title, content: content);
-  }
-
-  void _setAppVersao() async {
-    var controler = TextEditingController();
-    int currentVersion = Aplication.appVersionInDatabase;
-
-    controler.text = currentVersion.toString();
-    var title = 'Número da versão do app';
-    var content = TextField(
-      controller: controler,
-      keyboardType: TextInputType.number,
-      textInputAction: TextInputAction.done,
-      decoration: InputDecoration(
-          labelText: 'Número inteiro'
-      ),
-    );
-    var result = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
-    if (!result.isPositive) return;
-    int newVersion = int.parse(controler.text);
-
-    if (newVersion != currentVersion) {
-      Aplication.appVersionInDatabase = newVersion;
-
-      _setInProgress(true);
-      await FirebaseOki.database
-          .child(FirebaseChild.VERSAO)
-          .set(newVersion)
-          .then((value) => Log.snack(MyTexts.DADOS_SALVOS))
-          .catchError((e) => Log.snack(MyErros.ERRO_GENERICO));
-      _setInProgress(false);
-    }
   }
 
   void _setInProgress(bool b) {

@@ -18,6 +18,8 @@ class _MyState extends State<AdminPage> {
 
   @override
   Widget build(BuildContext context) {
+    var divider = Divider(color: OkiTheme.primary);
+
     return Scaffold(
       appBar: AppBar(title: Text(Titles.ADMIN, style: Styles.titleText)),
       body: SingleChildScrollView(
@@ -32,6 +34,38 @@ class _MyState extends State<AdminPage> {
             ElevatedButton(
               child: Text('Excluir Testes do banco de dados'),
               onPressed: _delete,
+            ),
+            divider,
+            ElevatedButton(
+              child: Text('App Versão: ${Aplication.appVersionInDatabase}'),
+              onPressed: !_inProgress ? _setAppVersao : null,
+            ),
+            ElevatedButton(
+              child: Text('Abrir Play Story'),
+              onPressed: () {
+                Aplication.openUrl(AppResources.playStoryLink, context);
+              },
+            ),
+            divider,
+            ElevatedButton(
+              child: Text('SnackBar'),
+              onPressed: () {
+                Log.snack('Teste de snackbar');
+              },
+            ),
+            ElevatedButton(
+              child: Text('SnackBar Erro'),
+              onPressed: () {
+                Log.snack('Teste de snackbar erro', isError: true);
+              },
+            ),
+            ElevatedButton(
+              child: Text('Ads: ${RunTime.mostrandoAds ? 'On' : 'Off'}'),
+              onPressed: () {
+                setState(() {
+                  RunTime.mostrandoAds = !RunTime.mostrandoAds;
+                });
+              },
             ),
           ],
         ),
@@ -168,6 +202,37 @@ class _MyState extends State<AdminPage> {
         .catchError((e) => Log.snack('Delete Fail', isError: true));
 
     _setInProgress(false);
+  }
+
+  void _setAppVersao() async {
+    var controler = TextEditingController();
+    int currentVersion = Aplication.appVersionInDatabase;
+
+    controler.text = currentVersion.toString();
+    var title = 'Número da versão do app';
+    var content = TextField(
+      controller: controler,
+      keyboardType: TextInputType.number,
+      textInputAction: TextInputAction.done,
+      decoration: InputDecoration(
+          labelText: 'Número inteiro'
+      ),
+    );
+    var result = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
+    if (!result.isPositive) return;
+    int newVersion = int.parse(controler.text);
+
+    if (newVersion != currentVersion) {
+      Aplication.appVersionInDatabase = newVersion;
+
+      _setInProgress(true);
+      await FirebaseOki.database
+          .child(FirebaseChild.VERSAO)
+          .set(newVersion)
+          .then((value) => Log.snack(MyTexts.DADOS_SALVOS))
+          .catchError((e) => Log.snack(MyErros.ERRO_GENERICO));
+      _setInProgress(false);
+    }
   }
 
   void _setInProgress(bool b) {
