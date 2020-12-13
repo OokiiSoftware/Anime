@@ -74,7 +74,7 @@ class _MyState extends State<AnimeCollectionPage> {
                 AnimeItemList(
                     item,
                     trailing: Layouts.markerCollection(item, user),
-                    listType: listType, onTap: () => _onParentClick(item)
+                    listType: listType, onTap: () => _onParentCollectionClick(item)
                 ),
               for (var item in parentesItem)
                 AnimeItemLayout(
@@ -141,14 +141,18 @@ class _MyState extends State<AnimeCollectionPage> {
       result(context, animeCollection);
   }
 
-  void _onParentClick(AnimeCollection item) async {
+  void _onParentCollectionClick(AnimeCollection item) async {
     Navigator.pop(context);
     Navigate.to(context, AnimeCollectionPage(listType, animeCollection: item));
   }
 
   void _onParentItemClick(Anime item) {
-    int init = animeCollection.itemsToList.indexOf(item);
-    Navigate.to(context, AnimePage(anime: animeCollection, listType: listType, inicialItem: init));
+    AnimeCollection itemC = AnimeCollection();
+    itemC.id = item.idPai;
+    itemC.nome = item.nome;
+    itemC.nome2 = item.nome2;
+    itemC.items[item.id] = item;
+    Navigate.to(context, AnimePage(anime: itemC, listType: listType, inicialItem: 0));
   }
 
   void _moverAnime(Anime item) async {
