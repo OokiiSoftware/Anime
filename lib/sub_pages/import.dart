@@ -1,2 +1,3 @@
-export 'package:anime/sub_pages/animes_fragment.dart';
-export 'package:anime/sub_pages/generos_fragment.dart';
+export 'animes_fragment.dart';
+export 'generos_fragment.dart';
+export 'online_fragment.dart';

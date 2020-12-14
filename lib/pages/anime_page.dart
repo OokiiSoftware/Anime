@@ -157,54 +157,6 @@ class _MyState extends State<AnimePage> with SingleTickerProviderStateMixin {
       ),
     ];
     DialogFullScreen.show(context, content);
-
-    /*showGeneralDialog(
-      context: context,
-      barrierColor: Colors.black12.withOpacity(0.3),
-      pageBuilder: (context, anim1, anim2) { // your widget implementation
-        return SizedBox.expand( // makes widget fullscreen
-          child: Column(
-            children: <Widget>[
-              Expanded(
-                flex: 5,
-                child: SizedBox.expand(
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          child: Icon(Icons.arrow_back),
-                        ),
-                        Expanded(
-                          child: Text(
-                            "Deslize entre os animes",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 20, color: Colors.white),
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20),
-                          child: Icon(Icons.arrow_forward),
-                        ),
-                      ],
-                    )
-                ),
-              ),
-              Expanded(
-                flex: 1,
-                child: GestureDetector(
-                  child: Text(
-                    "Fechar",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 20, color: Colors.white),
-                  ),
-                  onTap: () => Navigator.pop(context),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );*/
   }
 
   //endregion
@@ -249,6 +201,7 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
 
   int _episodios = 0;
 
+  // ignore: non_constant_identifier_names
   bool _IS_ONLINE_FINAL;
   bool _isOnline = false;
   bool _isSalvo = false;
@@ -664,22 +617,13 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
 
     var item = _criarAnime();
     if (await _verificar(item)) {
-
-      try {
-        if (FirebaseOki.userOki.animes[item.idPai] == null)
-          FirebaseOki.userOki.animes[item.idPai] = AnimeCollection();
-        FirebaseOki.userOki.animes[item.idPai].items[item.id] = item;
-      } catch(e) {
-        Log.e(TAG, 'saveManager', e);
-      }
-
       if (RunTime.isOnline) {
         await item.salvar(listType);
-        await FirebaseOki.userOki.atualizar();
       } else {
         item.salvar(listType);
         Log.snack('Você está Offline', isError: true);
       }
+      FirebaseOki.userOki.addAnime(item, listType);
       setState(() {
         _media = item.classificacao.media;
         _inEditMode = false;
@@ -726,18 +670,16 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
     var content = Text('${MyTexts.EXCLUIR_ITEM} $lista?');
     var result = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
     if (result.isPositive) {
-      String id = item.id;
-      bool deleteAll = (!_desejoRepetido(id) || listType.isAssistindo) &&
-          (!_concluidoRepetido(id) || listType.isConcluidos) &&
-          (!_favoritoRepetido(id) || listType.isFavoritos);
+      var user = FirebaseOki.userOki;
+
+      user.removeAnime(item, listType);
+      RunTime.updateFragment(listType);
 
       _setInProgress(true);
-      if (await item.delete(listType, deleteAll: deleteAll)) {
-        await FirebaseOki.userOki.atualizar();
-        RunTime.updateFragment(listType);
+      if (await item.delete(listType, deleteAll: !user.animes.containsKey(item.idPai)))
         Navigator.pop(context, _voidRetornoOnDelete);
-      }
-      else Log.snack(MyErros.ERRO_GENERICO, isError: true);
+      else
+        Log.snack(MyErros.ERRO_GENERICO, isError: true);
       _setInProgress(false);
     }
   }
@@ -874,7 +816,7 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
   void _onMoverItem(Anime item) async {
     _setInProgress(true);
     if (await Aplication.moverAnime(context, anime, listType)) {
-      await FirebaseOki.userOki.atualizar();
+      // await FirebaseOki.userOki.atualizar();
       Navigator.pop(context);
     }
     _setInProgress(false);
@@ -891,17 +833,22 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
 
   Future<bool> _verificar(Anime item) async {
     try {
-      var desejoRepetido = _desejoRepetido(item.id);
-      var concluidoRepetido = _concluidoRepetido(item.id);
-      var favoritoRepetido = _favoritoRepetido(item.id);
+      var user = FirebaseOki.userOki;
+      var repetido = user.getListChild(listType, item.idPai).containsKey(item.id);
 
       if (_perguntarSalvar) {
         var title = Titles.AVISO_ITEM_REPETIDO;
+        title += listType.valueName;
         var content = Text(MyTexts.AVISO_ITEM_REPETIDO);
-        switch(listType.value) {
+
+        if (repetido) {
+          var r = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
+          return r.isPositive;
+        }
+
+        /*switch(listType.value) {
           case ListType.assistindoValue: {
-            title += Strings.ASSISTINDO;
-            if (desejoRepetido) {
+            if (assistindoRepetido) {
               var r = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
               return r.isPositive;
             }
@@ -909,7 +856,6 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
           }
           case ListType.concluidosValue: {
             if (concluidoRepetido) {
-              title += Strings.CONCLUIDOS;
               var r = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
               return r.isPositive;
             }
@@ -917,12 +863,11 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
           }
           case ListType.favoritosValue:
             if (favoritoRepetido) {
-              title += Strings.FAVORITOS;
               var r = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
               return r.isPositive;
             }
             break;
-        }
+        }*/
       }
 
       return true;
@@ -930,10 +875,6 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
       return false;
     }
   }
-
-  bool _desejoRepetido(String key) => FirebaseOki.userOki.assistindo.containsKey(key);
-  bool _concluidoRepetido(String key) => FirebaseOki.userOki.concluidos.containsKey(key);
-  bool _favoritoRepetido(String key) => FirebaseOki.userOki.favoritos.containsKey(key);
 
   void _switchSinopse() {
     setState(() {

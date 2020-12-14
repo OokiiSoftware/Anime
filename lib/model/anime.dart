@@ -17,6 +17,20 @@ class ListType {
   ListType(this.value);
   int value;
 
+  String get valueName {
+    switch(value) {
+      case ListType.assistindoValue:
+        return FirebaseChild.DESEJOS;
+      case ListType.concluidosValue:
+        return FirebaseChild.CONCLUIDOS;
+      case ListType.favoritosValue:
+        return FirebaseChild.FAVORITOS;
+      case ListType.onlineValue:
+        return FirebaseChild.ONLINE;
+    }
+    return '';
+  }
+
   bool get isFavoritos => value == favoritos.value;
   bool get isAssistindo => value == assistindo.value;
   bool get isConcluidos => value == concluidos.value;
@@ -360,20 +374,17 @@ class Anime {
     }
   }
 
-  Future<bool> salvar(ListType list) async {
+  Future<bool> salvar(ListType listType) async {
     String child = '';
 
-    switch(list.value) {
+    switch(listType.value) {
       case ListType.assistindoValue:
-        FirebaseOki.userOki.assistindo[id] = id;
         child = FirebaseChild.DESEJOS;
         break;
       case ListType.concluidosValue:
-        FirebaseOki.userOki.concluidos[id] = id;
         child = FirebaseChild.CONCLUIDOS;
         break;
       case ListType.favoritosValue:
-        FirebaseOki.userOki.favoritos[id] = id;
         child = FirebaseChild.FAVORITOS;
         break;
     }
@@ -504,30 +515,24 @@ class Anime {
 
     switch(list.value) {
       case ListType.assistindoValue:
-        FirebaseOki.userOki.assistindo[id] = id;
         childNew = FirebaseChild.DESEJOS;
         break;
       case ListType.concluidosValue:
-        FirebaseOki.userOki.concluidos[id] = id;
         childNew = FirebaseChild.CONCLUIDOS;
         break;
       case ListType.favoritosValue:
-        FirebaseOki.userOki.favoritos[id] = id;
         childNew = FirebaseChild.FAVORITOS;
         break;
     }
 
     switch(old.value) {
       case ListType.assistindoValue:
-        FirebaseOki.userOki.assistindo.remove(id);
         childOld = FirebaseChild.DESEJOS;
         break;
       case ListType.concluidosValue:
-        FirebaseOki.userOki.concluidos.remove(id);
         childOld = FirebaseChild.CONCLUIDOS;
         break;
       case ListType.favoritosValue:
-        FirebaseOki.userOki.favoritos.remove(id);
         childOld = FirebaseChild.FAVORITOS;
         break;
     }
@@ -571,7 +576,7 @@ class Anime {
   }
 
   Future<bool> delete(ListType list, {bool save = true, bool deleteAll = false}) async {
-    var result = await _deleteAux(list, id);
+    var result = await _deleteAux(list, this);
     if (deleteAll) {
       result = await FirebaseOki.database
           .child(FirebaseChild.USUARIO)
@@ -591,22 +596,8 @@ class Anime {
       return await OfflineData.saveOfflineData();
     return result;
   }
-  Future<bool> _deleteAux(ListType list, String key) async {
-    String child = '';
-    switch(list.value) {
-      case ListType.assistindoValue:
-        FirebaseOki.userOki.assistindo.remove(key);
-        child = FirebaseChild.DESEJOS;
-        break;
-      case ListType.concluidosValue:
-        FirebaseOki.userOki.concluidos.remove(key);
-        child = FirebaseChild.CONCLUIDOS;
-        break;
-      case ListType.favoritosValue:
-        FirebaseOki.userOki.favoritos.remove(key);
-        child = FirebaseChild.FAVORITOS;
-        break;
-    }
+  Future<bool> _deleteAux(ListType listType, Anime item) async {
+    String child = listType.valueName;
 
     try {
       return await FirebaseOki.database

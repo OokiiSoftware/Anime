@@ -1,4 +1,4 @@
-import 'package:anime/model/user_oki.dart';
+import 'package:anime/model/user.dart';
 import 'firebase.dart';
 import 'logs.dart';
 

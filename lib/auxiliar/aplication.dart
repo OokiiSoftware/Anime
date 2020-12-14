@@ -135,6 +135,8 @@ class Aplication {
     }
 
     if (await item.mover(novaList, listType)) {
+      FirebaseOki.userOki.addAnime(item, novaList);
+      FirebaseOki.userOki.removeAnime(item, listType);
       return true;
     }
     return false;

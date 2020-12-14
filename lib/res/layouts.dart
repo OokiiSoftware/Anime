@@ -45,6 +45,11 @@ class Layouts {
   static Widget markerCollection(AnimeCollection item, UserOki user, {bool isGrid = false}) {
     double iconSize = 15.0;
     String id = item.id;
+
+    var favoritos = user.getList(ListType.favoritos).containsKey(id);
+    var assistindo = user.getList(ListType.assistindo).containsKey(id);
+    var concluidos = user.getList(ListType.concluidos).containsKey(id);
+
     if (isGrid)
       return Container(
         decoration: BoxDecoration(
@@ -58,22 +63,22 @@ class Layouts {
         child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if(user.assistindo.containsKey(id))
+              if(assistindo)
                 Icon(Icons.list, size: iconSize, color: OkiTheme.tint),
-              if(user.favoritos.containsKey(id))
+              if(favoritos)
                 Icon(Icons.favorite, size: iconSize, color: OkiTheme.tint),
-              if(user.concluidos.containsKey(id))
+              if(concluidos)
                 Icon(Icons.offline_pin, size: iconSize, color: OkiTheme.tint),
             ]
         ),
       );
     return Column(
         children: [
-          if(user.assistindo.containsKey(id))
+          if(assistindo)
             Icon(Icons.list, size: iconSize),
-          if(user.favoritos.containsKey(id))
+          if(favoritos)
             Icon(Icons.favorite, size: iconSize),
-          if(user.concluidos.containsKey(id))
+          if(concluidos)
             Icon(Icons.offline_pin, size: iconSize),
         ]
     );
@@ -82,13 +87,17 @@ class Layouts {
     double iconSize = 15.0;
     String id = item.id;
 
+    var assistindo = user.getListChild(ListType.assistindo, item.idPai).containsKey(id);
+    var favoritos = user.getListChild(ListType.favoritos, item.idPai).containsKey(id);
+    var concluidos = user.getListChild(ListType.concluidos, item.idPai).containsKey(id);
+
     return Column(
         children: [
-          if(user.getAssistindo(item.idPai).containsKey(id))
+          if(assistindo)
             Icon(Icons.list, size: iconSize),
-          if(user.getFavorito(item.idPai).containsKey(id))
+          if(favoritos)
             Icon(Icons.favorite, size: iconSize),
-          if(user.getConcluido(item.idPai).containsKey(id))
+          if(concluidos)
             Icon(Icons.offline_pin, size: iconSize),
         ]
     );
@@ -277,7 +286,6 @@ class AnimeItemLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var media = item.classificacao.media;
-    Log.d('AnimeItemLayout', 'build', item.id, media);
     String subtitle = '';
     if (item.episodios >= 0) {
       if (item.episodios > 1)

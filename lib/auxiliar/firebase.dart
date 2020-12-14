@@ -10,7 +10,6 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'admin.dart';
 import 'logs.dart';
-import 'online_data.dart';
 
 class FirebaseOki {
   //region Variaveis
@@ -142,54 +141,6 @@ class FirebaseOki {
     }
   }
 
-  //Listas (assistindo, concluidos, favoritos)
-  static void _organizarListas(/*User user*/) {
-    if (_userOki == null) return;
-
-    for(AnimeCollection item in OnlineData.dataList) {
-      if (!userOki.animes.containsKey(item.id)) continue;
-
-      //Os dados de backup.items só contém {classificacao, desc, ultimoAssistido, id}
-      //Aqui faço um backup pra restaurar depois
-      final backup = AnimeCollection.newItem(userOki.animes[item.id]);
-      //_getNewAnimeList(...) retorna somente os itens de minhas listas (favoritos, colcluidos, assistindo)
-      //Mas esses items não comtém {classificacao, desc, ultimoAssistido}
-      _userOki.animes[item.id] = _getNewAnimeList(item);
-      final items = userOki.animes[item.id];
-
-      //Aqui restaura os backups
-      if (items != null) {
-        for (final item in items.itemsToList) {
-          var aux = backup.items[item.idPai];
-          if (aux != null) {
-            item.desc = aux.desc;
-            // item.classificacao = aux.classificacao;
-            item.ultimoAssistido = aux.ultimoAssistido;
-          }
-        }
-      }
-    }
-  }
-
-  static AnimeCollection _getNewAnimeList(AnimeCollection items) {
-    AnimeCollection itemsAux = AnimeCollection.fromJson(items.toJson(), items.id);
-    itemsAux.items.clear();
-    Map assistindoMap = userOki.assistindo[items.id];
-    Map concluidosMap = userOki.concluidos[items.id];
-    Map favoritosMap = userOki.favoritos[items.id];
-
-    for (Anime item in items.items.values) {
-      var aux = Anime.fromJson(item.toJson());
-      if (favoritosMap != null && favoritosMap.containsKey(item.id))
-        itemsAux.items[item.id] = aux;
-      if (assistindoMap != null && assistindoMap.containsKey(item.id))
-        itemsAux.items[item.id] = aux;
-      if (concluidosMap != null && concluidosMap.containsKey(item.id))
-        itemsAux.items[item.id] = aux;
-    }
-    return itemsAux;
-  }
-
   static Future<UserOki> _baixarUser(String uid) async {
     try {
       var snapshot = await FirebaseOki.database
@@ -212,6 +163,7 @@ class FirebaseChild {
   static const String DESEJOS = 'assistindo';
   static const String CONCLUIDOS = 'concluidos';
   static const String FAVORITOS = 'favoritos';
+  static const String ONLINE = 'online';
   static const String ANIMES = 'animes';
   static const String ANIME = 'anime';
   static const String CAPA = 'capa';

@@ -53,8 +53,6 @@ class _MyState extends State<AnimeCollectionPage> {
         body: SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(10, 10, 10, 80),
           child: Column(children: [
-//          if (_fotoUrl.isNotEmpty)
-//            Image.network(_fotoUrl),
             for (Anime item in animeCollection.itemsToList)
               AnimeItemLayout(
                   item,
@@ -158,7 +156,7 @@ class _MyState extends State<AnimeCollectionPage> {
   void _moverAnime(Anime item) async {
     _setInProgress(true);
     if (await Aplication.moverAnime(context, item, listType)) {
-      await FirebaseOki.userOki.atualizar();
+      // await FirebaseOki.userOki.atualizar();
       setState(() {
         _inEditMode = false;
         if (!listType.isOnline)

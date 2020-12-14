@@ -19,12 +19,10 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
 
   TabController _tabController;
   String _currentTitle = Titles.main_page[0];
-
+  List<Widget> tabViews;
   BannerAd myBanner;
 
   //endregion
-
-  AnimesFragment animesFragmentOnline;
 
   //region overrides
 
@@ -55,13 +53,6 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
       Tooltip(message: Titles.main_page[1], child: Tab(icon: Icon(Icons.favorite, color: tintColor))),
       Tooltip(message: Titles.main_page[2], child: Tab(icon: Icon(Icons.offline_pin, color: tintColor))),
       Tooltip(message: Titles.main_page[3], child: Tab(icon: Icon(Icons.online_prediction, color: tintColor))),
-    ];
-    animesFragmentOnline = AnimesFragment(context, ListType.online);
-    List<Widget> tabViews = [
-      AnimesFragment(context, ListType.assistindo),
-      AnimesFragment(context, ListType.favoritos),
-      AnimesFragment(context, ListType.concluidos),
-      animesFragmentOnline,
     ];
 
     if (!_isOnline) Config.itemListMode = ListMode.list;
@@ -96,20 +87,12 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
                   });
                 },
               ),
-            // IconButton(
-            //   tooltip: 'Configurações',
-            //   icon: Icon(Icons.settings, color: tintColor),
-            //   onPressed: () {
-            //     Navigate.to(context, ConfigPage());
-            //   },
-            // ),
             PopupMenuButton<String> (
               itemBuilder: (context) {
                 return Arrays.menuMain.map((e) => PopupMenuItem(child: Text(e), value: e)).toList();
               },
               onSelected: _onMenuItemSelected,
             ),
-            // Padding(padding: EdgeInsets.only(right: 10))
           ],
         ),
         body: TabBarView(
@@ -124,10 +107,17 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
   //region Metodos
 
   void _init() {
+    tabViews = [
+      AnimesFragment(context, ListType.assistindo),
+      AnimesFragment(context, ListType.favoritos),
+      AnimesFragment(context, ListType.concluidos),
+      OnlineFragment(context),
+    ];
+
     if (_tabController == null) {
       int initIndex = Config.currentTabInMainPage;
-      if (initIndex == 3) initIndex = 0;
-      _tabController = TabController(length: 4, initialIndex: initIndex, vsync: this);
+      if (initIndex == 3) initIndex = 2;
+      _tabController = TabController(length: tabViews.length, initialIndex: initIndex, vsync: this);
       _tabController.addListener(_onPageChanged);
     }
     _onPageChanged();
@@ -155,13 +145,13 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
     final user = FirebaseOki.userOki;
     switch(index) {
       case ListType.assistindoValue:
-        quantAnimes = user.assistindo.length.toString();
+        quantAnimes = user.getAnimeLenght(ListType.assistindo).toString();
         break;
       case ListType.favoritosValue:
-        quantAnimes = user.favoritos.length.toString();
+        quantAnimes = user.getAnimeLenght(ListType.favoritos).toString();
         break;
       case ListType.concluidosValue:
-        quantAnimes = user.concluidos.length.toString();
+        quantAnimes = user.getAnimeLenght(ListType.concluidos).toString();
         break;
     }
     setState(() {
