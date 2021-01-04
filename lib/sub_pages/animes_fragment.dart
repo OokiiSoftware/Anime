@@ -3,6 +3,28 @@ import 'package:anime/model/import.dart';
 import 'package:anime/res/import.dart';
 import 'package:anime/pages/import.dart';
 
+class AssistindoFrament extends StatelessWidget {
+  final BuildContext context;
+  AssistindoFrament(this.context);
+
+  @override
+  Widget build(BuildContext context) => AnimesFragment(this.context, ListType.assistindo);
+}
+class FavoritosFrament extends StatelessWidget {
+  final BuildContext context;
+  FavoritosFrament(this.context);
+
+  @override
+  Widget build(BuildContext context) => AnimesFragment(this.context, ListType.favoritos);
+}
+class ConcluidosFrament extends StatelessWidget {
+  final BuildContext context;
+  ConcluidosFrament(this.context);
+
+  @override
+  Widget build(BuildContext context) => AnimesFragment(this.context, ListType.concluidos);
+}
+
 class AnimesFragment extends StatefulWidget {
   final ListType listType;
   final BuildContext context;

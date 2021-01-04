@@ -44,4 +44,9 @@ class OkiTheme {
       brightness = Brightness.dark;
     return brightness;
   }
+
+  static refesh(BuildContext context) async {
+    Brightness brightness = getBrilho(Config.theme);
+    await DynamicTheme.of(context).setBrightness(brightness);
+  }
 }

@@ -8,6 +8,51 @@ import 'config_page.dart';
 import 'info_page.dart';
 import 'login_page.dart';
 
+BannerAd myBanner;
+
+void onMenuItemSelected(BuildContext context, String value) async {
+  switch(value) {
+    case MenuMain.config:
+      Navigate.to(context, ConfigPage());
+      break;
+    case MenuMain.sobre:
+      Navigate.to(context, InfoPage());
+      break;
+    case MenuMain.logout:
+      await FirebaseOki.finalize();
+      Navigate.toReplacement(context, LoginPage());
+      break;
+  }
+}
+
+void _loadAdMob() async {
+  MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
+    // keywords: <String>['flutterio', 'Anime'],
+    // contentUrl: 'https://flutter.io',
+    childDirected: false,
+    testDevices: <String>[], // Android emulators are considered test devices
+  );
+
+  myBanner?.dispose();
+  myBanner = BannerAd(
+      adUnitId: /*BannerAd.testAdUnitId,*/'ca-app-pub-8585143969698496/1877059427',
+      size: AdSize.banner,
+      targetingInfo: targetingInfo,
+      listener: (MobileAdEvent event) {
+        Log.d('MainPage', 'loadAdMob', "BannerAd event is $event");
+        switch(event) {
+          case MobileAdEvent.loaded:
+            RunTime.mostrandoAds = true;
+            break;
+          default:
+            RunTime.mostrandoAds = false;
+        }
+      }
+  );
+  if (await myBanner.load())
+    await myBanner.show();
+}
+
 class MainPage extends StatefulWidget {
   @override
   _MyState createState() => _MyState();
@@ -15,12 +60,10 @@ class MainPage extends StatefulWidget {
 class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
 
   //region Variaveis
-  static const String TAG = 'MainPage';
+  // static const String TAG = 'MainPage';
 
   TabController _tabController;
   String _currentTitle = Titles.main_page[0];
-  List<Widget> tabViews;
-  BannerAd myBanner;
 
   //endregion
 
@@ -55,6 +98,13 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
       Tooltip(message: Titles.main_page[3], child: Tab(icon: Icon(Icons.online_prediction, color: tintColor))),
     ];
 
+    var tabViews = [
+      AnimesFragment(context, ListType.assistindo),
+      AnimesFragment(context, ListType.favoritos),
+      AnimesFragment(context, ListType.concluidos),
+      OnlineFragment(context),
+    ];
+
     if (!_isOnline) Config.itemListMode = ListMode.list;
 
     //endregion
@@ -81,6 +131,7 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
                 onPressed: () {
                   if (isListMode) Config.itemListMode = ListMode.grid;
                   else Config.itemListMode = ListMode.list;
+                  OkiTheme.refesh(this.context);
 
                   setState(() {
                     isListMode = Config.itemListMode.isListMode;
@@ -107,21 +158,14 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
   //region Metodos
 
   void _init() {
-    tabViews = [
-      AnimesFragment(context, ListType.assistindo),
-      AnimesFragment(context, ListType.favoritos),
-      AnimesFragment(context, ListType.concluidos),
-      OnlineFragment(context),
-    ];
-
     if (_tabController == null) {
       int initIndex = Config.currentTabInMainPage;
       if (initIndex == 3) initIndex = 2;
-      _tabController = TabController(length: tabViews.length, initialIndex: initIndex, vsync: this);
+      _tabController = TabController(length: 4, initialIndex: initIndex, vsync: this);
       _tabController.addListener(_onPageChanged);
     }
     _onPageChanged();
-    _mostrarDicas();
+    // _mostrarDicas();
   }
 
   void _onMenuItemSelected(String value) async {
@@ -174,32 +218,285 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
     DialogBox.dialogOK(context, title: title, content: [content]);
   }
 
-  void _loadAdMob() async {
-    MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
-      // keywords: <String>['flutterio', 'Anime'],
-      // contentUrl: 'https://flutter.io',
-      childDirected: false,
-      testDevices: <String>[], // Android emulators are considered test devices
-    );
+  //endregion
 
+}
+
+class MainPage2 extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => _State();
+}
+class _State extends State<MainPage2> with SingleTickerProviderStateMixin {
+
+  //region Variaveis
+  static const int NAO_LANCADOS_PAGE_INDEX = 4;
+
+  String title = Titles.main_page[0];
+  int currentListTypeValue;
+
+  AssistindoFrament assistindoFragment;
+  FavoritosFrament favoritosFragment;
+  ConcluidosFrament concluidosFragment;
+  OnlineFragment onlineFragment;
+  NaoLancadosFrament naoLancadosFragment;
+  //endregion
+
+  //region overrides
+
+  @override
+  void dispose() {
+    super.dispose();
     myBanner?.dispose();
-    myBanner = BannerAd(
-        adUnitId: /*BannerAd.testAdUnitId,*/'ca-app-pub-8585143969698496/1877059427',
-        size: AdSize.banner,
-        targetingInfo: targetingInfo,
-        listener: (MobileAdEvent event) {
-          Log.d(TAG, 'loadAdMob', "BannerAd event is $event");
-          switch(event) {
-            case MobileAdEvent.loaded:
-              RunTime.mostrandoAds = true;
-              break;
-            default:
-              RunTime.mostrandoAds = false;
-          }
-        }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _init();
+    _loadAdMob();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    //region Variaveis
+    bool _isOnline = RunTime.isOnline;
+    bool isListMode = Config.itemListMode.isListMode;
+
+    var tintColor = _isOnline ? OkiTheme.tint : OkiTheme.textError;
+
+    var draewrHeaderTextColor = Colors.white;
+    var draewrTextColor = OkiTheme.text;
+    var draewrIconColor = OkiTheme.text;
+    var draewrTextStyle = TextStyle(color: draewrTextColor);
+    //endregion
+
+    Widget temp;
+    switch(currentListTypeValue) {
+      case ListType.assistindoValue:
+        temp = AssistindoFrament(context);
+        break;
+      case ListType.favoritosValue:
+        temp = FavoritosFrament(context);
+        break;
+      case ListType.concluidosValue:
+        temp = ConcluidosFrament(context);
+        break;
+      case ListType.onlineValue:
+        temp = OnlineFragment(context);
+        break;
+      case NAO_LANCADOS_PAGE_INDEX:
+        temp = NaoLancadosFrament(context);
+        break;
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+          title: Text(title, style: Styles.titleText),
+        actions: [
+          IconButton(
+            tooltip: 'Pesquisar',
+            icon: Icon(Icons.search, color: tintColor),
+            onPressed: () {
+              showSearch(context: context, delegate: DataSearch());
+            },
+          ),
+          if (_isOnline)
+            IconButton(
+              tooltip: 'Modo de Visualização',
+              icon: Icon(isListMode? Icons.list : Icons.view_module),
+              onPressed: () {
+                if (isListMode) Config.itemListMode = ListMode.grid;
+                else Config.itemListMode = ListMode.list;
+                isListMode = Config.itemListMode.isListMode;
+                setState(() {});
+              },
+            ),
+        ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      if (OkiTheme.darkModeOn)...[
+                        Colors.grey[900],
+                        Colors.grey[850]
+                      ] else...[
+                        OkiTheme.primary,
+                        OkiTheme.primaryLight,
+                      ]
+                    ]
+                ),
+              ),
+              child: Container(
+                child: Column(
+                  children: [
+                    //Icone / Foto
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        child: Image.asset(MyIcons.ic_launcher),
+                      ),
+                    ),
+                    Spacer(),
+                    // Nome
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        AppResources.APP_NAME,
+                        style: TextStyle(
+                          color: draewrHeaderTextColor,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ),
+                    // Email
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        AppResources.app_email,
+                        style: TextStyle(
+                          color: Colors.white60,
+                          fontSize: 15,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            ListTile(
+              leading: Icon(Icons.list, color: draewrIconColor),
+              title: Text(Titles.main_page[0], style: draewrTextStyle),
+              onTap: () {
+                _closeDrawer(context);
+                _setPage(ListType.assistindo);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.favorite, color: draewrIconColor),
+              title: Text(Titles.main_page[1], style: draewrTextStyle),
+              onTap: () {
+                _closeDrawer(context);
+                _setPage(ListType.favoritos);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.offline_pin, color: draewrIconColor),
+              title: Text(Titles.main_page[2], style: draewrTextStyle),
+              onTap: () {
+                _closeDrawer(context);
+                _setPage(ListType.concluidos);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.online_prediction, color: draewrIconColor),
+              title: Text(Titles.main_page[3], style: draewrTextStyle),
+              onTap: () {
+                _closeDrawer(context);
+                _setPage(ListType.online);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.online_prediction, color: draewrIconColor),
+              title: Text(Menus.NAO_LANCADOS, style: draewrTextStyle),
+              onTap: () {
+                _closeDrawer(context);
+                _setPage(ListType(NAO_LANCADOS_PAGE_INDEX));
+              },
+            ),
+
+            //Sobre
+            ListTile(
+              leading: Icon(Icons.info, color: draewrIconColor),
+              title: Text(MenuMain.sobre, style: draewrTextStyle),
+              onTap: () {
+                _closeDrawer(context);
+                onMenuItemSelected(context, MenuMain.sobre);
+              },
+            ),
+            //Loguot
+            ListTile(
+              leading: Icon(Icons.remove_circle, color: draewrIconColor),
+              title: Text(MenuMain.logout, style: draewrTextStyle),
+              onTap: () {
+                _closeDrawer(context);
+                onMenuItemSelected(context, MenuMain.logout);
+              },
+            ),
+            Divider(color: draewrIconColor),
+            // Config
+            ListTile(
+              leading: Icon(Icons.settings, color: draewrIconColor),
+              title: Text(MenuMain.config, style: draewrTextStyle),
+              onTap: () {
+                _closeDrawer(context);
+                onMenuItemSelected(context, MenuMain.config);
+              },
+            ),
+          ],
+        ),
+      ),
+      body: temp,
     );
-    if (await myBanner.load())
-      await myBanner.show();
+  }
+
+  //endregion
+
+  //region Metodos
+
+  void _init() {
+    int initIndex = Config.currentTabInMainPage;
+    if (initIndex == 3) initIndex = 2;
+
+    _setPage(ListType(initIndex));
+  }
+
+  Widget get getBody {
+    switch(currentListTypeValue) {
+      case ListType.assistindoValue:
+        if (assistindoFragment == null)
+          assistindoFragment = AssistindoFrament(context);
+        return assistindoFragment;
+
+      case ListType.favoritosValue:
+        if (favoritosFragment == null)
+          favoritosFragment = FavoritosFrament(context);
+        return favoritosFragment;
+
+      case ListType.concluidosValue:
+        if (concluidosFragment == null)
+          concluidosFragment = ConcluidosFrament(context);
+        return concluidosFragment;
+
+      case ListType.onlineValue:
+        if (onlineFragment == null)
+          onlineFragment = OnlineFragment(context);
+        return onlineFragment;
+
+      case 4:
+        if (naoLancadosFragment == null)
+          naoLancadosFragment = NaoLancadosFrament(context);
+        return naoLancadosFragment;
+    }
+    return null;
+  }
+
+  void _setPage(ListType page) {
+    currentListTypeValue = page.value;
+    title = Titles.main_page[page.value];
+    setState(() {});
+  }
+
+  void _closeDrawer(BuildContext context) {
+    Navigator.pop(context);
   }
 
   //endregion

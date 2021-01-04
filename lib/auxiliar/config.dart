@@ -29,6 +29,7 @@ class Config {
   static String _listOrder;
   static String _theme;
   static bool _showEcchi;
+  static bool _useNewLayout;
 
   //region get set
 
@@ -73,6 +74,12 @@ class Config {
     Preferences.setBool(PreferencesKey.SHOW_ECCHI, value);
   }
 
+  static bool get useNewLayout => _useNewLayout ?? true;
+  static set useNewLayout(bool value) {
+    _useNewLayout = value;
+    Preferences.setBool(PreferencesKey.USE_NOVO_LAYOUT, value);
+  }
+
   //endregion
 
   static void readConfig() {
@@ -80,6 +87,7 @@ class Config {
     _listOrder = Preferences.getString(PreferencesKey.LIST_ORDER, padrao: ListOrder.dataDsc);
     _itemListMode = Preferences.getInt(PreferencesKey.ITEM_LIST_MODE, padrao: ListMode.listValue);
     _currentTabInMainPage = Preferences.getInt(PreferencesKey.CURRENT_TAB_IN_MAIN_PAGE, padrao: 0);
+    _useNewLayout = Preferences.getBool(PreferencesKey.USE_NOVO_LAYOUT, padrao: true);
     _showEcchi = Preferences.getBool(PreferencesKey.SHOW_ECCHI, padrao: false);
     _generos = Preferences.getString(PreferencesKey.GENEROS, padrao: '');
     _filtro = Preferences.getString(PreferencesKey.FILTRO, padrao: '#');

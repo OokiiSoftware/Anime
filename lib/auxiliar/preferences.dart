@@ -38,6 +38,7 @@ class PreferencesKey {
   static const String ITEM_LIST_MODE = 'itemListMode';
   static const String CURRENT_TAB_IN_MAIN_PAGE = 'CURRENT_TAB_IN_MAIN_PAGE';
   static const String GENEROS = 'generos';
+  static const String USE_NOVO_LAYOUT = 'USE_NOVO_LAYOUT';
   static const String SHOW_ECCHI = 'show_ecchi';
 
   static const String POST_AVANCADO = "POST_AVANCADO";

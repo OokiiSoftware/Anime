@@ -17,3 +17,4 @@ export 'package:package_info/package_info.dart';
 export 'package:path_provider/path_provider.dart';
 export 'package:shared_preferences/shared_preferences.dart';
 export 'package:url_launcher/url_launcher.dart';
+export 'package:youtube_player_flutter/youtube_player_flutter.dart';

@@ -15,12 +15,9 @@ class MyWidgetState extends State<ConfigPage> {
   bool _isAdmin = false;
   bool inProgress = false;
   bool _showEcchi = false;
+  bool _useNewLayout = false;
 
-  // List<DropdownMenuItem<String>> _dropDownThema;
   String _currentThema;
-
-  ///Ordem de listagem dos animes
-  // List<DropdownMenuItem<String>> _dropDownOrdem;
   String _currentOrdem;
 
   //endregion
@@ -32,8 +29,7 @@ class MyWidgetState extends State<ConfigPage> {
     super.initState();
     _isAdmin = FirebaseOki.isAdmin;
     _showEcchi = Config.showEcchi;
-    // _dropDownThema = Layouts.dropDownMenuItems(Arrays.thema);
-    // _dropDownOrdem = Layouts.dropDownMenuItems(Arrays.ordem);
+    _useNewLayout = Config.useNewLayout;
     _currentThema = Config.theme;
     _currentOrdem = Config.listOrder;
   }
@@ -52,19 +48,6 @@ class MyWidgetState extends State<ConfigPage> {
               icon: Icon(Icons.admin_panel_settings),
               onPressed: _gotoAdminPage,
             ),
-          // if (RunTime.semInternet)
-          //   Layouts.icAlertInternet,
-          // Layouts.appBarActionsPadding,
-          // IconButton(
-          //   tooltip: 'Informações',
-          //     icon: Icon(Icons.info),
-          //     onPressed: _onInfoClick
-          // ),
-          // IconButton(
-          //   tooltip: Strings.LOGOUT,
-          //   icon: Icon(Icons.logout),
-          //   onPressed: _onLogout,
-          // ),
         ],
       ),
       body: SingleChildScrollView(
@@ -108,6 +91,11 @@ class MyWidgetState extends State<ConfigPage> {
                       ],
                     ),
                     Divider(),
+                    CheckboxListTile(
+                        title: Text('Menu lateral na tela principal'),
+                        value: _useNewLayout,
+                        onChanged: _onLayoutChanged
+                    ),
                     CheckboxListTile(
                         title: Text('Mostrar animes com gênero Ecchi'),
                         value: _showEcchi,
@@ -181,6 +169,13 @@ class MyWidgetState extends State<ConfigPage> {
       _showEcchi = value;
     });
     Config.showEcchi = value;
+  }
+  void _onLayoutChanged(bool value) async {
+    setState(() {
+      _useNewLayout = value;
+    });
+    Config.useNewLayout = value;
+    OkiTheme.refesh(context);
   }
 
   void _onSugestaoCkick([bool isSugestaoAnime = false]) async {

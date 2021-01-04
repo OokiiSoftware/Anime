@@ -128,7 +128,7 @@ class AnimeCollection {
     double value = 0.0;
     double i = 0.0;
     for (var item in items.values) {
-      var media = item.classificacao.media;
+      var media = item.getMedia;
       if (media >= 0) {
         i++;
         value += media;
@@ -258,6 +258,8 @@ class Anime {
   //region Variaveis
   static const String TAG = 'Anime';
 
+  bool _isComplete = false;
+
   String _id;
   String _nome;
   String _nome2;
@@ -265,14 +267,17 @@ class Anime {
   String _link;
   String _data;
   String _tipo;
-  // String _foto;//todo
+
   String _aviso;
+  String _trailer;
+  String _maturidade;
   String _miniatura;
   String _sinopse;
   String _fotoLocal;
   int _episodios;
   int _ultimoAssistido;
   bool _isCopiado;
+  double _pontosBase;
   List<dynamic> _generos;
 
   Classificacao _classificacao;
@@ -290,13 +295,15 @@ class Anime {
     if (mapIsNoNull(map['link'])) link = map['link'];
     if (mapIsNoNull(map['data'])) data = map['data'];
     if (mapIsNoNull(map['tipo'])) tipo = map['tipo'];
-    // if (mapIsNoNull(map['foto'])) foto = map['foto'];todo
     if (mapIsNoNull(map['aviso'])) aviso = map['aviso'];
     if (mapIsNoNull(map['sinopse'])) sinopse = map['sinopse'];
     if (mapIsNoNull(map['generos'])) generos = map['generos'];
     if (mapIsNoNull(map['isCopiado'])) isCopiado = map['isCopiado'];
     if (mapIsNoNull(map['episodios'])) episodios = map['episodios'];
     if (mapIsNoNull(map['miniatura'])) miniatura = map['miniatura'];
+    if (mapIsNoNull(map['pontosBase'])) pontosBase = map['pontosBase'];
+    if (mapIsNoNull(map['maturidade'])) maturidade = map['maturidade'];
+    if (mapIsNoNull(map['trailer'])) trailer = map['trailer'];
     if (mapIsNoNull(map['ultimoAssistido'])) ultimoAssistido = map['ultimoAssistido'];
     if (mapIsNoNull(map['classificacao'])) classificacao = Classificacao.fromJson(map['classificacao']);
   }
@@ -311,13 +318,15 @@ class Anime {
     "link": link,
     "data": data,
     "tipo": tipo,
-    // "foto": foto,
     "aviso": aviso,
     "sinopse": sinopse,
     "generos": generos,
     "isCopiado": isCopiado,
     "episodios": episodios,
     "miniatura": miniatura,
+    'trailer': trailer,
+    'maturidade': maturidade,
+    'pontosBase': pontosBase,
     "ultimoAssistido": ultimoAssistido,
     "classificacao": classificacao.toJson(),
   };
@@ -345,13 +354,13 @@ class Anime {
   //region Metodos
 
   void _completar(Anime item) {
-    // foto = item.foto;todo
     link = item.link;
-    tipo = item.tipo;
-    // status = item.status;
     sinopse = item.sinopse;
     episodios = item.episodios;
     classificacao = item.classificacao;
+    pontosBase = item.pontosBase;
+    trailer = item.trailer;
+    maturidade = item.maturidade;
   }
 
   Future<bool> complete() async {
@@ -367,6 +376,8 @@ class Anime {
       var item = Anime.fromJson(snapshot.value);
       if (item != null)
         _completar(item);
+
+      _isComplete = true;
       return true;
     } catch(e) {
       Log.e(TAG, 'complete', id, e);
@@ -445,6 +456,9 @@ class Anime {
         'sinopse': sinopse,
         'tipo': tipo,
         'generos': generos,
+        'trailer': trailer,
+        'maturidade': maturidade,
+        'pontosBase': pontosBase,
         'classificacao': classificacao.toJson(),
       };
 
@@ -623,7 +637,7 @@ class Anime {
     File file = File(OfflineData.localPath + '/' + fotoLocal);
     return file.existsSync();
   }
-  bool get isComplete => tipo.isNotEmpty;
+  bool get isComplete => _isComplete;
   bool get isNoLancado => !isLancado;
   bool get isLancado => data.compareTo(DataHora.now()) < 0;
 
@@ -639,6 +653,13 @@ class Anime {
     if (data.contains('-'))
       return data.substring(0, data.indexOf('-'));
     return data;
+  }
+
+  double get getMedia {
+    var media = classificacao.media;
+    if (pontosBase > 0)
+      media += pontosBase;
+    return media;
   }
 
   //endregion
@@ -686,13 +707,10 @@ class Anime {
       Log.e(TAG, 'foto', e, !e.toString().contains('Not Found.  Could not get object'));
       return null;
     }
-
-    // if (_foto == null || _foto.isEmpty) return miniatura;
-    // return _foto;
   }
-  // set foto(String value) {todo
-  //   _foto = value;
-  // }
+
+  String get trailer => _trailer ?? '';
+  set trailer(String value) => _trailer = value;
 
   String get miniatura => _miniatura ?? '';
   set miniatura(String value) => _miniatura = value;
@@ -725,6 +743,12 @@ class Anime {
 
   String get data => _data ?? '';
   set data(String value) => _data = value;
+
+  String get maturidade => _maturidade ?? '';
+  set maturidade(String value) => _maturidade = value;
+
+  double get pontosBase => _pontosBase ?? -1;
+  set pontosBase(double value) => _pontosBase = value;
 
   //endregion
 

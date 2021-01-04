@@ -1,8 +1,17 @@
 import 'package:anime/auxiliar/import.dart';
 import 'package:anime/pages/import.dart';
 import 'package:anime/res/import.dart';
+import 'package:flutter/services.dart';
 
-void main() => runApp(Main());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.blueAccent,
+    ),
+  );
+  runApp(Main());
+}
 
 class Main extends StatefulWidget {
   @override
@@ -83,6 +92,8 @@ class MyState extends State<Main> {
       return SplashScreen(mostrarLog: _mostrarLog);
     else if (!FirebaseOki.isLogado)
       return LoginPage();
+    if (Config.useNewLayout)
+      return MainPage2();
     else
       return MainPage();
   }

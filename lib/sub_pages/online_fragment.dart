@@ -4,20 +4,30 @@ import 'package:anime/res/import.dart';
 import 'package:anime/pages/import.dart';
 import 'generos_fragment.dart';
 
-class OnlineFragment extends StatefulWidget {
+class NaoLancadosFrament extends StatelessWidget {
   final BuildContext context;
-  OnlineFragment(this.context);
+  NaoLancadosFrament(this.context);
 
   @override
-  _MyState createState() => _MyState(context);
+  Widget build(BuildContext context) => OnlineFragment(this.context, filtro: '0000');
+}
+
+class OnlineFragment extends StatefulWidget {
+  final BuildContext context;
+  final String filtro;
+  OnlineFragment(this.context, {this.filtro});
+
+  @override
+  _MyState createState() => _MyState(context, filtro);
 }
 class _MyState extends State<OnlineFragment> with AutomaticKeepAliveClientMixin<OnlineFragment> {
 
-  _MyState(this.context);
+  _MyState(this.context, this._args);
 
   //region Variaveis
   static const String TAG = 'OnlineFragment';
-  static String _filtro = '#';
+  String _args;
+  String _filtro;
 
   final BuildContext context;
   List<AnimeCollection> collections = [];
@@ -32,7 +42,11 @@ class _MyState extends State<OnlineFragment> with AutomaticKeepAliveClientMixin<
   @override
   void initState() {
     super.initState();
-    _filtro = Config.filtro;
+    if (_args == null)
+      _filtro = Config.filtro;
+    else
+      _filtro = _args;
+
     _preencherLista(ignoreRunTime: true);
   }
 
@@ -101,11 +115,11 @@ class _MyState extends State<OnlineFragment> with AutomaticKeepAliveClientMixin<
             }
         ),
         floatingActionButton: RunTime.changeListMode ? AdsFooter(child: CircularProgressIndicator()) :
-        AdsFooter(
+        _args == null ? AdsFooter(
             child: FloatingActionButton.extended(
                 label: Text(_filtro),
                 onPressed: _alterarFiltro
-            )),
+            )) : null,
       ),
       onRefresh: _onRefresh,
     );
@@ -195,9 +209,7 @@ class _MyState extends State<OnlineFragment> with AutomaticKeepAliveClientMixin<
           int i = int.parse(filtro);
           if (i == 0) {
             collections.addAll(OnlineData.dataList.where((x) => x.itemsToList.where((e) => e.isNoLancado).length > 0));
-            Log.snack('Animes não lançados');
-          }
-          else {
+          } else {
             collections.addAll(OnlineData.dataList.where((x) => x.itemsToList.where((e) => e.data.contains(filtro)).length > 0));
             Log.snack('Animes lançados em $filtro');
           }

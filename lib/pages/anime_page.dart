@@ -1,6 +1,8 @@
 import 'package:anime/auxiliar/import.dart';
 import 'package:anime/model/import.dart';
+import 'package:anime/pages/youtube_player_page.dart';
 import 'package:anime/res/import.dart';
+import 'package:flutter/services.dart';
 
 class AnimePage extends StatefulWidget {
   final AnimeCollection anime;
@@ -198,6 +200,8 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
   String _tipo = '';
   String _status = '';
   String _aviso = '';
+  String _trailer = '';
+  String _maturidade = '';
 
   int _episodios = 0;
 
@@ -251,6 +255,7 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
   @override
   Widget build(BuildContext context) {
     super.build(context);
+
     return WillPopScope(
       onWillPop: () async {
         if (_inEditMode) {
@@ -266,15 +271,6 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
         else return true;
       },
       child: Scaffold(
-        // appBar: AppBar(
-        //   automaticallyImplyLeading: false,
-        //   backgroundColor: OkiTheme.background,
-        //   // title: Text(pageTitle, style: Styles.titleText),
-        //   // flexibleSpace: Text(pageTitle, style: Styles.titleText),
-        //   actions: [
-        //
-        //   ],
-        // ),
         body: SingleChildScrollView(
           child: Stack(
             children: [
@@ -288,48 +284,28 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
                     padding: EdgeInsets.fromLTRB(10, 10, 10, 70),
                     child: Column(
                       children: [
-                        if (_sinopce.isNotEmpty)...[
-                          Container(
-                              alignment: Alignment.centerLeft,
-                              child: FlatButton(
-                                child: Text('${Strings.SINOPSE}: ${_showSinopse ? 'ocultar': 'mostrar'}'),
-                                onPressed: _switchSinopse,
-                              )
-                          ),
-                          if(_showSinopse)...[
+                        Row(
+                          children: [
+                            if (_sinopce.isNotEmpty)
+                              itemButtonLayout('${Strings.SINOPSE}: ${_showSinopse ? 'ocultar': 'mostrar'}', _switchSinopse),
+
+                            if (_trailer.isNotEmpty)
+                              itemButtonLayout('${Strings.TRAILER}', onTrailerClick),
+
+                            if(_link.isNotEmpty && FirebaseOki.isAdmin)
+                              itemButtonLayout(_linkProvider, _onOpenLinkClick),
+                          ],
+                        ),
+
+                        if(_sinopce.isNotEmpty && _showSinopse)...[
+                          itemLayout(_sinopce),
+                          if (_aviso.isNotEmpty)
                             Container(
                               padding: EdgeInsets.all(5),
-                              child: Text(_sinopce),
+                              child: Text('Info: $_aviso', style: TextStyle(color: Colors.red)),
                             ),
-                            if (_aviso.isNotEmpty)
-                              Container(
-                                padding: EdgeInsets.all(5),
-                                child: Text('Info: $_aviso', style: TextStyle(color: Colors.red)),
-                              ),
-                          ]
                         ],
 
-                        if(_media >= 0)
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            padding: EdgeInsets.all(10),
-                            child: Text('${Strings.MEDIA}: $_media'),
-                          ),
-                        if (_votos > 0)
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            padding: EdgeInsets.all(5),
-                            child: Text('${Strings.VOTOS}: $_votos'),
-                          ),
-                        if(_link.isNotEmpty && FirebaseOki.isAdmin)
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            padding: EdgeInsets.all(5),
-                            child: ElevatedButton(
-                              child: Text(_linkProvider),
-                              onPressed: _onOpenLinkClick,
-                            ),
-                          ),
                         if (_isAvancado)...[
                           Divider(),
                           if (!_isOnline && _inEditMode)...[
@@ -378,12 +354,12 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
               ),
               Container(
                 decoration: BoxDecoration(
-                  boxShadow: [
-                    BoxShadow(
-                      color: OkiTheme.textInvert(0.3),
-                      blurRadius: 30,
-                    ),
-                  ]
+                    boxShadow: [
+                      BoxShadow(
+                        color: OkiTheme.textInvert(0.3),
+                        blurRadius: 30,
+                      ),
+                    ]
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -466,17 +442,18 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
 
     return Column(
       children: [
+        // Nome 1
         Container(
           alignment: Alignment.centerLeft,
           padding: EdgeInsets.all(5),
           child: Text('${Strings.TITULO}: $_nome', style: TextStyle(fontSize: 20)),
         ),
         if (_nome2.isNotEmpty)
-          Container(
-            alignment: Alignment.centerLeft,
-            padding: paddingH,
-            child: Text('$_nome2'),
-          ),
+          itemLayout('$_nome2'),
+
+        itemLayout('Episódios: ${_episodios >= 0 ? _episodios : 'Indefinido'}'),
+
+        // Tipo
         Container(
           alignment: Alignment.centerLeft,
           padding: paddingH,
@@ -485,29 +462,23 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
             Layouts.getAnimeTypeIcon(_tipo),
           ]),
         ),
-        Container(
-          alignment: Alignment.centerLeft,
-          padding: paddingH,
-          child: Text('Data: $_data'),
-        ),
+
+        itemLayout('Data: $_data'),
+
         if (_status.isNotEmpty)
-          Container(
-            alignment: Alignment.centerLeft,
-            padding: paddingH,
-            child: Text('Status: $_status'),
-          ),
-          Container(
-            alignment: Alignment.centerLeft,
-            padding: paddingH,
-            child: Text('Episódios: ${_episodios >= 0 ? _episodios : 'Indefinido'}'),
-          )
-        ,
+          itemLayout('Status: $_status'),
+
+        if (_maturidade.isNotEmpty)
+          itemLayout('Maturidade: $_maturidade'),
+
+        if(_media >= 0)
+          itemLayout('${Strings.MEDIA}: $_media'),
+        if (_votos > 0)
+          itemLayout('${Strings.VOTOS}: $_votos'),
+
         if(_generos.isNotEmpty)
-          Container(
-            alignment: Alignment.centerLeft,
-            padding: paddingH,
-            child: Text('${Strings.GENEROS}: $_generos'),
-          ),
+          itemLayout('${Strings.GENEROS}: $_generos'),
+
         if(!_isOnline)
           _customTextField(_desc, TextInputType.text, Strings.OBSERVACAO, isReadOnly: !_inEditMode),
         if (listType.isAssistindo)
@@ -585,6 +556,25 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
         )),
         Text(teste.toString())
       ],
+    );
+  }
+
+  Widget itemLayout(String value) {
+    var paddingH = EdgeInsets.symmetric(horizontal: 10, vertical: 2);
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: paddingH,
+      child: Text('$value'),
+    );
+  }
+  Widget itemButtonLayout(String value, onClick()) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: EdgeInsets.all(5),
+      child: FlatButton(
+        child: Text(value),
+        onPressed: onClick,
+      ),
     );
   }
 
@@ -692,13 +682,14 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
     _link = item.link;
     _data = item.data;
     _tipo = item.tipo;
-    // _fotoUrl = item.foto;todo
     _sinopce = item.sinopse;
+    _trailer = item.trailer;
+    _maturidade = item.maturidade;
     _status = item.isNoLancado ? 'Ainda não foi ao ar' : '';
     _aviso = item.aviso ?? '';
     _isCopiado = item.isCopiado;
     _episodios = item.episodios;
-    _media = item.classificacao.media;
+    _media = listType.isOnline ? item.getMedia : item.classificacao.media;
 
     if (_data.contains('i')) _data = 'Indefinido';
 
@@ -739,6 +730,7 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
       _setInProgress(false);
     }
     setState(() {});
+    Log.d(TAG, '_preencherDados', _trailer);
   }
 
   void _onMenuEditClick() async {
@@ -820,6 +812,11 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
       Navigator.pop(context);
     }
     _setInProgress(false);
+  }
+
+  void onTrailerClick() {
+    // Aplication.openUrl(_trailer);
+    Navigate.to(context, YouTubePage(_trailer));
   }
 
   _voidRetornoOnDelete(context, AnimeCollection animeCollection) {

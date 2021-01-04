@@ -1,7 +1,7 @@
 name: anime
 description: Lista de animes e suas classificações
 
-version: 1.0.24+24
+version: 1.0.25+25
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -21,6 +21,7 @@ dependencies:
   path_provider: ^1.6.24
   shared_preferences: ^0.5.12+4
   url_launcher: ^5.7.10
+  youtube_player_flutter: ^7.0.0+7
   flutter:
     sdk: flutter
 

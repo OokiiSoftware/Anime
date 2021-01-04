@@ -49,6 +49,7 @@ class Strings {
   static const String TITULO = 'Titulo';
   static const String NOME = 'Nome';
   static const String SINOPSE = 'Sinopse';
+  static const String TRAILER = 'Ver o trailer';
   static const String OBSERVACAO = 'Observação';
   static const String GENEROS = 'Gêneros';
   static const String MEDIA = 'Média';
@@ -75,7 +76,7 @@ class Titles {
 
   static const String AVISO_ITEM_REPETIDO = 'Este item já está em sua lista de ';
 
-  static const main_page = [DESEJOS, FAVORITOS, CONCLUIDOS, ONLINE, ADMIN];
+  static const main_page = [DESEJOS, FAVORITOS, CONCLUIDOS, ONLINE, Menus.NAO_LANCADOS];
 }
 
 class MyTexts {
@@ -105,6 +106,10 @@ class MyErros {
   static const String ABRIR_LINK = 'Erro ao abrir o link';
   static const String ABRIR_EMAIL = 'Erro ao enviar email';
   static const String ERRO_GENERICO = 'Ocorreu um erro';
+}
+
+class Menus {
+  static const NAO_LANCADOS = 'Não Lançados';
 }
 
 class MenuMain {

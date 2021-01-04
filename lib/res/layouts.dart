@@ -285,7 +285,7 @@ class AnimeItemLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var media = item.classificacao.media;
+    var media = listType.isOnline ? item.getMedia : item.classificacao.media;
     String subtitle = '';
     if (item.episodios >= 0) {
       if (item.episodios > 1)
