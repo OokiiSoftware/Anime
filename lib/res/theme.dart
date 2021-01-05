@@ -4,15 +4,15 @@ import 'package:anime/auxiliar/import.dart';
 class OkiColors {
   static int cor(bool darkModeOn) => darkModeOn ? 0 : 255;
 
-  static Color primaryLight = Colors.orangeAccent;
-  static Color primaryDark = Colors.deepOrange;
-  static Color primary = Colors.orange;
-  static Color accent = Colors.blue;
-  static Color text = Colors.white;
+  static const Color primaryLight = Colors.orangeAccent;
+  static const Color primaryDark = Colors.deepOrangeAccent;
+  static const Color primary = Colors.orange;
+  static const Color accent = Colors.deepOrange;
+  static const Color text = Colors.white;
   static Color textInvert(double alfa, {bool isDark = false}) => Color.fromRGBO(cor(isDark), cor(isDark), cor(isDark), alfa);
-  static Color textError = Colors.red;
+  static const Color textError = Colors.red;
   static Color background({bool isDark = false}) => isDark ? Colors.black87 : Colors.white;
-  static Color tint = Colors.white;
+  static const Color tint = Colors.white;
 }
 
 class OkiThemeMode {

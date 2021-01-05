@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:anime/auxiliar/import.dart';
 import 'package:anime/res/import.dart';
 import 'package:flutter/cupertino.dart';
@@ -35,6 +34,8 @@ class _State extends State<YouTubePage> {
   void initState() {
     super.initState();
 
+    _setOrientation(DeviceOrientation.values);
+
     _controller = YoutubePlayerController(
       initialVideoId: link,
       flags: const YoutubePlayerFlags(
@@ -61,55 +62,58 @@ class _State extends State<YouTubePage> {
 
   @override
   Widget build(BuildContext context) {
-    return YoutubePlayerBuilder(
-      onExitFullScreen: () {
-        // The player forces portraitUp after exiting fullscreen. This overrides the behaviour.
-        SystemChrome.setPreferredOrientations(DeviceOrientation.values);
-      },
-      player: YoutubePlayer(
-        controller: _controller,
-        showVideoProgressIndicator: true,
-        progressIndicatorColor: OkiTheme.primary,
-        topActions: <Widget>[
-          const SizedBox(width: 8.0),
-          Expanded(
-            child: Text(
-              _controller.metadata.title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18.0,
+    return WillPopScope(
+        onWillPop: () async {
+          _setOrientation([ DeviceOrientation.portraitUp ]);
+          return true;
+        },
+        child: YoutubePlayerBuilder(
+          onExitFullScreen: () {},
+          player: YoutubePlayer(
+            controller: _controller,
+            showVideoProgressIndicator: true,
+            progressIndicatorColor: OkiTheme.primary,
+            topActions: <Widget>[
+              const SizedBox(width: 8.0),
+              Expanded(
+                child: Text(
+                  _controller.metadata.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18.0,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
               ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+            ],
+            onReady: () {
+              _isPlayerReady = true;
+            },
+            onEnded: (data) {
+              // _controller.load(_ids[(_ids.indexOf(data.videoId) + 1) % _ids.length]);
+              // Log.snack('Next Video Started!');
+            },
+          ),
+          builder: (context, player) => Scaffold(
+            appBar: AppBar(title: const Text('Trailer', style: TextStyle(color: Colors.white))),
+            body: ListView(
+              children: [
+                player,
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _space,
+                      _text(_videoMetaData.title),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-        ],
-        onReady: () {
-          _isPlayerReady = true;
-        },
-        onEnded: (data) {
-          // _controller.load(_ids[(_ids.indexOf(data.videoId) + 1) % _ids.length]);
-          // Log.snack('Next Video Started!');
-        },
-      ),
-      builder: (context, player) => Scaffold(
-        appBar: AppBar(title: const Text('Trailer', style: TextStyle(color: Colors.white))),
-        body: ListView(
-          children: [
-            player,
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _space,
-                  _text(_videoMetaData.title),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
+        )
     );
   }
 
@@ -126,6 +130,10 @@ class _State extends State<YouTubePage> {
   }
 
   Widget get _space => const SizedBox(height: 10);
+
+  void _setOrientation(List<DeviceOrientation> orientacoes) {
+    SystemChrome.setPreferredOrientations(orientacoes);
+  }
 
   void listener() {
     if (_isPlayerReady && mounted && !_controller.value.isFullScreen) {
