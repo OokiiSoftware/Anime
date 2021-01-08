@@ -65,7 +65,7 @@ class Titles {
   static const String FAVORITOS = 'FAVORITOS';
   static const String CONCLUIDOS = 'CONCLUIDOS';
   static const String ADD_ANIME = 'Adicionar Anime';
-  static const String ADMIN = 'Admin';
+  static const String ADMIN = 'ADMINISTRADOR';
   static const String CONFIGURACOES = 'CONFIGURAÇÕES';
   static const String INFORMACOES = 'INFORMAÇÕES';
   static const String GENEROS = 'GÊNEROS';

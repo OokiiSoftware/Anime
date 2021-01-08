@@ -2,13 +2,10 @@ import 'package:anime/auxiliar/import.dart';
 import 'package:anime/model/import.dart';
 import 'package:anime/res/import.dart';
 import 'package:anime/sub_pages/import.dart';
-import '../auxiliar/config.dart';
 import 'anime_page.dart';
 import 'config_page.dart';
 import 'info_page.dart';
 import 'login_page.dart';
-
-BannerAd myBanner;
 
 void onMenuItemSelected(BuildContext context, String value) async {
   switch(value) {
@@ -23,34 +20,6 @@ void onMenuItemSelected(BuildContext context, String value) async {
       Navigate.toReplacement(context, LoginPage());
       break;
   }
-}
-
-void _loadAdMob() async {
-  MobileAdTargetingInfo targetingInfo = MobileAdTargetingInfo(
-    // keywords: <String>['flutterio', 'Anime'],
-    // contentUrl: 'https://flutter.io',
-    childDirected: false,
-    testDevices: <String>[], // Android emulators are considered test devices
-  );
-
-  myBanner?.dispose();
-  myBanner = BannerAd(
-      adUnitId: /*BannerAd.testAdUnitId,*/'ca-app-pub-8585143969698496/1877059427',
-      size: AdSize.banner,
-      targetingInfo: targetingInfo,
-      listener: (MobileAdEvent event) {
-        Log.d('MainPage', 'loadAdMob', "BannerAd event is $event");
-        switch(event) {
-          case MobileAdEvent.loaded:
-            RunTime.mostrandoAds = true;
-            break;
-          default:
-            RunTime.mostrandoAds = false;
-        }
-      }
-  );
-  if (await myBanner.load())
-    await myBanner.show();
 }
 
 class MainPage extends StatefulWidget {
@@ -73,14 +42,14 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
   void dispose() {
     super.dispose();
     _tabController?.dispose();
-    myBanner?.dispose();
+    AdMob.instance.dispose();
   }
 
   @override
   void initState() {
     super.initState();
     _init();
-    _loadAdMob();
+    AdMob.instance.load();
   }
 
   @override
@@ -111,7 +80,7 @@ class _MyState extends State<MainPage> with SingleTickerProviderStateMixin {
 
     return Scaffold(
         appBar: AppBar(
-          title: Text(_currentTitle, style: Styles.titleText),
+          title: Text(_currentTitle, style: Styles.textFixo),
           bottom: TabBar(
             controller: _tabController,
             tabs: tabs,
@@ -246,14 +215,14 @@ class _State extends State<MainPage2> with SingleTickerProviderStateMixin {
   @override
   void dispose() {
     super.dispose();
-    myBanner?.dispose();
+    AdMob.instance.dispose();
   }
 
   @override
   void initState() {
     super.initState();
     _init();
-    _loadAdMob();
+    AdMob.instance.load();
   }
 
   @override
@@ -268,7 +237,6 @@ class _State extends State<MainPage2> with SingleTickerProviderStateMixin {
     var draewrTextColor = OkiTheme.text;
     var draewrIconColor = OkiTheme.text;
     var draewrTextStyle = TextStyle(color: draewrTextColor);
-    //endregion
 
     Widget temp;
     switch(currentListTypeValue) {
@@ -288,10 +256,11 @@ class _State extends State<MainPage2> with SingleTickerProviderStateMixin {
         temp = NaoLancadosFrament(context);
         break;
     }
+    //endregion
 
     return Scaffold(
       appBar: AppBar(
-          title: Text(title, style: Styles.titleText),
+          title: Text(title, style: Styles.textFixo),
         actions: [
           IconButton(
             tooltip: 'Pesquisar',
@@ -454,7 +423,7 @@ class _State extends State<MainPage2> with SingleTickerProviderStateMixin {
 
   void _init() {
     int initIndex = Config.currentTabInMainPage;
-    if (initIndex == 3) initIndex = 2;
+    if (initIndex == 3) initIndex = 0;
 
     _setPage(ListType(initIndex));
   }

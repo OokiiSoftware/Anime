@@ -28,7 +28,7 @@ class _MyState extends State<GenerosFragment> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(Titles.GENEROS, style: Styles.titleText),
+        title: Text(Titles.GENEROS, style: Styles.textFixo),
         actions: [
           Tooltip(
             message: _allSelected ? 'Desmarcar Tudo' : 'Marcar Tudo',
@@ -79,10 +79,10 @@ class _MyState extends State<GenerosFragment> {
   //region metodos
 
   bool get isTudoSelecionado {
-    for (var key in _data.keys) {
-      if (!_data[key]) return false;
-    }
-    return true;
+    // for (var key in _data.keys) {
+    //   if (!_data[key]) return false;
+    // }
+    return _data.values.firstWhere((x) => !x, orElse: () => true);
   }
 
   void _onMostrarFab(bool b) {
@@ -92,10 +92,10 @@ class _MyState extends State<GenerosFragment> {
   }
 
   void _onSave() {
-    var temp = '';
+    var temp = List<String>();
     for (var key in _data.keys) {
       if (_data[key])
-        temp += '$key,';
+        temp.add(key);
     }
     Config.generos = temp;
     RunTime.updateOnlineFragment = true;

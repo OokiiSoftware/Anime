@@ -1,6 +1,6 @@
 import 'package:anime/auxiliar/import.dart';
 import 'package:anime/model/import.dart';
-import 'package:anime/pages/youtube_player_page.dart';
+import 'package:anime/pages/youtube_page.dart';
 import 'package:anime/res/import.dart';
 import 'package:flutter/services.dart';
 
@@ -61,7 +61,7 @@ class _MyState extends State<AnimePage> with SingleTickerProviderStateMixin {
     return Scaffold(
       appBar: AppBar(
           elevation: 0.1,
-          title: Text(title, style: Styles.titleText),
+          title: Text(title, style: Styles.textFixo),
       ),
       body: TabBarView(
         controller: tabController,

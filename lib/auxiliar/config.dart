@@ -24,12 +24,12 @@ class ListOrder {
 class Config {
   static int _itemListMode;
   static int _currentTabInMainPage;
-  static String _filtro;
-  static String _generos;
-  static String _listOrder;
-  static String _theme;
   static bool _showEcchi;
   static bool _useNewLayout;
+  static String _filtro;
+  static String _theme;
+  static String _listOrder;
+  static List<String> _generos;
 
   //region get set
 
@@ -62,10 +62,10 @@ class Config {
     Preferences.setString(PreferencesKey.FILTRO, value);
   }
 
-  static String get generos => _generos ?? '';
-  static set generos(String value) {
+  static List<String> get generos => _generos ?? '';
+  static set generos(List<String> value) {
     _generos = value;
-    Preferences.setString(PreferencesKey.GENEROS, value);
+    Preferences.setList(PreferencesKey.GENEROS, value);
   }
 
   static bool get showEcchi => _showEcchi ?? false;
@@ -89,12 +89,12 @@ class Config {
     _currentTabInMainPage = Preferences.getInt(PreferencesKey.CURRENT_TAB_IN_MAIN_PAGE, padrao: 0);
     _useNewLayout = Preferences.getBool(PreferencesKey.USE_NOVO_LAYOUT, padrao: true);
     _showEcchi = Preferences.getBool(PreferencesKey.SHOW_ECCHI, padrao: false);
-    _generos = Preferences.getString(PreferencesKey.GENEROS, padrao: '');
+    _generos = Preferences.getList(PreferencesKey.GENEROS, padrao: []);
     _filtro = Preferences.getString(PreferencesKey.FILTRO, padrao: '#');
 
     if (_generos.isEmpty) {
       for (String item in OnlineData.generos)
-        _generos += '$item,';
+        _generos.add(item);
     }
   }
 }

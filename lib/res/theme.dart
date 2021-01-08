@@ -31,6 +31,7 @@ class OkiTheme {
   static Color get primary => OkiColors.primary;
   static Color get accent => OkiColors.accent;
   static Color get text => darkModeOn ? OkiColors.textDark : OkiColors.textLight;
+  static Color get textI => darkModeOn ? OkiColors.textLight : OkiColors.textDark;
   static Color textInvert([double alfa = 1]) => OkiColors.textInvert(alfa, isDark: darkModeOn);
   static Color get textError => OkiColors.textError;
   static Color get background => OkiColors.background(isDark: darkModeOn);

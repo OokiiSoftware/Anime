@@ -21,7 +21,7 @@ class _MyState extends State<AdminPage> {
     var divider = Divider(color: OkiTheme.primary);
 
     return Scaffold(
-      appBar: AppBar(title: Text(Titles.ADMIN, style: Styles.titleText)),
+      appBar: AppBar(title: Text(Titles.ADMIN, style: Styles.textFixo)),
       body: SingleChildScrollView(
         padding: Layouts.adsPadding(10),
         child: Column(
@@ -62,9 +62,11 @@ class _MyState extends State<AdminPage> {
             ElevatedButton(
               child: Text('Ads: ${RunTime.mostrandoAds ? 'On' : 'Off'}'),
               onPressed: () {
-                setState(() {
-                  RunTime.mostrandoAds = !RunTime.mostrandoAds;
-                });
+                if (RunTime.mostrandoAds)
+                  AdMob.instance.dispose();
+                else
+                  AdMob.instance.load();
+                setState(() {});
               },
             ),
           ],

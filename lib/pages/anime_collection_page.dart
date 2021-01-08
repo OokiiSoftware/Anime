@@ -49,7 +49,7 @@ class _MyState extends State<AnimeCollectionPage> {
         else return true;
       },
       child: Scaffold(
-        appBar: AppBar(title: Text(animeCollection.nome, style: TextStyle(color: OkiTheme.text))),
+        appBar: AppBar(title: Text(animeCollection.nome, style: Styles.textFixo)),
         body: SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(10, 10, 10, 80),
           child: Column(children: [

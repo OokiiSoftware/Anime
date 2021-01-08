@@ -18,7 +18,6 @@ class _State extends State<YouTubePage> {
 
   YoutubeMetaData _videoMetaData;
   bool _isPlayerReady = false;
-  bool _isFinalizado = false;
 
   final String link;
 
@@ -51,29 +50,29 @@ class _State extends State<YouTubePage> {
     _videoMetaData = const YoutubeMetaData();
 
     _controller.play();
+    AdMob.instance.dispose();
   }
 
   @override
   void deactivate() {
     // Pauses video while navigating to next page.
     _controller.pause();
+    Log.d('YouTubePage', 'onEnterFullScreen', 2);
     super.deactivate();
   }
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
-        onWillPop: () async {
-          _setOrientation([ DeviceOrientation.portraitUp ]);
-          return true;
-        },
+        onWillPop: onGoBack,
         child: YoutubePlayerBuilder(
           onExitFullScreen: () {
-            if (!_isFinalizado)
+            if (_controller.value.isPlaying)
               _controller.play();
           },
-          onEnterFullScreen: () {
-            if (!_isFinalizado)
+          onEnterFullScreen: () async {
+            Log.d('YouTubePage', 'onEnterFullScreen', 1);
+            if (_controller.value.isPlaying)
               _controller.play();
           },
           player: YoutubePlayer(
@@ -103,7 +102,7 @@ class _State extends State<YouTubePage> {
             },
           ),
           builder: (context, player) => Scaffold(
-            appBar: AppBar(title: const Text('Trailer', style: TextStyle(color: Colors.white))),
+            appBar: AppBar(title: Text('Trailer', style: Styles.textFixo)),
             body: ListView(
               children: [
                 player,
@@ -138,6 +137,12 @@ class _State extends State<YouTubePage> {
 
   Widget get _space => const SizedBox(height: 10);
 
+  Future<bool> onGoBack() async {
+    _setOrientation([ DeviceOrientation.portraitUp ]);
+    AdMob.instance.load();
+    return true;
+  }
+
   void _setOrientation(List<DeviceOrientation> orientacoes) {
     SystemChrome.setPreferredOrientations(orientacoes);
   }
@@ -148,8 +153,6 @@ class _State extends State<YouTubePage> {
         _videoMetaData = _controller.metadata;
       });
     }
-    if (_isPlayerReady && mounted)
-      _isFinalizado = _controller.value.position == _controller.value.metaData.duration;
   }
 
 }

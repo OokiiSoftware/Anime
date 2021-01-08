@@ -8,11 +8,13 @@ class Preferences {
   static int getInt(String key, {int padrao = 0}) => instance.getInt(key) ?? padrao;
   static double getDouble(String key, {double padrao = 0.0}) => instance.getDouble(key) ?? padrao;
   static String getString(String key, {String padrao = ''}) => instance.getString(key) ?? padrao;
+  static List<String> getList(String key, {List<String> padrao}) => instance.getStringList(key) ?? padrao;
 
   static Future<bool> setBool(String key, bool value) async => await instance.setBool(key, value);
   static Future<bool> setInt(String key, int value) async => await instance.setInt(key, value);
   static Future<bool> setDouble(String key, double value) async => await instance.setDouble(key, value);
   static Future<bool> setString(String key, String value) async => await instance.setString(key, value);
+  static Future<bool> setList(String key, List<String> value) async => await instance.setStringList(key, value);
 
   static bool containsKey(String key) => instance.containsKey(key);
 }
@@ -37,7 +39,7 @@ class PreferencesKey {
   static const String TUTORIAL = 'tutorial_01';
   static const String ITEM_LIST_MODE = 'itemListMode';
   static const String CURRENT_TAB_IN_MAIN_PAGE = 'CURRENT_TAB_IN_MAIN_PAGE';
-  static const String GENEROS = 'generos';
+  static const String GENEROS = 'generos_v2';
   static const String USE_NOVO_LAYOUT = 'USE_NOVO_LAYOUT';
   static const String SHOW_ECCHI = 'show_ecchi';
 

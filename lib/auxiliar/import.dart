@@ -1,4 +1,5 @@
 export 'admin.dart';
+export 'ad_mob.dart';
 export 'aplication.dart';
 export 'config.dart';
 export 'criptografia.dart';

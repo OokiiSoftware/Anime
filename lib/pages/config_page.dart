@@ -40,7 +40,7 @@ class MyWidgetState extends State<ConfigPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(Titles.CONFIGURACOES, style: Styles.titleText),
+        title: Text(Titles.CONFIGURACOES, style: Styles.textFixo),
         actions: [
           if (_isAdmin)
             IconButton(
@@ -121,13 +121,13 @@ class MyWidgetState extends State<ConfigPage> {
                     FlatButton(
                       minWidth: 200,
                       color: OkiTheme.accent,
-                      child: Text(MyTexts.ANINE_SUGESTAO, style: Styles.text),
+                      child: Text(MyTexts.ANINE_SUGESTAO, style: Styles.textFixo),
                       onPressed: () => _onSugestaoCkick(true),
                     ),
                     FlatButton(
                       minWidth: 200,
                       color: OkiTheme.accent,
-                      child: Text(MyTexts.ENVIE_SUGESTAO, style: Styles.text),
+                      child: Text(MyTexts.ENVIE_SUGESTAO, style: Styles.textFixo),
                       onPressed: _onSugestaoCkick,
                     ),
                   ],

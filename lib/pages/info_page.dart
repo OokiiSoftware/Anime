@@ -28,7 +28,7 @@ class _MyState extends State<InfoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(Titles.INFORMACOES, style: Styles.titleText)),
+      appBar: AppBar(title: Text(Titles.INFORMACOES, style: Styles.textFixo)),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(20),
         child: Column(
