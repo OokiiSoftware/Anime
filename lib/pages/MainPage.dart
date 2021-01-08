@@ -532,30 +532,33 @@ class DataSearch extends SearchDelegate<String> {
   @override
   Widget buildResults(BuildContext context) {
     if (listResults.length == 0) {
-      return _msgSemResultados;
+      return _msgSemResultados(context);
     }
     return listView(listResults);
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    listResults.clear();
-    listResults.addAll(query.isEmpty ? [] :
-    sugestoes.where((x) =>
-        (x.nome.toLowerCase().contains(query.toLowerCase())) ||
-        (x.nome2 != null && x.nome2.toLowerCase().contains(query.toLowerCase()))
-    ).toList());
-
+    _setQueryValues();
     if (listResults.length == 0 && query.length > 0) {
-      return _msgSemResultados;
+      return _msgSemResultados(context);
     }
 
     return listView(listResults);
   }
 
-  Widget get _msgSemResultados => ListTile(
-    title: Text('Sem resultados'),
-    subtitle: Text('Tente selecionar alguns generos na guia \'Online\''),
+  Widget _msgSemResultados(context) => ListTile(
+    title: Text(MyTexts.SEM_RESULTADOS),
+    subtitle: Text(MyTexts.SUJESTAO_ON_SEM_RESULTADOS),
+    onTap: () async {
+      await Navigate.to(context, GenerosFragment());
+      if (RunTime.updatePesquisaMainPage) {
+        sugestoes.clear();
+        _setQueryValues();
+        sugestoes.addAll(OnlineData.dataAnimes);
+        context.setState(() {});
+      }
+    },
   );
 
   ListView listView(List<Anime> list) {
@@ -573,6 +576,15 @@ class DataSearch extends SearchDelegate<String> {
       },
       itemCount: list.length,
     );
+  }
+
+  void _setQueryValues() {
+    listResults.clear();
+    listResults.addAll(query.isEmpty ? [] :
+    sugestoes.where((x) =>
+    (x.nome.toLowerCase().contains(query.toLowerCase())) ||
+        (x.nome2 != null && x.nome2.toLowerCase().contains(query.toLowerCase()))
+    ).toList());
   }
 
   void _onItemTap(BuildContext context, Anime item) async {

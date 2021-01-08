@@ -104,9 +104,12 @@ class RunTime {
   static bool _updateAssistindoFragment = false;
   static bool _updateFavoritosFragment = false;
   static bool _updateConcluidosFragment = false;
+  static bool _updatePesquisaMainPage = false;
   static bool _changeListMode = false;
   static bool mostrandoAds = false;
   static bool isOnline = false;
+
+  static const int PESQUISA_MAIN_PAGE_CODE = 5;
 
   static void updateFragment(ListType listType) {
     switch(listType.value) {
@@ -118,6 +121,9 @@ class RunTime {
         break;
       case ListType.concluidosValue:
         RunTime.updateConcluidosFragment = true;
+        break;
+      case PESQUISA_MAIN_PAGE_CODE:
+        RunTime.updatePesquisaMainPage = true;
         break;
     }
   }
@@ -144,6 +150,12 @@ class RunTime {
   static bool get updateConcluidosFragment {
     final b = _updateConcluidosFragment;
     _updateConcluidosFragment = false;
+    return b;
+  }
+  static set updatePesquisaMainPage(bool value) => _updatePesquisaMainPage = value;
+  static bool get updatePesquisaMainPage {
+    final b = _updatePesquisaMainPage;
+    _updatePesquisaMainPage = false;
     return b;
   }
 

@@ -180,7 +180,7 @@ class MyWidgetState extends State<ConfigPage> {
 
   void _onSugestaoCkick([bool isSugestaoAnime = false]) async {
     var controller = TextEditingController();
-    var title = MyTexts.ENVIAR_SUGESTAO_TITLE;
+    var title = isSugestaoAnime ? MyTexts.ANINE_SUGESTAO : MyTexts.ENVIAR_SUGESTAO_TITLE;
     var content = [
       if (isSugestaoAnime)
         Text('Insira corretamente o nome completo do anime'),

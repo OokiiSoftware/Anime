@@ -473,6 +473,7 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
 
         if(_media >= 0)
           itemLayout('${Strings.MEDIA}: $_media'),
+
         if (_votos > 0)
           itemLayout('${Strings.VOTOS}: $_votos'),
 
@@ -842,29 +843,6 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
           var r = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
           return r.isPositive;
         }
-
-        /*switch(listType.value) {
-          case ListType.assistindoValue: {
-            if (assistindoRepetido) {
-              var r = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
-              return r.isPositive;
-            }
-            break;
-          }
-          case ListType.concluidosValue: {
-            if (concluidoRepetido) {
-              var r = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
-              return r.isPositive;
-            }
-            break;
-          }
-          case ListType.favoritosValue:
-            if (favoritoRepetido) {
-              var r = await DialogBox.dialogCancelOK(context, title: title, content: [content]);
-              return r.isPositive;
-            }
-            break;
-        }*/
       }
 
       return true;

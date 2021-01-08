@@ -8,12 +8,14 @@ class OkiColors {
   static const Color primaryDark = Colors.deepOrangeAccent;
   static const Color primary = Colors.orange;
   static const Color accent = Colors.deepOrange;
-  static const Color text = Colors.white;
+  static const Color textDark = Colors.white;
+  static const Color textLight = Colors.black;
   static Color textInvert(double alfa, {bool isDark = false}) => Color.fromRGBO(cor(isDark), cor(isDark), cor(isDark), alfa);
   static const Color textError = Colors.red;
   static Color background({bool isDark = false}) => isDark ? Colors.black87 : Colors.white;
   static const Color tint = Colors.white;
 }
+
 
 class OkiThemeMode {
   static const sistema = 'Sistema';
@@ -28,7 +30,7 @@ class OkiTheme {
   static Color get primaryDark => OkiColors.primaryDark;
   static Color get primary => OkiColors.primary;
   static Color get accent => OkiColors.accent;
-  static Color get text => OkiColors.text;
+  static Color get text => darkModeOn ? OkiColors.textDark : OkiColors.textLight;
   static Color textInvert([double alfa = 1]) => OkiColors.textInvert(alfa, isDark: darkModeOn);
   static Color get textError => OkiColors.textError;
   static Color get background => OkiColors.background(isDark: darkModeOn);

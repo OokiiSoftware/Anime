@@ -92,6 +92,9 @@ class MyTexts {
   static const String REPORTAR_PROBLEMA_AGRADECIMENTO = 'Obrigado pelo seu feedback';
   static const String ENVIE_SUGESTAO_AGRADECIMENTO = 'Obrigado pela sua ${Strings.SUGESTAO}';
 
+  static const String SEM_RESULTADOS = 'Sem resultados';
+  static const String SUJESTAO_ON_SEM_RESULTADOS = 'Clique aqui para selecionar alguns gêneros';
+
   static const String EXCLUIR_ITEM = 'Deseja excluir este item da lista de';
   static const String ULTIMO_VISTO = 'Ultimo assistido';
 

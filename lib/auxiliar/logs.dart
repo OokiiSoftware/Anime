@@ -9,7 +9,7 @@ class Log {
     try {
       scaffKey.currentState.hideCurrentSnackBar();
 
-      var textColor = OkiTheme.text;
+      var textColor = OkiColors.textDark;
       var snack = SnackBar(
         content: Container(
           margin: Layouts.adsPadding(0),

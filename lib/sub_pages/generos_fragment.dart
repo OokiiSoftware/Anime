@@ -99,6 +99,7 @@ class _MyState extends State<GenerosFragment> {
     }
     Config.generos = temp;
     RunTime.updateOnlineFragment = true;
+    RunTime.updatePesquisaMainPage = true;
 
     Log.snack('Dados Salvos');
 

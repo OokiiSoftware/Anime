@@ -13,12 +13,12 @@ class YouTubePage extends StatefulWidget {
   @override
   _State createState() => _State(link);
 }
-
 class _State extends State<YouTubePage> {
   YoutubePlayerController _controller;
 
   YoutubeMetaData _videoMetaData;
   bool _isPlayerReady = false;
+  bool _isFinalizado = false;
 
   final String link;
 
@@ -68,7 +68,14 @@ class _State extends State<YouTubePage> {
           return true;
         },
         child: YoutubePlayerBuilder(
-          onExitFullScreen: () {},
+          onExitFullScreen: () {
+            if (!_isFinalizado)
+              _controller.play();
+          },
+          onEnterFullScreen: () {
+            if (!_isFinalizado)
+              _controller.play();
+          },
           player: YoutubePlayer(
             controller: _controller,
             showVideoProgressIndicator: true,
@@ -141,6 +148,8 @@ class _State extends State<YouTubePage> {
         _videoMetaData = _controller.metadata;
       });
     }
+    if (_isPlayerReady && mounted)
+      _isFinalizado = _controller.value.position == _controller.value.metaData.duration;
   }
 
 }

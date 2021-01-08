@@ -68,12 +68,14 @@ class _MyState extends State<OnlineFragment> with AutomaticKeepAliveClientMixin<
             itemCount: 1,
             itemBuilder: (context, index) {
               return ListTile(
-                title: Text('Sem resultados'),
-                subtitle: Text('Clique aqui para selecionar alguns generos'),
+                title: Text(MyTexts.SEM_RESULTADOS),
+                subtitle: Text(MyTexts.SUJESTAO_ON_SEM_RESULTADOS),
                 onTap: () async {
                   await Navigate.to(context, GenerosFragment());
                   if (RunTime.updateOnlineFragment) {
-                    _setFiltro(_filtro);
+                    RunTime.updatePesquisaMainPage;// <- Remove o valor 'true' dessa variavel
+                    _setFiltro('$_filtro');
+                    setState(() {});
                   }
                 },
               );
@@ -149,12 +151,6 @@ class _MyState extends State<OnlineFragment> with AutomaticKeepAliveClientMixin<
         ),
       ),
       ElevatedButton(
-        child: Text('Generos'),
-        onPressed: () async {
-          await Navigate.to(context, GenerosFragment());
-        },
-      ),
-      ElevatedButton(
         child: Text('Exemplos'),
         onPressed: () {
           var title = 'Exemplos de Filtros';
@@ -170,6 +166,12 @@ class _MyState extends State<OnlineFragment> with AutomaticKeepAliveClientMixin<
           DialogBox.dialogOK(context, title: title, content: content);
         },
       ),
+      ElevatedButton(
+        child: Text('Generos'),
+        onPressed: () async {
+          await Navigate.to(context, GenerosFragment());
+        },
+      ),
     ];
 
     var result = await DialogBox.dialogCancelOK(context, title: title, content: content);
@@ -180,6 +182,7 @@ class _MyState extends State<OnlineFragment> with AutomaticKeepAliveClientMixin<
       _saveFiltro(text);
     } else if (RunTime.updateOnlineFragment) {
       _setFiltro(_filtro);
+      setState(() {});
     }
   }
 
