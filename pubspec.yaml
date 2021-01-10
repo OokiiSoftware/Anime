@@ -1,7 +1,7 @@
 name: anime
 description: Lista de animes e suas classificações
 
-version: 1.0.28+28
+version: 1.0.29+29
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -9,7 +9,7 @@ environment:
 dependencies:
 #  android_intent: ^0.3.7+3
 #  device_apps: ^1.2.0
-#  dio: any
+  dio: any
   clipboard_manager: ^0.0.4
   dynamic_theme: ^1.0.1
   firebase_admob: ^0.10.2

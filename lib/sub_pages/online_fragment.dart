@@ -40,6 +40,12 @@ class _MyState extends State<OnlineFragment> with AutomaticKeepAliveClientMixin<
   bool get wantKeepAlive => true;
 
   @override
+  void dispose() {
+    AdMob.instance.removeListener(this);
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     if (_args == null)
@@ -48,6 +54,7 @@ class _MyState extends State<OnlineFragment> with AutomaticKeepAliveClientMixin<
       _filtro = _args;
 
     _preencherLista(ignoreRunTime: true);
+    AdMob.instance.addListener(this);
   }
 
   @override
@@ -56,7 +63,6 @@ class _MyState extends State<OnlineFragment> with AutomaticKeepAliveClientMixin<
 
     _preencherLista();
 
-    var isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
     bool isListMode = Config.itemListMode.isListMode;
     var user = FirebaseOki.userOki;
 
@@ -102,17 +108,16 @@ class _MyState extends State<OnlineFragment> with AutomaticKeepAliveClientMixin<
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 mainAxisSpacing: 2,
                 crossAxisSpacing: 2,
-                crossAxisCount: isPortrait ? 3 : 2,
-                childAspectRatio: isPortrait ? 1/2 : 3.5
+                crossAxisCount: 3,
+                childAspectRatio: 1/2
             ),
             itemBuilder: (context, index) {
               var item = collections[index];
               return AnimeItemGrid(
                   item,
                   onTap: () => _abrirAnime(item),
-                  isOrientationPortrait: isPortrait,
                   listType: ListType.online,
-                  footer: Layouts.markerCollection(item, user, isGrid: isPortrait)
+                  footer: Layouts.markerCollection(item, user, isGrid: true)
               );
             }
         ),

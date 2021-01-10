@@ -62,7 +62,7 @@ class Config {
     Preferences.setString(PreferencesKey.FILTRO, value);
   }
 
-  static List<String> get generos => _generos ?? '';
+  static List<String> get generos => _generos ?? [];
   static set generos(List<String> value) {
     _generos = value;
     Preferences.setList(PreferencesKey.GENEROS, value);

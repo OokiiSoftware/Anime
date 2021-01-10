@@ -30,9 +30,16 @@ class _MyState extends State<AnimeCollectionPage> {
   //region overrides
 
   @override
+  void dispose() {
+    AdMob.instance.removeListener(this);
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     _baixarAnime();
+    AdMob.instance.addListener(this);
   }
 
   @override

@@ -163,7 +163,7 @@ class AnimeCollection {
   }
 
   Anime get ultimoAnimeTV {
-    var animesTV = itemsToList.where((e) => e.tipo == AnimeType.TV).toList();
+    var animesTV = itemsToList.where((e) => e.tipo == AnimeType.TV && e.miniatura.isNotEmpty).toList();
     return animesTV.length > 0 ? animesTV[animesTV.length -1] : getItem(items.length -1);
   }
 
@@ -273,7 +273,6 @@ class Anime {
   String _maturidade;
   String _miniatura;
   String _sinopse;
-  String _fotoLocal;
   int _episodios;
   int _ultimoAssistido;
   bool _isCopiado;
@@ -281,6 +280,10 @@ class Anime {
   List<dynamic> _generos;
 
   Classificacao _classificacao;
+
+  String _foto;
+  String _fotoLocal;
+  String _miniaturaLocal;
   //endregion
 
   //region Construttores
@@ -633,16 +636,37 @@ class Anime {
     }
   }
 
-  bool get fotoLocalExist {
-    File file = File(OfflineData.localPath + '/' + fotoLocal);
-    return file.existsSync();
+  Future<bool> baixarMiniatura() async {
+    try {
+      return await OfflineData.downloadFile(miniatura, OfflineData.localPath, miniaturaLocal);
+    } catch(e) {
+      Log.e(TAG, 'baixarMiniatura', e);
+      return false;
+    }
   }
+  Future<bool> baixarFoto() async {
+    try {
+      return await OfflineData.downloadFile(await foto, OfflineData.localPath, fotoLocal);
+    } catch(e) {
+      Log.e(TAG, 'baixarMiniatura', e);
+      return false;
+    }
+  }
+
+  bool get fotoLocalExist => fotoToFile.existsSync();
+  bool get miniaturaLocalExist => miniaturaToFile.existsSync();
   bool get isComplete => _isComplete;
   bool get isNoLancado => !isLancado;
   bool get isLancado => data.compareTo(DataHora.now()) < 0;
 
   File get fotoToFile => File(OfflineData.localPath + '/' + fotoLocal);
+  File get miniaturaToFile => File(OfflineData.localPath + '/' + miniaturaLocal);
 
+  String get miniaturaLocal {
+    if (_miniaturaLocal == null)
+      _miniaturaLocal = 'thumbnails/$id.jpg';
+    return _miniaturaLocal;
+  }
   String get fotoLocal {
     if (_fotoLocal == null)
       _fotoLocal = '$id.jpg';
@@ -660,6 +684,22 @@ class Anime {
     if (pontosBase > 0)
       media += pontosBase;
     return media;
+  }
+
+  Future<String> get foto async {
+    if (_foto == null) {
+      var ref = FirebaseOki.storage
+          .child(FirebaseChild.ANIME)
+          .child(FirebaseChild.CAPA).child(id[0])
+          .child('$id.jpg');
+      try {
+        _foto = await ref.getDownloadURL();
+      } catch(e) {
+        Log.e(TAG, 'foto', e, !e.toString().contains('Not Found.  Could not get object'));
+        return null;
+      }
+    }
+    return _foto;
   }
 
   //endregion
@@ -695,19 +735,6 @@ class Anime {
 
   String get aviso => _aviso ?? null;
   set aviso(String value) => _aviso = value;
-
-  Future<String> get foto async {
-    var ref = FirebaseOki.storage
-        .child(FirebaseChild.ANIME)
-        .child(FirebaseChild.CAPA).child(id[0])
-        .child('$id.jpg');
-    try {
-      return await ref.getDownloadURL();
-    } catch(e) {
-      Log.e(TAG, 'foto', e, !e.toString().contains('Not Found.  Could not get object'));
-      return null;
-    }
-  }
 
   String get trailer => _trailer ?? '';
   set trailer(String value) => _trailer = value;

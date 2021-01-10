@@ -246,10 +246,19 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
   bool get wantKeepAlive => true;
 
   @override
+  void dispose() {
+    AdMob.instance.removeListener(this);
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
-    if (anime != null)
+    if (anime != null) {
       _preencherDados(anime);
+      anime.baixarMiniatura();
+    }
+    AdMob.instance.addListener(this);
   }
 
   @override
@@ -428,6 +437,8 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
   //region Metodos
 
   Image _widgetFoto() {
+    if (anime.fotoLocalExist)
+      return Image.file(anime.fotoToFile);
     return Image.network(_fotoUrl,
       errorBuilder: (context, widget, e) => Icon(Icons.image),
         loadingBuilder: (context, widget, progress) {
@@ -731,7 +742,7 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
       _setInProgress(false);
     }
     setState(() {});
-    Log.d(TAG, '_preencherDados', _trailer);
+    // Log.d(TAG, '_preencherDados', _trailer);
   }
 
   void _onMenuEditClick() async {
@@ -820,7 +831,7 @@ class _MyStateFragment extends State<_AnimeFragment> with AutomaticKeepAliveClie
     Navigate.to(context, YouTubePage(_trailer));
   }
 
-  _voidRetornoOnDelete(context, AnimeCollection animeCollection) {
+  void _voidRetornoOnDelete(context, AnimeCollection animeCollection) {
     Log.d(TAG, 'voidRetorno', 'AnimeId', anime.id);
     setState(() {
       animeCollection.items.remove(anime.id);

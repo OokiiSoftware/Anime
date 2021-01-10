@@ -14,6 +14,13 @@ class _MyState extends State<GenerosFragment> {
   //endregion
 
   //region overrides
+
+  @override
+  void dispose() {
+    AdMob.instance.removeListener(this);
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -22,6 +29,7 @@ class _MyState extends State<GenerosFragment> {
       _data[s] = b;
       if (!b) _allSelected = false;
     }
+    AdMob.instance.addListener(this);
   }
 
   @override

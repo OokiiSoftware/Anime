@@ -66,7 +66,6 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
 
    _preencherLista();
 
-    var isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
     bool isListMode = Config.itemListMode.isListMode;
 
     return RefreshIndicator(
@@ -91,15 +90,14 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 mainAxisSpacing: 2,
                 crossAxisSpacing: 2,
-                crossAxisCount: isPortrait ? 3 : 2,
-                childAspectRatio: isPortrait ? 1/2 : 3.5
+                crossAxisCount: 3,
+                childAspectRatio: 1/2
             ),
             itemBuilder: (context, index) {
               var item = collections[index];
               return AnimeItemGrid(
                   item,
                   onTap: () => _abrirAnime(item),
-                  isOrientationPortrait: isPortrait,
                   listType: listType,
               );
             }
@@ -126,7 +124,7 @@ class _MyState extends State<AnimesFragment> with AutomaticKeepAliveClientMixin<
     if (RunTime.updateFavoritosFragment ||
         RunTime.updateConcluidosFragment ||
         RunTime.updateAssistindoFragment || ignoreRunTime) {
-      Log.d(TAG, '_preencherLista', RunTime.updateFavoritosFragment, RunTime.updateConcluidosFragment, RunTime.updateAssistindoFragment, ignoreRunTime);
+
       // Log.d(TAG, '_preencherLista', listType.valueName);
       collections.clear();
       setState(() {

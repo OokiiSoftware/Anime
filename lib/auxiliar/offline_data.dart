@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:anime/auxiliar/import.dart';
 import 'package:anime/model/import.dart';
 
@@ -8,7 +9,7 @@ class OfflineData {
   static const String FILE_USER = 'user';
   static const String FILE_ANIMES = 'animes';
   static String localPath = '';
-//  static Dio _dio = Dio();
+ static Dio _dio = Dio();
 
   static Future<void> readDirectorys() async {
     String directory = await OfflineData._getDirectoryPath();
@@ -102,11 +103,14 @@ class OfflineData {
   static Future<void> createDataDirectory() async {
     Directory directory = await _getDirectory();
     Directory dir = Directory(directory.path + '/data');
+    Directory dir2 = Directory(directory.path + '/data/thumbnails');
     if (!dir.existsSync())
       await dir.create();
+    if (!dir2.existsSync())
+      await dir2.create();
   }
 
-  static Future<bool> downloadFile(String url, String path, String fileName, {bool override = false/*, ProgressCallback onProgress, CancelToken cancelToken*/}) async {
+  static Future<bool> downloadFile(String url, String path, String fileName, {bool override = false, ProgressCallback onProgress, CancelToken cancelToken}) async {
     if (url == null || url.isEmpty)
       return true;
 
@@ -121,7 +125,7 @@ class OfflineData {
         }
       }
       Log.d(TAG, 'downloadFile', 'Iniciando');
-//      await _dio.download(url, _path, onReceiveProgress: onProgress, cancelToken: cancelToken);
+     await _dio.download(url, _path, onReceiveProgress: onProgress, cancelToken: cancelToken);
       Log.d(TAG, 'downloadFile', 'OK');
       return true;
     } catch(e) {

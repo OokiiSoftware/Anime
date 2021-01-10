@@ -20,9 +20,16 @@ class _MyState extends State<InfoPage> {
   //region overrides
 
   @override
+  void dispose() {
+    AdMob.instance.removeListener(this);
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     showInfo = Preferences.getBool(PreferencesKey.CONFIG_SHOW_INFO, padrao: false);
+    AdMob.instance.addListener(this);
   }
 
   @override

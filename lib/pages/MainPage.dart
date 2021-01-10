@@ -459,8 +459,21 @@ class _State extends State<MainPage2> with SingleTickerProviderStateMixin {
   }
 
   void _setPage(ListType page) {
+    String quantAnimes = '';
+    final user = FirebaseOki.userOki;
+    switch(page.value) {
+      case ListType.assistindoValue:
+        quantAnimes = user.getAnimeLenght(ListType.assistindo).toString();
+        break;
+      case ListType.favoritosValue:
+        quantAnimes = user.getAnimeLenght(ListType.favoritos).toString();
+        break;
+      case ListType.concluidosValue:
+        quantAnimes = user.getAnimeLenght(ListType.concluidos).toString();
+        break;
+    }
     currentListTypeValue = page.value;
-    title = Titles.main_page[page.value];
+    title = Titles.main_page[page.value] + (quantAnimes.isEmpty ? '' : ' ($quantAnimes)');
     setState(() {});
   }
 

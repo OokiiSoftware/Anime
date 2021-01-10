@@ -25,6 +25,12 @@ class MyWidgetState extends State<ConfigPage> {
   //region overrides
 
   @override
+  void dispose() {
+    AdMob.instance.removeListener(this);
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
     _isAdmin = FirebaseOki.isAdmin;
@@ -32,6 +38,7 @@ class MyWidgetState extends State<ConfigPage> {
     _useNewLayout = Config.useNewLayout;
     _currentThema = Config.theme;
     _currentOrdem = Config.listOrder;
+    AdMob.instance.addListener(this);
   }
 
   @override

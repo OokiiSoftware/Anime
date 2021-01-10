@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:anime/res/styles.dart';
+
 import 'strings.dart';
 import 'theme.dart';
 import 'my_icons.dart';
@@ -130,16 +132,15 @@ class AnimeItemGrid extends StatelessWidget {
   final AnimeCollection items;
   final ListType listType;
   final Widget footer;
-  final bool isOrientationPortrait;
   final Function onTap;
 
-  AnimeItemGrid(this.items, {this.listType, @required this.onTap(), this.footer, this.isOrientationPortrait = true});
+  AnimeItemGrid(this.items, {this.listType, @required this.onTap(), this.footer});
 
   @override
   Widget build(BuildContext context) {
-    var textStyle = TextStyle(color: isOrientationPortrait ? OkiTheme.text : OkiTheme.textInvert());
-
     var ultimoAnime = items.ultimoAnimeTV;
+    /*var textStyle = TextStyle(color: OkiTheme.text);
+
 
     var icon = Layouts.getAnimeTypeIcon(ultimoAnime.tipo);
     var media = items.media;
@@ -149,13 +150,13 @@ class AnimeItemGrid extends StatelessWidget {
     subtitle += 'Episódios: ${items.episodios}';
 
     if ((listType.isOnline || listType.isConcluidos) && media >= 0)
-      subtitle += '\nMedia: $media';
+      subtitle += '\nMedia: $media';*/
 
     return Hero(
       tag: items.id,
       child: GestureDetector(
         child: GridTile(
-          header: isOrientationPortrait ? Container(
+          header: Container(
             decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
@@ -166,45 +167,17 @@ class AnimeItemGrid extends StatelessWidget {
             ),
             padding: EdgeInsets.all(3),
             child: footer,
-          ) : null,
+          ),
           child: Container(
-            color: isOrientationPortrait ? Colors.black87 : OkiTheme.tint,
-            child: isOrientationPortrait ? Column(
+            color: Colors.black87,
+            child: Column(
               children: [
-                Expanded(child: FotoAnime(ultimoAnime, fit: BoxFit.fitHeight)),
+                Expanded(child: _MiniaturaAnime(ultimoAnime, fit: BoxFit.fitHeight)),
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-                  child: Text(items.nome, maxLines: 1, style: TextStyle(color: OkiTheme.text)),
+                  child: Text(items.nome, maxLines: 1, style: Styles.textFixo),
                 )
               ],
-            ) :
-            Row(
-                children: [
-                  FotoAnime(ultimoAnime, fit: BoxFit.fitHeight),
-                  Expanded(child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(items.nome, maxLines: 1, style: textStyle),
-                          Text(subtitle, style: textStyle),
-                          if (icon != null) ...[
-                            Row(
-                                children: [
-                                  Text('Tipo: ${ultimoAnime.tipo}   ', style: textStyle),
-                                  icon
-                                ]
-                            ),
-                          ]
-                        ]
-                    ),
-                  )),
-                  if (!isOrientationPortrait && footer != null)
-                    Container(
-                      padding: EdgeInsets.all(3),
-                      child: footer,
-                    )
-                ]
             ),
           ),
         ),
@@ -257,7 +230,7 @@ class AnimeItemList extends StatelessWidget {
       tag: items.id,
       child: ListTile(
         contentPadding: EdgeInsets.only(bottom: 3),
-        leading: FotoAnime(ultimoAnime),
+        leading: _MiniaturaAnime(ultimoAnime),
         title: Text('${items.nome} $itemsCount'),
         subtitle: Row(children: [
           Expanded(child: Text(subtitle)),
@@ -305,7 +278,7 @@ class AnimeItemLayout extends StatelessWidget {
     var icon = Layouts.getAnimeTypeIcon(item.tipo);
     return ListTile(
       contentPadding: EdgeInsets.only(bottom: 5),
-      leading: FotoAnime(item),
+      leading: _MiniaturaAnime(item),
       title: Text(item.nome),
       subtitle: Row(children: [
         if (icon != null)
@@ -342,21 +315,20 @@ class DropDownMenu extends StatelessWidget {
   }
 }
 
-class FotoAnime extends StatelessWidget {
+class _MiniaturaAnime extends StatelessWidget {
   final Anime item;
   final double iconSize;
   final BoxFit fit;
-  FotoAnime(this.item, {this.iconSize, this.fit});
+  _MiniaturaAnime(this.item, {this.iconSize, this.fit});
 
   @override
   Widget build(BuildContext context) {
-    bool fotoLocal = item.fotoLocalExist;
-    return fotoLocal ?
-    Layouts.fotoFile(item.fotoToFile, iconSize: iconSize, fit: fit) :
-    item.miniatura.isEmpty ? Icon(Icons.image) :
-    Layouts.fotoNetwork(item.miniatura, iconSize: iconSize, fit: fit);
+    if (item.miniaturaLocalExist)
+      return Layouts.fotoFile(item.miniaturaToFile, iconSize: iconSize, fit: fit);
+    if (item.miniatura.isEmpty)
+      return Icon(Icons.image);
+    return Layouts.fotoNetwork(item.miniatura, iconSize: iconSize, fit: fit);
   }
-
 }
 
 class SplashScreen extends StatelessWidget {
@@ -375,7 +347,7 @@ class SplashScreen extends StatelessWidget {
           children: [
             Image.asset(MyIcons.ic_launcher, width: 200),
             padding,
-            Text(AppResources.APP_NAME, style: TextStyle(fontSize: 30, color: OkiTheme.text)),
+            Text(AppResources.APP_NAME, style: TextStyle(fontSize: 30, color: OkiTheme.textI)),
             if (mostrarLog)...[
               padding,
               Text('Parece que sua conexão está sem Chakra\nIniciando modo Offline', style: TextStyle(color: OkiTheme.text)),
