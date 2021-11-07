@@ -1,6 +1,8 @@
-import 'package:anime/auxiliar/import.dart';
-import 'package:anime/model/import.dart';
-import 'package:anime/res/import.dart';
+import 'package:flutter/material.dart';
+import '../auxiliar/import.dart';
+import '../manager/import.dart';
+import '../model/import.dart';
+import '../res/import.dart';
 
 class Log {
   static final scaffKey = GlobalKey<ScaffoldState>();
@@ -9,10 +11,10 @@ class Log {
     try {
       scaffKey.currentState.hideCurrentSnackBar();
 
-      var textColor = OkiColors.textDark;
+      var textColor = Colors.white;
       var snack = SnackBar(
         content: Container(
-          margin: Layouts.adsPadding(0),
+          margin: adsPadding(),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -22,7 +24,7 @@ class Log {
             ],
           ),
         ),
-        backgroundColor: isError ? Colors.red : OkiTheme.accent,
+        backgroundColor: isError ? Colors.red : Colors.black45,
         action: onTap == null ? null: SnackBarAction(
           label: actionLabel,
           onPressed: onTap,
@@ -67,12 +69,12 @@ class Log {
   static _sendError(String tag, String metodo, String value) {
     String id = '';
 
-    Erro e = Erro();
-    e.data = DataHora.now();
-    e.classe = tag;
-    e.metodo = metodo;
-    e.valor = value;
-    e.userId = id;
+    // Erro e = Erro();
+    // e.data = DataHora.now();
+    // e.classe = tag;
+    // e.metodo = metodo;
+    // e.valor = value;
+    // e.userId = id;
 //    e.salvar();
   }
 }

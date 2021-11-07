@@ -1,323 +1,171 @@
-import 'dart:io';
 import 'dart:ui';
-import 'package:anime/res/styles.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:network_to_file_image/network_to_file_image.dart';
+import '../manager/import.dart';
+import '../model/import.dart';
+import '../res/import.dart';
+import 'import.dart';
 
-import 'strings.dart';
-import 'theme.dart';
-import 'my_icons.dart';
-import 'package:anime/auxiliar/import.dart';
-import 'package:anime/model/import.dart';
-
-class Layouts {
-  static Widget fotoFile(File file, {double iconSize, BoxFit fit}) =>
-      Image.file(file,
-          fit: fit,
-          width: iconSize,
-          height: iconSize,
-          errorBuilder: (c, u, e) => Icon(Icons.image));
-  static Widget fotoNetwork(String url, {double iconSize, BoxFit fit}) =>
-      Image.network(
-        url,
-        fit: fit,
-        width: iconSize,
-        height: iconSize,
-        errorBuilder: (c, u, e) => Icon(Icons.image),
-        loadingBuilder: (context, widget, progress) {
-          if (progress == null) return widget;
-          return Icon(Icons.image);
-        },
-      );
-
-  static Icon getAnimeTypeIcon(String animeTipo) {
-    switch (animeTipo) {
-      case AnimeType.TV:
-        return Icon(Icons.tv);
-        break;
-      case AnimeType.OVA:
-        return Icon(MyIcons.egg, size: 20);
-        break;
-      case AnimeType.ONA:
-        return Icon(Icons.wifi_tethering);
-        break;
-      case AnimeType.MOVIE:
-        return Icon(Icons.video_call);
-        break;
-      case AnimeType.SPECIAL:
-        return Icon(Icons.star);
-        break;
-      case AnimeType.INDEFINIDO:
-        return Icon(Icons.error);
-        break;
-      default:
-        return Icon(Icons.circle, color: Colors.transparent);
-    }
-  }
-
-  static Widget markerCollection(AnimeCollection item, UserOki user,
-      {bool isGrid = false}) {
-    double iconSize = 15.0;
-    String id = item.id;
-
-    var favoritos = user.getList(ListType.favoritos).containsKey(id);
-    var assistindo = user.getList(ListType.assistindo).containsKey(id);
-    var concluidos = user.getList(ListType.concluidos).containsKey(id);
-
-    if (isGrid)
-      return Container(
-        decoration: BoxDecoration(boxShadow: [
-          BoxShadow(
-            color: OkiTheme.textInvert(0.3),
-            blurRadius: 40,
-          )
-        ]),
-        child: Row(mainAxisSize: MainAxisSize.min, children: [
-          if (assistindo)
-            Icon(Icons.list, size: iconSize, color: OkiTheme.tint),
-          if (favoritos)
-            Icon(Icons.favorite, size: iconSize, color: OkiTheme.tint),
-          if (concluidos)
-            Icon(Icons.offline_pin, size: iconSize, color: OkiTheme.tint),
-        ]),
-      );
-    return Column(children: [
-      if (assistindo) Icon(Icons.list, size: iconSize),
-      if (favoritos) Icon(Icons.favorite, size: iconSize),
-      if (concluidos) Icon(Icons.offline_pin, size: iconSize),
-    ]);
-  }
-
-  static Widget markerAnime(Anime item, UserOki user) {
-    double iconSize = 15.0;
-    String id = item.id;
-
-    var assistindo =
-        user.getListChild(ListType.assistindo, item.idPai).containsKey(id);
-    var favoritos =
-        user.getListChild(ListType.favoritos, item.idPai).containsKey(id);
-    var concluidos =
-        user.getListChild(ListType.concluidos, item.idPai).containsKey(id);
-
-    return Column(children: [
-      if (assistindo) Icon(Icons.list, size: iconSize),
-      if (favoritos) Icon(Icons.favorite, size: iconSize),
-      if (concluidos) Icon(Icons.offline_pin, size: iconSize),
-    ]);
-  }
-
-  static EdgeInsets adsPadding(double value,
-      [double top, double right, double botton]) {
-    double temp = 0;
-    if (RunTime.mostrandoAds) temp = 50;
-    return EdgeInsets.fromLTRB(
-        value, top ?? value, right ?? value, (botton ?? value) + temp);
-  }
-}
-
-class AdsFooter extends StatelessWidget {
-  final Widget child;
-  AdsFooter({this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    double value = 0;
-    if (RunTime.mostrandoAds) value = 50;
-    return Padding(padding: EdgeInsets.only(bottom: value), child: child);
-  }
-}
-
-class AnimeItemGrid extends StatelessWidget {
-  final AnimeCollection items;
-  final ListType listType;
-  final Widget footer;
+class OkiTextField extends StatelessWidget {
+  final String hint;
+  final String initialValue;
+  final TextEditingController controller;
+  final Widget icon;
+  final bool textIsEmpty;
+  final bool isPassword;
+  final bool readOnly;
+  final Function(String) onChanged;
   final Function onTap;
+  final int maxLines;
+  final FocusNode focus;
+  final TextStyle style;
+  final TextInputType textInputType;
+  final TextInputAction action;
+  // final List<TextInputFormatter> formatters;
+  final FormFieldValidator<String> validator;
+  final FormFieldSetter<String> onSave;
 
-  AnimeItemGrid(this.items,
-      {this.listType, @required this.onTap(), this.footer});
+  OkiTextField({
+    this.hint,
+    this.initialValue,
+    this.controller,
+    this.icon,
+    this.textIsEmpty = false,
+    this.isPassword = false,
+    this.readOnly = false,
+    this.textInputType,
+    this.maxLines = 1,
+    // this.formatters,
+    this.focus,
+    this.style,
+    this.action,
+    this.onTap,
+    this.onChanged,
+    this.validator,
+    this.onSave,
+  });
 
   @override
   Widget build(BuildContext context) {
-    var ultimoAnime = items.ultimoAnimeTV;
-    /*var textStyle = TextStyle(color: OkiTheme.text);
-
-
-    var icon = Layouts.getAnimeTypeIcon(ultimoAnime.tipo);
-    var media = items.media;
-    String subtitle = '';
-    if (items.nome2 != null)
-      subtitle = '${items.nome2}\n';
-    subtitle += 'Episódios: ${items.episodios}';
-
-    if ((listType.isOnline || listType.isConcluidos) && media >= 0)
-      subtitle += '\nMedia: $media';*/
-
-    return Hero(
-      tag: items.id,
-      child: GestureDetector(
-        child: GridTile(
-          header: Container(
-            decoration: BoxDecoration(
-                boxShadow: [BoxShadow(blurRadius: 6, color: Colors.black12)]),
-            padding: EdgeInsets.all(3),
-            child: footer,
+    return Container(
+      child: TextFormField(
+        controller: controller,
+        maxLines: maxLines,
+        minLines: 1,
+        focusNode: focus,
+        initialValue: initialValue,
+        readOnly: readOnly,
+        obscureText: isPassword,
+        keyboardType: textInputType,
+        style: style,
+        textInputAction: action,
+        decoration: InputDecoration(
+          suffixIcon: icon,
+          labelText: hint,
+          enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(
+                  color: style?.color?.withOpacity(0.2) ?? Colors.black38
+              )
           ),
-          child: Container(
-            color: Colors.black87,
-            child: Column(
-              children: [
-                Expanded(
-                    child: _MiniaturaAnime(ultimoAnime, fit: BoxFit.fitHeight)),
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 5, vertical: 3),
-                  child: Text(items.nome, maxLines: 1, style: Styles.textFixo),
-                )
-              ],
-            ),
+          labelStyle: style?.copyWith(
+              color: style.color.withAlpha(120)
           ),
         ),
         onTap: onTap,
+        onChanged: onChanged,
+        validator: validator,
+        onSaved: onSave,
       ),
     );
   }
 }
 
-class AnimeItemList extends StatelessWidget {
-  final AnimeCollection items;
-  final ListType listType;
-  final Widget trailing;
-  final bool showSeconfName;
-  final Function onTap;
-
-  AnimeItemList(this.items,
-      {this.listType,
-      @required this.onTap(),
-      this.trailing,
-      this.showSeconfName = false});
+class OkiButton extends StatelessWidget {
+  final Widget child;
+  final Color color;
+  final Function onPressed;
+  OkiButton({this.child, this.color = OkiColors.primary, this.onPressed});
 
   @override
   Widget build(BuildContext context) {
-    var media = items.media;
-    String subtitle = '';
-    if (showSeconfName && items.nome2 != null)
-      subtitle = items.nome2;
-    else if ((listType.isOnline || listType.isConcluidos) && media >= 0)
-      subtitle = 'Media: $media';
-    else if (listType.isAssistindo) {
-      if (items.items.length == 1)
-        subtitle = 'Ultimo assistido: ${items.getItem(0).ultimoAssistido}';
-    } else if (items.nome2 != null) subtitle = items.nome2;
-
-    int eps = items.episodios;
-    if (eps != 0) {
-      int temp = eps < 0 ? eps * -1 : eps;
-      if (temp > 1) {
-        var epsS = eps < 0 ? '${eps * -1}+' : '$eps';
-        subtitle += '\nEpi: $epsS';
-      }
-    }
-
-    var ultimoAnime = items.ultimoAnimeTV;
-
-    String itemsCount =
-        items.items.length <= 1 ? '' : '(${items.items.length})';
-
-    return Hero(
-      tag: items.id,
-      child: ListTile(
-        contentPadding: EdgeInsets.only(bottom: 3),
-        leading: _MiniaturaAnime(ultimoAnime),
-        title: Text('${items.nome} $itemsCount'),
-        subtitle: Row(children: [
-          Expanded(child: Text(subtitle)),
-          if (items.isDataInicioFimIguais)
-            Text(items.anoFim)
-          else
-            Text('${items.anoInicio} - ${items.anoFim}'),
-        ]),
-        trailing: trailing,
-        onTap: onTap,
+    return ElevatedButton(
+      child: child,
+      onPressed: onPressed,
+      style: ButtonStyle(
+        backgroundColor: MaterialStateProperty.all<Color>(color),
       ),
     );
   }
 }
 
-class AnimeItemLayout extends StatelessWidget {
-  final Anime item;
-  final ListType listType;
-  final Widget trailing;
-  final bool showSeconfName;
-  final Function onTap;
-  AnimeItemLayout(this.item,
-      {@required this.listType,
-      @required this.onTap(),
-      this.trailing,
-      this.showSeconfName = false});
-
-  @override
-  Widget build(BuildContext context) {
-    var media = listType.isOnline ? item.getMedia : item.classificacao.media;
-    String subtitle = '';
-    if (item.episodios >= 0) {
-      if (item.episodios > 1) subtitle = 'Epi: ${item.episodios}';
-    } else {
-      subtitle = 'Indefinido';
-    }
-    if (showSeconfName && item.nome2 != null)
-      subtitle = item.nome2;
-    else if ((listType.isOnline || listType.isConcluidos) && media >= 0)
-      subtitle += '\nMedia: $media';
-    else if (listType.isAssistindo)
-      subtitle += '\nUltimo: ${item.ultimoAssistido}';
-
-    subtitle += '\nAno: ${item.ano}';
-
-    var icon = Layouts.getAnimeTypeIcon(item.tipo);
-    return ListTile(
-      contentPadding: EdgeInsets.only(bottom: 5),
-      leading: _MiniaturaAnime(item),
-      title: Text(item.nome),
-      subtitle: Row(children: [
-        if (icon != null)
-          Padding(
-            padding: EdgeInsets.only(right: 10),
-            child: icon,
-          ),
-        Expanded(child: Text(subtitle))
-      ]),
-      trailing: trailing,
-      onTap: onTap,
-    );
-  }
-}
-
-class DropDownMenu extends StatelessWidget {
+class OkiDropDown extends StatelessWidget {
   final List<String> items;
-  final Function onChanged;
+  final Function(String) onChanged;
+  final String text;
+  final String info;
   final String value;
-  DropDownMenu({@required this.items, @required this.onChanged, this.value});
+  final TextStyle style;
+  final Color dropdownColor;
+  OkiDropDown({this.text, @required this.items, this.info, this.style, this.dropdownColor, @required this.onChanged, @required this.value});
 
   @override
   Widget build(BuildContext context) {
-    List<DropdownMenuItem<String>> temp = new List();
-    for (String value in items) {
-      temp.add(new DropdownMenuItem(value: value, child: new Text(value)));
+    List<DropdownMenuItem<String>> temp = [];
+    String valueZero = '';
+    bool semValor = false;
+
+    if (items.isNotEmpty) {
+      valueZero = items[0];
+      semValor = !items.contains(value);
     }
-    return DropdownButton(value: value, items: temp, onChanged: onChanged);
+
+    for (String value in items) {
+      temp.add(new DropdownMenuItem(value: value, child: Text(value, style: style)));
+    }
+    return ListTile(
+      title: text == null ? null : Text(text, style: style),
+      subtitle: info == null ? null : Text(info, style: style),
+      trailing: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: DropdownButton(
+          value: semValor ? valueZero : value,
+          disabledHint: Text(semValor ? valueZero : value),
+          items: temp,
+          onChanged: onChanged,
+          dropdownColor: dropdownColor,
+        ),
+      ),
+    );
   }
 }
 
-class _MiniaturaAnime extends StatelessWidget {
-  final Anime item;
-  final double iconSize;
-  final BoxFit fit;
-  _MiniaturaAnime(this.item, {this.iconSize, this.fit});
+class OkiSlider extends StatelessWidget {
+  final String title;
+  final String label;
+  final double value;
+  final Color color;
+  final Function(double) onChanged;
+  OkiSlider({this.title, this.label, this.value, this.color, this.onChanged});
 
   @override
   Widget build(BuildContext context) {
-    if (item.miniaturaLocalExist)
-      return Layouts.fotoFile(item.miniaturaToFile,
-          iconSize: iconSize, fit: fit);
-    if (item.miniatura.isEmpty) return Icon(Icons.image);
-    return Layouts.fotoNetwork(item.miniatura, iconSize: iconSize, fit: fit);
+    return ListTile(
+      leading: Text(title ?? ''),
+      title: Slider(
+        value: value,
+        min: -1,
+        max: 10,
+        divisions: 11,
+
+        activeColor: color,
+        onChanged: (value) => onChanged?.call(value),
+        onChangeEnd: (value) {
+
+        },
+      ),
+      trailing: Text('${value.toInt()}'),
+    );
   }
 }
 
@@ -329,7 +177,7 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     var padding = Padding(padding: EdgeInsets.only(top: 10));
     return Scaffold(
-      backgroundColor: OkiTheme.primary,
+      backgroundColor: OkiColors.primary,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -337,17 +185,225 @@ class SplashScreen extends StatelessWidget {
             Image.asset(MyIcons.ic_launcher_adaptive, width: 200),
             padding,
             Text(AppResources.APP_NAME,
-                style: TextStyle(fontSize: 30, color: OkiTheme.textI)),
+                style: TextStyle(fontSize: 30, color: OkiColors.textDark)),
             if (mostrarLog) ...[
               padding,
               Text(
                   'Parece que sua conexão está sem Chakra\nIniciando modo Offline',
-                  style: TextStyle(color: OkiTheme.text)),
-              LinearProgressIndicator(backgroundColor: OkiTheme.primary)
+                  style: TextStyle(color: OkiColors.textDark)),
+              LinearProgressIndicator(backgroundColor: OkiColors.primary)
             ],
           ],
         ),
       ),
     );
   }
+}
+
+class AnimeItemGrid extends StatelessWidget {
+  final Anime anime;
+  final Function(Anime) onClick;
+  AnimeItemGrid({this.anime, @required this.onClick});
+
+  @override
+  Widget build(BuildContext context) {
+    Color colorC = getColorCrunch(anime);
+    Color colorF = getColorFun(anime) ?? colorC ?? Colors.black87;
+
+    return GestureDetector(
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: GridTile(
+          header: Container(
+            decoration: BoxDecoration(
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 6,
+                  color: Colors.black12,
+                ),
+              ],
+            ),
+            padding: EdgeInsets.all(3),
+            child: Row(
+              children: [
+                if (anime.isFavorited)
+                  Icon(
+                    Icons.favorite,
+                    color: Colors.white,
+                    size: 15,
+                  )
+                else if (anime.containsFavorite)
+                  Icon(
+                    Icons.favorite_border,
+                    color: Colors.white,
+                    size: 15,
+                  ),
+              ],
+            ),
+          ),
+          child: MiniaturaAnime(anime),
+          footer: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  if (colorC != null)
+                    colorC
+                  else
+                    colorF,
+                  colorF,
+                ]
+              )
+            ),
+            padding: EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+            child: Text(anime.nome, maxLines: 1, style: TextStyle(color: Colors.white),),
+          ),
+        ),
+      ),
+      onTap: () => onClick?.call(anime),
+    );
+  }
+}
+
+class AnimeItemList extends StatelessWidget {
+  final Anime anime;
+  final bool showSeconfName;
+  final Function(Anime) onClick;
+
+  AnimeItemList({this.anime, this.onClick, this.showSeconfName = true});
+
+  @override
+  Widget build(BuildContext context) {
+    double media = anime.media;
+    List<String> subtitle = [];
+    if (showSeconfName && anime.nome2 != null)
+      subtitle.add(anime.nome2);
+    if (media >= 0)
+      subtitle.add('Media: ${media.toStringAsFixed(2)}');
+    if (anime.isFavorited) {
+      if (anime.length == 1)
+        subtitle.add('Ultimo assistido: ${anime.getAt(0).ultimoAssistido}');
+    }
+
+    int eps = anime.episodios;
+    if (eps != 0) {
+      int temp = eps < 0 ? eps * -1 : eps;
+      if (temp > 1) {
+        var epsS = eps < 0 ? '${eps * -1}+' : '$eps';
+        subtitle.add('Epi: $epsS');
+      }
+    }
+
+    String itemsCount = anime.isCollection ? '(${anime.length})' : '';
+
+    return Row(
+      children: [
+        Container(
+          color: getColorCrunch(anime),
+          height: 50,
+          width: 2,
+        ),
+        Expanded(
+          child: Card(
+            margin: EdgeInsets.symmetric(horizontal: 1, vertical: 1),
+            child: ListTile(
+              leading: MiniaturaAnime(anime),
+              title: Text('${anime.nome} $itemsCount', maxLines: 1,),
+              subtitle: Text(subtitle.join('\n')),
+              trailing: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (anime.isFavorited)
+                    Icon(
+                      Icons.favorite,
+                      size: 15,
+                    )
+                  else if (anime.containsFavorite)
+                    Icon(
+                      Icons.favorite_border,
+                      size: 15,
+                    ),
+                  if (anime.isDataInicioFimIguais)
+                    Text(anime.anoFim)
+                  else
+                    Text('${anime.anoInicio} - ${anime.anoFim}'),
+                ],
+              ),
+              onTap: () => onClick?.call(anime),
+            ),
+          ),
+        ),
+        Container(
+          color: getColorFun(anime),
+          height: 50,
+          width: 2,
+        ),
+      ],
+    );
+  }
+}
+
+Color getColorCrunch(Anime anime) {
+  if (anime.isCrunchyroll || anime.parent.isCrunchyroll)
+    return OkiColors.accent;
+  return null;
+}
+Color getColorFun(Anime anime) {
+  if (anime.isFunimation || anime.parent.isFunimation)
+    return Colors.deepPurple;
+  return null;
+}
+
+class MiniaturaAnime extends StatelessWidget {
+  final Anime item;
+  MiniaturaAnime(this.item);
+
+  @override
+  Widget build(BuildContext context) {
+    return Image(
+      image: NetworkToFileImage(
+        url: item.miniatura,
+        file: item.previewFile,
+      ),
+      fit: BoxFit.cover,
+      errorBuilder: (c, o, e) => Icon(Icons.image),
+      loadingBuilder: (context, widget, progress) {
+        if (progress == null) return widget;
+        return CircularProgressIndicator();
+      },
+    );
+  }
+}
+
+class AnimeTypeIcon extends StatelessWidget {
+  final String value;
+  AnimeTypeIcon({this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    switch (value) {
+      case AnimeType.TV:
+        return Icon(Icons.tv);
+      case AnimeType.OVA:
+        return Icon(MyIcons.egg, size: 20);
+      case AnimeType.ONA:
+        return Icon(Icons.wifi_tethering);
+      case AnimeType.MOVIE:
+        return Icon(Icons.video_call);
+      case AnimeType.SPECIAL:
+        return Icon(Icons.star);
+      case AnimeType.INDEFINIDO:
+        return Icon(Icons.error);
+      default:
+        return Icon(Icons.circle, color: Colors.transparent);
+    }
+  }
+}
+
+EdgeInsets adsPadding({bool showingAds = false, double all = 0, double top, double left, double right, double botton}) {
+  double temp = 0;
+  if (showingAds) temp = 50;
+  return EdgeInsets.fromLTRB(left ?? all, top ?? all, right ?? all, (botton ?? all) + temp);
 }

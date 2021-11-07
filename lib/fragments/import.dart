@@ -1,0 +1,1 @@
+export 'animes_fragment.dart';

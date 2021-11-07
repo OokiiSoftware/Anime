@@ -1,264 +1,14 @@
 import 'dart:io';
-import 'package:anime/auxiliar/import.dart';
-import 'data_hora.dart';
-import 'classificacao.dart';
+import '../auxiliar/import.dart';
+import '../manager/import.dart';
+import 'import.dart';
 
-class ListType {
-  static const int assistindoValue = 0;
-  static const int favoritosValue = 1;
-  static const int concluidosValue = 2;
-  static const int onlineValue = 3;
-
-  static ListType get assistindo => ListType(assistindoValue);
-  static ListType get favoritos => ListType(favoritosValue);
-  static ListType get concluidos => ListType(concluidosValue);
-  static ListType get online => ListType(onlineValue);
-
-  ListType(this.value);
-  int value;
-
-  String get valueName {
-    switch(value) {
-      case ListType.assistindoValue:
-        return FirebaseChild.DESEJOS;
-      case ListType.concluidosValue:
-        return FirebaseChild.CONCLUIDOS;
-      case ListType.favoritosValue:
-        return FirebaseChild.FAVORITOS;
-      case ListType.onlineValue:
-        return FirebaseChild.ONLINE;
-    }
-    return '';
-  }
-
-  bool get isFavoritos => value == favoritos.value;
-  bool get isAssistindo => value == assistindo.value;
-  bool get isConcluidos => value == concluidos.value;
-  bool get isOnline => value == online.value;
-}
-
-class AnimeType {
-  static const String TV = 'TV';
-  static const String OVA = 'OVA';
-  static const String ONA = 'ONA';
-  static const String MOVIE = 'MOVIE';
-  static const String SPECIAL = 'SPECIAL';
-  static const String INDEFINIDO = 'INDEFINIDO';
-}
-
-class AnimeCollection {
-
-  //region variaveis
-  static const String TAG = 'AnimeCollection';
-
-  String _id;
-  String _idUser;
-  String _nome;
-  String _nome2;
-  Map<String, Anime> _items;
-  List<dynamic> _parentes;
-  List<dynamic> _generos;
-  //endregion
-
-  //region Construttores
-
-  AnimeCollection();
-
-  static AnimeCollection newItem(AnimeCollection item) {
-    var novo = AnimeCollection();
-    novo.id = item.id;
-    novo.nome = item.nome;
-    novo.nome2 = item.nome2;
-    novo.idUser = item.idUser;
-    novo.generos.addAll(item.generos);
-    novo.parentes.addAll(item.parentes);
-    for (Anime anime in item.items.values)
-      novo.items[anime.id] = Anime.fromJson(anime.toJson());
-    return novo;
-  }
-
-  static Map<String, AnimeCollection> fromJsonList(Map map) {
-    Map<String, AnimeCollection> items = Map();
-    if (map == null) return items;
-
-    for (String key in map.keys)
-      items[key] = AnimeCollection.fromJson(map[key], key);
-
-    return items;
-  }
-
-  AnimeCollection.fromJson(Map<dynamic, dynamic> map, String idPai) {
-    try {
-      id = idPai;
-      nome = map['nome'];
-      nome2 = map['nome2'];
-      idUser = map['idUser'];
-      generos = map['generos'];
-      if(map['items'] != null) {
-        items = Anime.fromJsonList(map['items']);
-      }
-      if(map['parentes'] != null) {
-        parentes = map['parentes'];
-      }
-      for (var item in items.values) {
-        if (item.generos.length == 0)
-          item.generos = generos;
-      }
-    } catch (e) {
-      Log.e(TAG, 'AnimeList.fromJson', e);
-    }
-  }
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'nome': nome,
-    'nome2': nome2,
-    'items': items,
-    "idUser": idUser,
-    'generos': generos,
-    'parentes': parentes,
-  };
-
-   //endregion
-
-  //region gets
-  bool get isCompleto => itemsToList[0].tipo != null;
-
-  double get media {
-    double value = 0.0;
-    double i = 0.0;
-    for (var item in items.values) {
-      var media = item.getMedia;
-      if (media >= 0) {
-        i++;
-        value += media;
-      }
-    }
-    if (i == 0) return -1;
-
-    value = value / i;
-    return value;
-  }
-
-  int get episodios {
-    int value = 0;
-    bool contemIndefinidos = false;
-    for (var item in items.values)
-      if (item.episodios >= 0)
-        value += item.episodios;
-      else contemIndefinidos = true;
-      return contemIndefinidos ? -value : value;
-  }
-
-  bool get isDataInicioFimIguais => anoInicio == anoFim;
-
-  String get anoInicio {
-    var item = itemsToList[0];
-    return item.ano;
-  }
-
-  String get anoFim {
-    var item = itemsToList[itemsToList.length-1];
-    return item.ano;
-  }
-
-  Anime get ultimoAnimeTV {
-    var animesTV = itemsToList.where((e) => e.tipo == AnimeType.TV && e.miniatura.isNotEmpty).toList();
-    return animesTV.length > 0 ? animesTV[animesTV.length -1] : getItem(items.length -1);
-  }
-
-  List<Anime> get itemsToList {
-    switch(Config.listOrder) {
-      case ListOrder.nome:
-        return items.values.toList()..sort((a, b) => a.nome.compareTo(b.nome));
-        break;
-      case ListOrder.dataAsc:
-        return items.values.toList()..sort((a, b) => a.data.compareTo(b.data));
-      break;
-      default:
-        return items.values.toList()..sort((a, b) => b.data.compareTo(a.data));
-        break;
-    }
-  }
-  //endregion
-
-  //region metodos
-
-  Anime getItem(int position) {
-    if (position < 0) return null;
-    return itemsToList[position];
-  }
-
-  Future<void> completar() async {
-    var snapshot = await FirebaseOki.database
-        .child(FirebaseChild.ANIME)
-        .child(FirebaseChild.COMPLEMENTO)
-        .child(id)
-        .once();
-    var map = snapshot.value;
-    if(map == null) return;
-    var items = map['items'];
-    if(items == null) return;
-    if (valueNotNull(map['parentes']))
-      parentes = map['parentes'];
-
-    for (Anime item in itemsToList) {
-      if (valueNotNull(items[item.id])) {
-        Anime aux = Anime.fromJson(items[item.id]);
-        if (aux != null) item._completar(aux);
-      }
-    }
-  }
-
-  static bool valueNotNull(dynamic value) => value != null;
-
-  //endregion
-
-  //region get set
-
-  String get id => _id ?? '';
-  set id(String value) => _id = value;
-
-  String get idUser => _idUser ?? null;
-  set idUser(String value) => _idUser = value;
-
-  String get nome => _nome ?? '';
-  set nome(String value) => _nome = value;
-
-  Map<String, Anime> get items {
-    if (_items == null)
-      _items = Map();
-    return _items;
-  }
-  set items(Map<String, Anime> value) => _items = value;
-
-  String get nome2 => _nome2 ?? null;
-  set nome2(String value) => _nome2 = value;
-
-  List<dynamic> get generos {
-    if (_generos == null)
-      _generos = [];
-    return _generos;
-  }
-  set generos(List<dynamic> value) => _generos = value;
-
-  List<dynamic> get parentes {
-    if (_parentes == null)
-      _parentes = [];
-    return _parentes;
-  }
-  set parentes(List<dynamic> value) => _parentes = value;
-
-  //endregion
-
-}
-
-class Anime {
+class Anime extends _Listener implements Map<String, Anime> {
 
   //region Variaveis
-  static const String TAG = 'Anime';
+  static const String _TAG = 'Anime';
 
-  bool _isComplete = false;
+  final Anime parent;
 
   String _id;
   String _nome;
@@ -276,174 +26,401 @@ class Anime {
   int _episodios;
   int _ultimoAssistido;
   bool _isCopiado;
+  bool _isFavorited;
   double _pontosBase;
-  List<dynamic> _generos;
+  final List<String> _generos = [];
+  final List<String> _links = [];
 
-  Classificacao _classificacao;
+  final Classificacao classificacao = Classificacao();
 
   String _foto;
-  String _fotoLocal;
-  String _miniaturaLocal;
+
+  final Map<String, Anime> _items = {};
+  final List<String> parentes = [];
+
   //endregion
 
   //region Construttores
 
-  Anime();
+  Anime({this.parent});
 
-  Anime.fromJson(Map<dynamic, dynamic> map) {
-    if (mapIsNoNull(map['id'])) id = map['id'];
-    if (mapIsNoNull(map['nome'])) nome = map['nome'];
-    if (mapIsNoNull(map['nome2'])) nome2 = map['nome2'];
-    if (mapIsNoNull(map['desc'])) desc = map['desc'];
-    if (mapIsNoNull(map['link'])) link = map['link'];
-    if (mapIsNoNull(map['data'])) data = map['data'];
-    if (mapIsNoNull(map['tipo'])) tipo = map['tipo'];
-    if (mapIsNoNull(map['aviso'])) aviso = map['aviso'];
-    if (mapIsNoNull(map['sinopse'])) sinopse = map['sinopse'];
-    if (mapIsNoNull(map['generos'])) generos = map['generos'];
-    if (mapIsNoNull(map['isCopiado'])) isCopiado = map['isCopiado'];
-    if (mapIsNoNull(map['episodios'])) episodios = map['episodios'];
-    if (mapIsNoNull(map['miniatura'])) miniatura = map['miniatura'];
-    if (mapIsNoNull(map['pontosBase'])) pontosBase = map['pontosBase'];
-    if (mapIsNoNull(map['maturidade'])) maturidade = map['maturidade'];
-    if (mapIsNoNull(map['trailer'])) trailer = map['trailer'];
-    if (mapIsNoNull(map['ultimoAssistido'])) ultimoAssistido = map['ultimoAssistido'];
-    if (mapIsNoNull(map['classificacao'])) classificacao = Classificacao.fromJson(map['classificacao']);
+  Anime.fromJson(Map map, this.parent) {
+    _set(map);
   }
 
-  bool mapIsNoNull(dynamic map) => map != null;
-
-  Map<String, dynamic> toJson() => {
-    "id": id,
-    "nome": nome,
-    "nome2": nome2,
-    "desc": desc,
-    "link": link,
-    "data": data,
-    "tipo": tipo,
-    "aviso": aviso,
-    "sinopse": sinopse,
-    "generos": generos,
-    "isCopiado": isCopiado,
-    "episodios": episodios,
-    "miniatura": miniatura,
-    'trailer': trailer,
-    'maturidade': maturidade,
-    'pontosBase': pontosBase,
-    "ultimoAssistido": ultimoAssistido,
-    "classificacao": classificacao.toJson(),
-  };
-
-  static Map<String, Anime> fromJsonList(Map map) {
+  static Map<String, Anime> fromJsonList(Map map, Anime parent) {
     Map<String, Anime> items = Map();
-    if (map == null)
-      return items;
+    if (map == null) return items;
 
-    for (String key in map.keys) {
-      var aux = map[key];
-      Anime item;
-
-      if (aux is Anime) item = aux;
-      else item = Anime.fromJson(map[key]);
-
-      items[key] = item;
-    }
+    map.forEach((key, value) {
+      items[key] = Anime.fromJson(value, parent);
+    });
 
     return items;
   }
+
+  Map<String, dynamic> toJson() => {
+    "id": _id,
+    "nome": _nome,
+    "nome2": _nome2,
+    "desc": _desc,
+    "link": _link,
+    "data": _data,
+    "tipo": _tipo,
+    "aviso": _aviso,
+    'trailer': _trailer,
+    "sinopse": _sinopse,
+    "isCopiado": _isCopiado,
+    "episodios": _episodios,
+    "miniatura": _miniatura,
+    'maturidade': _maturidade,
+    'pontosBase': _pontosBase,
+    "isFavorited": _isFavorited,
+    "ultimoAssistido": _ultimoAssistido,
+    'items': _itemsJson(),
+    'links': _linksJson(),
+    "generos": _generosJson(),
+    'parentes': _parentesJson(),
+    "classificacao": classificacao.toJson(),
+  };
+
+  void _set(Map map) {
+    if (map == null) return;
+
+    if (_notNull(map['id'])) _id = map['id'];
+    if (_notNull(map['nome'])) _nome = map['nome'];
+    if (_notNull(map['nome2'])) _nome2 = map['nome2'];
+    if (_notNull(map['desc'])) _desc = map['desc'];
+    if (_notNull(map['link'])) _link = map['link'];
+    if (_notNull(map['data'])) _data = map['data'];
+    if (_notNull(map['tipo'])) _tipo = map['tipo'];
+    if (_notNull(map['aviso'])) _aviso = map['aviso'];
+    if (_notNull(map['trailer'])) _trailer = map['trailer'];
+    if (_notNull(map['sinopse'])) _sinopse = map['sinopse'];
+    if (_notNull(map['isCopiado'])) _isCopiado = map['isCopiado'];
+    if (_notNull(map['episodios'])) _episodios = map['episodios'];
+    if (_notNull(map['miniatura'])) _miniatura = map['miniatura'];
+    if (_notNull(map['pontosBase'])) _pontosBase = map['pontosBase'];
+    if (_notNull(map['maturidade'])) _maturidade = map['maturidade'];
+    if (_notNull(map['isFavorited'])) _isFavorited = map['isFavorited'];
+    if (_notNull(map['ultimoAssistido'])) _ultimoAssistido = map['ultimoAssistido'];
+
+    List generosTemp = map['generos'];
+    if (generosTemp != null && generosTemp is List) {
+      generos.clear();
+      generosTemp.forEach((item) => generos.add(item.toString()));
+    }
+    classificacao.set(map['classificacao']);
+
+    var linksTemp = map['links'];
+    if (linksTemp != null && linksTemp is List) {
+      linksTemp.forEach((item) {
+        _links.add(item.toString());
+      });
+    }
+
+    var parentesTemp = map['parentes'];
+    if (parentesTemp != null && parentesTemp is List) {
+      parentesTemp.forEach((item) {
+        parentes.add(item.toString());
+      });
+    }
+
+    final list = Anime.fromJsonList(map['items'], this);
+    list.forEach((key, value) {
+      if (containsKey(key))
+        get(key).complete(value);
+      else
+        add(value);
+    });
+
+    for (var item in values) {
+      if (item.generos.isEmpty)
+        item.generos.addAll(generos);
+    }
+  }
+
+  List<dynamic> _parentesJson() {
+    List<dynamic> items = [];
+    parentes.forEach((item) {
+      items.add(item);
+    });
+    return items;
+  }
+
+  List<dynamic> _generosJson() {
+    List<dynamic> items = [];
+    _generos.forEach((item) {
+      items.add(item);
+    });
+    return items;
+  }
+
+  List<dynamic> _linksJson() {
+    List<dynamic> items = [];
+    _links.forEach((item) {
+      items.add(item);
+    });
+    return items;
+  }
+
+  Map _itemsJson() {
+    Map map = {};
+    forEach((key, value) {
+      map[key] = value.toJson();
+    });
+    return map;
+  }
+
+  bool _notNull(dynamic value) => value != null;
+
+  //endregion
+
+  //region get
+
+  bool get isCollection => length > 1;
+
+  bool get isComplete {
+    if (isEmpty)
+      return link.isNotEmpty;
+    return getAt(0).isComplete;
+  }
+
+  bool get containsFavorite {
+    if (isFavorited)
+      return true;
+    return where((item) => item.containsFavorite).isNotEmpty;
+  }
+
+  bool get isDataInicioFimIguais => anoInicio == anoFim;
+
+  double get media {
+    if (isEmpty)
+      return getMedia;
+
+    double value = 0.0;
+    double i = 0.0;
+    for (var item in values) {
+      var media = item.getMedia;
+      if (media >= 0) {
+        i++;
+        value += media;
+      }
+    }
+    if (i == 0) return -1;
+
+    value = value / i;
+    return value;
+  }
+
+  String get anoInicio {
+    if (isEmpty)
+      return ano;
+    var item = getAt(0);
+    return item.ano;
+  }
+
+  String get anoFim {
+    if (isEmpty)
+      return ano;
+    var item = getAt(length -1);
+    return item.ano;
+  }
+
+  Anime get ultimoAnimeTV {
+    var animesTV = values.firstWhere((e) => e.tipo == AnimeType.TV && e.miniatura.isNotEmpty, orElse: () => null);
+    return animesTV != null ? animesTV : getAt(/*length -1*/0);
+  }
+
+  bool get isCrunchyroll {
+    return getLink(LinksType.crunchyroll).isNotEmpty;
+  }
+  bool get isFunimation {
+    return getLink(LinksType.funimation).isNotEmpty;
+  }
+  String getLink(LinksType type) {
+    String v;
+    switch(type){
+      case LinksType.crunchyroll:
+        v = 'crunchyroll';
+        break;
+      case LinksType.funimation:
+        v = 'funimation';
+        break;
+      default:
+        v = 'ASDFGHJKL:';
+    }
+    return _links.firstWhere((x) => x.contains(v), orElse: () => '');
+  }
+
+  bool get isNoLancado => !isLancado;
+  bool get isLancado => data.compareTo(Calendario.now()) < 0;
+
+  bool get hasLocalFoto => fotoFile.existsSync();
+  bool get hasLocalPreview => previewFile.existsSync();
+
+  File get fotoFile => StorageManager.i.file('$id.jpg', Directorys.POSTS);
+  File get previewFile => StorageManager.i.file('$id.jpg', Directorys.PREVIEWS);
+
+  String get ano {
+    if (data.contains('-'))
+      return data.substring(0, data.indexOf('-'));
+    return data;
+  }
+
+  double get getMedia {
+    var media = classificacao.media;
+    if (pontosBase > 0)
+      media += pontosBase;
+    return media;
+  }
+
+  Future<String> get fotoUrl async {
+    if (_foto == null) {
+      // var ref = FirebaseManager.i.storage
+      //     .child(FirebaseChild.ANIME)
+      //     .child(FirebaseChild.CAPA).child(id[0])
+      //     .child('$id.jpg');
+      try {
+        // _foto = await ref.getDownloadURL();
+      } catch(e) {
+        Log.e(_TAG, 'foto', e, !e.toString().contains('Not Found.  Could not get object'));
+        return null;
+      }
+    }
+    return _foto;
+  }
+
+  List<Anime> get list => values.toList()..sort((a, b) => a.nome.toLowerCase().compareTo(b.nome.toLowerCase()));
+
+  //==========================================
+
+  String get id => _id ?? '';
+
+  String get nome => _nome ?? '';
+
+  String get tipo => _tipo ?? '';
+
+  String get nome2 => _nome2 ?? null;
+
+  int get episodios {
+    if (isEmpty)
+      return _episodios ?? 0;
+
+    if (length == 1)
+      return getAt(0).episodios;
+
+    int value = 0;
+    bool contemIndefinidos = false;
+    for (Anime item in values) {
+      if (item.episodios >= 0)
+        value += item.episodios;
+      else {
+        contemIndefinidos = true;
+        break;
+      }
+    }
+
+    return contemIndefinidos ? -value : value;
+  }
+
+  String get miniatura {
+    if (isEmpty)
+      return _miniatura ?? '';
+    return getAt(0)?.miniatura ?? '';
+  }
+
+  List<String> get generos {
+    if (_generos.isEmpty && isNotEmpty)
+      return getAt(0)._generos;
+    return _generos;
+  }
+
+  String get aviso => _aviso ?? '';
+
+  String get trailer => _trailer ?? '';
+
+  String get sinopse => _sinopse ?? '';
+
+  String get data => _data ?? '';
+
+  String get maturidade => _maturidade ?? '';
+
+  String get link => _link ?? '';
 
   //endregion
 
   //region Metodos
 
-  void _completar(Anime item) {
-    link = item.link;
-    sinopse = item.sinopse;
-    episodios = item.episodios;
-    classificacao = item.classificacao;
-    pontosBase = item.pontosBase;
-    trailer = item.trailer;
-    maturidade = item.maturidade;
+  int indexOf(Anime value) => list.indexOf(value);
+
+  void add(Anime value) {
+    _items[value.id] = value;
+    _callListener(value);
   }
 
-  Future<bool> complete() async {
-    try{
-      var snapshot = await FirebaseOki.database
-          .child(FirebaseChild.ANIME)
-          .child(FirebaseChild.COMPLEMENTO)
-          .child(idPai)
-          .child(FirebaseChild.ITEMS)
-          .child(id)
-          .once();
-      Log.d(TAG, 'complete', id, idPai);
-      var item = Anime.fromJson(snapshot.value);
-      if (item != null)
-        _completar(item);
+  Anime get(String key) => _items[key];
 
-      _isComplete = true;
+  Anime getAt(int index) {
+    if (index >= length)
+      return null;
+    return values.elementAt(index);
+  }
+
+  Future<bool> complete([Anime item]) async {
+    try{
+      if (item == null) {
+        var snapshot = database['complemento'];
+        var map = snapshot[id];
+        if(map == null) return false;
+
+        _set(map);
+
+        // var snapshot = await _firebase.database
+        //     .child(FirebaseChild.ANIME)
+        //     .child(FirebaseChild.COMPLEMENTO)
+        //     .child(idPai)
+        //     .child(FirebaseChild.ITEMS)
+        //     .child(id)
+        //     .once();
+        //
+        // _set(snapshot.value);
+        // Log.d(_TAG, 'complete', idPai, id);
+        // var item = Anime.fromJson(snapshot.value);
+      } else {
+        _episodios = item._episodios;
+        _link = item._link;
+        pontosBase = item._pontosBase;
+        _sinopse = item._sinopse;
+        _links.clear();
+        _links.addAll(item._links);
+      }
       return true;
     } catch(e) {
-      Log.e(TAG, 'complete', id, e);
+      Log.e(_TAG, 'complete', id, e);
       return false;
     }
   }
 
-  Future<bool> salvar(ListType listType) async {
-    String child = '';
+  /// Add dados do usuário
+  void apply(Anime item) {
+    if (item == null) return;
 
-    switch(listType.value) {
-      case ListType.assistindoValue:
-        child = FirebaseChild.DESEJOS;
-        break;
-      case ListType.concluidosValue:
-        child = FirebaseChild.CONCLUIDOS;
-        break;
-      case ListType.favoritosValue:
-        child = FirebaseChild.FAVORITOS;
-        break;
-    }
+    print(nome);
+    _desc = item._desc;
+    _ultimoAssistido = item._ultimoAssistido;
+    _isFavorited = item._isFavorited;
 
-    var temp = {
-      "id": id,
-      "desc": desc,
-      "ultimoAssistido": ultimoAssistido,
-      "classificacao": classificacao.toJson(),
-    };
+    if (item.classificacao.media >= 0)
+      classificacao.set(item.classificacao.toJson());
 
-    try {
-      await FirebaseOki.database
-          .child(FirebaseChild.USUARIO)
-          .child(idUser)
-          .child(FirebaseChild.ANIMES)
-          .child(idPai)
-          .child(FirebaseChild.ITEMS)
-          .child(id)
-          .set(temp).then((value) {
-        Log.d(TAG, 'salvar', idPai, id, 'OK');
-        return true;
-      }).catchError((e) {
-        Log.e(TAG, 'salvar fail', id, e);
-        return false;
-      });
-      return await FirebaseOki.database
-          .child(FirebaseChild.USUARIO)
-          .child(idUser)
-          .child(child)
-          .child(idPai)
-          .child(id)
-          .set(id).then((value) {
-        Log.d(TAG, 'salvar', id, 'OK');
-        return true;
-      }).catchError((e) {
-        Log.e(TAG, 'salvar fail', id, e);
-        return false;
-      });
-    } catch (e) {
-      Log.e(TAG, 'salvar', id, e);
-      return false;
-    }
+    forEach((key, value) {
+      if (item.containsKey(key))
+        value.apply(item[key]);
+    });
   }
-  Future<bool> salvarAdmin() async {
+
+  /*Future<bool> salvarAdmin() async {
     try {
       Map basico = {
         'data': data,
@@ -466,301 +443,163 @@ class Anime {
       };
 
       Future<bool> salvarBasico() async {
-        return await FirebaseOki.database
-            .child(FirebaseChild.TESTE)
-            .child(FirebaseChild.BASICO)
-            .child(idPai)
-            .child(FirebaseChild.ITEMS)
-            .child(id)
-            .set(basico).then((value) async {
-          Log.d(TAG, 'salvarAdmin', 'salvarBasico', id, 'OK');
-          return true;
-        }).catchError((e) {
-          Log.e(TAG, 'salvarAdmin fail', 'salvarBasico', id, e);
-          return false;
-        });
+        // return await _firebase.database
+        //     .child(FirebaseChild.TESTE)
+        //     .child(FirebaseChild.BASICO)
+        //     .child(idPai)
+        //     .child(FirebaseChild.ITEMS)
+        //     .child(id)
+        //     .set(basico).then((value) async {
+        //   Log.d(_TAG, 'salvarAdmin', 'salvarBasico', id, 'OK');
+        //   return true;
+        // }).catchError((e) {
+        //   Log.e(_TAG, 'salvarAdmin fail', 'salvarBasico', id, e);
+        //   return false;
+        // });
       }
       Future<bool> salvarComplemento() async {
-        return await FirebaseOki.database
-            .child(FirebaseChild.TESTE)
-            .child(FirebaseChild.COMPLEMENTO)
-            .child(idPai)
-            .child(FirebaseChild.ITEMS)
-            .child(id)
-            .set(complemento).then((value) {
-          Log.d(TAG, 'salvarAdmin', 'salvarComplemento', id, 'OK');
-          return true;
-        }).catchError((e) {
-          Log.e(TAG, 'salvarAdmin fail', 'salvarComplemento', id, e);
-          return false;
-        });
+        // return await _firebase.database
+        //     .child(FirebaseChild.TESTE)
+        //     .child(FirebaseChild.COMPLEMENTO)
+        //     .child(idPai)
+        //     .child(FirebaseChild.ITEMS)
+        //     .child(id)
+        //     .set(complemento).then((value) {
+        //   Log.d(_TAG, 'salvarAdmin', 'salvarComplemento', id, 'OK');
+        //   return true;
+        // }).catchError((e) {
+        //   Log.e(_TAG, 'salvarAdmin fail', 'salvarComplemento', id, e);
+        //   return false;
+        // });
       }
 
       if (await salvarBasico())
         return await salvarComplemento();
       return false;
     } catch (e) {
-      Log.e(TAG, 'salvarAdmin', id, e);
+      Log.e(_TAG, 'salvarAdmin', id, e);
       return false;
     }
   }
   Future<bool> salvarClassificacao() async {
     Future<bool> salvarComplemento() async {
-      return await FirebaseOki.database
-          .child(FirebaseChild.ANIME)
-          .child(FirebaseChild.COMPLEMENTO)
-          .child(idPai)
-          .child(FirebaseChild.ITEMS)
-          .child(id)
-          .child(FirebaseChild.CLASSIFICACAO)
-          .set(classificacao.toJson()).then((value) {
-        Log.d(TAG, 'salvarAdmin', 'salvarComplemento', id, 'OK');
-        return true;
-      }).catchError((e) {
-        Log.e(TAG, 'salvarAdmin fail', 'salvarComplemento', id, e);
-        return false;
-      });
+      // return await _firebase.database
+      //     .child(FirebaseChild.ANIME)
+      //     .child(FirebaseChild.COMPLEMENTO)
+      //     .child(idPai)
+      //     .child(FirebaseChild.ITEMS)
+      //     .child(id)
+      //     .child(FirebaseChild.CLASSIFICACAO)
+      //     .set(classificacao.toJson()).then((value) {
+      //   Log.d(_TAG, 'salvarAdmin', 'salvarComplemento', id, 'OK');
+      //   return true;
+      // }).catchError((e) {
+      //   Log.e(_TAG, 'salvarAdmin fail', 'salvarComplemento', id, e);
+      //   return false;
+      // });
     }
 
     return await salvarComplemento();
+  }*/
+
+  //endregion
+
+  //region override
+
+  @override
+  remove(Object key) {
+    var t = _items.remove(key);
+    _callListener(t);
+    return t;
   }
 
-  Future<bool> mover(ListType list, ListType old) async {
-    if (list == old) return true;
-    String childNew = '';
-    String childOld = '';
-
-    switch(list.value) {
-      case ListType.assistindoValue:
-        childNew = FirebaseChild.DESEJOS;
-        break;
-      case ListType.concluidosValue:
-        childNew = FirebaseChild.CONCLUIDOS;
-        break;
-      case ListType.favoritosValue:
-        childNew = FirebaseChild.FAVORITOS;
-        break;
-    }
-
-    switch(old.value) {
-      case ListType.assistindoValue:
-        childOld = FirebaseChild.DESEJOS;
-        break;
-      case ListType.concluidosValue:
-        childOld = FirebaseChild.CONCLUIDOS;
-        break;
-      case ListType.favoritosValue:
-        childOld = FirebaseChild.FAVORITOS;
-        break;
-    }
-
-    try {
-      await salvar(list);
-
-      var result = await FirebaseOki.database
-          .child(FirebaseChild.USUARIO)
-          .child(idUser)
-          .child(childNew)
-          .child(idPai)
-          .child(id)
-          .set(id).then((value) {
-        Log.d(TAG, 'mover', id, 'OK');
-        return true;
-      }).catchError((e) {
-        Log.e(TAG, 'mover fail', id, e);
-        return false;
-      });
-      if (result) {
-        FirebaseOki.database
-            .child(FirebaseChild.USUARIO)
-            .child(idUser)
-            .child(childOld)
-            .child(idPai)
-            .child(id)
-            .remove().then((value) {
-          Log.d(TAG, 'mover: remove', id, 'OK');
-          return true;
-        }).catchError((e) {
-          Log.e(TAG, 'mover: remove fail', id, e);
-          return false;
-        });
-      }
-      return result;
-    } catch (e) {
-      Log.e(TAG, 'mover', id, e);
-      return false;
-    }
+  @override
+  void addAll(Map other) {
+    _items.addAll(other);
   }
 
-  Future<bool> delete(ListType list, {bool save = true, bool deleteAll = false}) async {
-    var result = await _deleteAux(list, this);
-    if (deleteAll) {
-      result = await FirebaseOki.database
-          .child(FirebaseChild.USUARIO)
-          .child(idUser)
-          .child(FirebaseChild.ANIMES)
-          .child(idPai)
-          .child(id)
-          .remove().then((value) {
-        Log.d(TAG, 'delete', id, 'OK');
-        return true;
-      }).catchError((e) {
-        Log.e(TAG, 'delete fail', id, e);
-        return false;
-      });
-    }
-    if (save)
-      return await OfflineData.saveOfflineData();
-    return result;
-  }
-  Future<bool> _deleteAux(ListType listType, Anime item) async {
-    String child = listType.valueName;
+  @override
+  String toString() => toJson().toString();
 
-    try {
-      return await FirebaseOki.database
-          .child(FirebaseChild.USUARIO)
-          .child(idUser)
-          .child(child)
-          .child(idPai)
-          .child(id)
-          .remove().then((value) {
-        Log.d(TAG, '_deleteAux', id, 'OK');
-        return true;
-      }).catchError((e) {
-        Log.e(TAG, '_deleteAux fail', id, e);
-        return false;
-      });
-    } catch(e) {
-      Log.e(TAG, '_deleteAux', e);
-      return false;
-    }
+  @override
+  void addEntries(Iterable<MapEntry> newEntries) => _items.addEntries(newEntries);
+
+  @override
+  Map<RK, RV> cast<RK, RV>() => _items.cast();
+
+  @override
+  void clear() => _items.clear();
+
+  @override
+  bool containsKey(Object key) => _items.containsKey(key);
+
+  @override
+  bool containsValue(Object value) => _items.containsValue(value);
+
+  @override
+  Iterable<MapEntry<String, Anime>> get entries => _items.entries;
+
+  @override
+  void forEach(void Function(String key, Anime value) action) => _items.forEach(action);
+
+  Iterable<Anime> where(bool Function(Anime) test) {
+    return values.where(test);
   }
 
-  Future<bool> baixarMiniatura() async {
-    try {
-      return await OfflineData.downloadFile(miniatura, OfflineData.localPath, miniaturaLocal);
-    } catch(e) {
-      Log.e(TAG, 'baixarMiniatura', e);
-      return false;
-    }
-  }
-  Future<bool> baixarFoto() async {
-    try {
-      return await OfflineData.downloadFile(await foto, OfflineData.localPath, fotoLocal);
-    } catch(e) {
-      Log.e(TAG, 'baixarMiniatura', e);
-      return false;
-    }
+  @override
+  Map<K2, V2> map<K2, V2>(MapEntry<K2, V2> Function(String key, Anime value) convert) => _items.map(convert);
+
+  @override
+  putIfAbsent(key, Function() ifAbsent) => _items.putIfAbsent(key, ifAbsent);
+
+  @override
+  void removeWhere(bool Function(String key, Anime value) test) {
+    _items.removeWhere(test);
   }
 
-  bool get fotoLocalExist => fotoToFile.existsSync();
-  bool get miniaturaLocalExist => miniaturaToFile.existsSync();
-  bool get isComplete => _isComplete;
-  bool get isNoLancado => !isLancado;
-  bool get isLancado => data.compareTo(DataHora.now()) < 0;
+  @override
+  update(key, Function(Anime value) update, {Function() ifAbsent}) =>
+    _items.update(key, update, ifAbsent: ifAbsent);
 
-  File get fotoToFile => File(OfflineData.localPath + '/' + fotoLocal);
-  File get miniaturaToFile => File(OfflineData.localPath + '/' + miniaturaLocal);
-
-  String get miniaturaLocal {
-    if (_miniaturaLocal == null)
-      _miniaturaLocal = 'thumbnails/$id.jpg';
-    return _miniaturaLocal;
-  }
-  String get fotoLocal {
-    if (_fotoLocal == null)
-      _fotoLocal = '$id.jpg';
-    return _fotoLocal;
+  @override
+  void updateAll(Function(String key, Anime value) update) {
+    _items.updateAll(update);
   }
 
-  String get ano {
-    if (data.contains('-'))
-      return data.substring(0, data.indexOf('-'));
-    return data;
-  }
+  @override
+  operator [](Object key) => _items[key];
 
-  double get getMedia {
-    var media = classificacao.media;
-    if (pontosBase > 0)
-      media += pontosBase;
-    return media;
-  }
+  @override
+  void operator []=(key, value) => _items[key] = value;
 
-  Future<String> get foto async {
-    if (_foto == null) {
-      var ref = FirebaseOki.storage
-          .child(FirebaseChild.ANIME)
-          .child(FirebaseChild.CAPA).child(id[0])
-          .child('$id.jpg');
-      try {
-        _foto = await ref.getDownloadURL();
-      } catch(e) {
-        Log.e(TAG, 'foto', e, !e.toString().contains('Not Found.  Could not get object'));
-        return null;
-      }
-    }
-    return _foto;
-  }
+  @override
+  bool get isEmpty => _items.isEmpty;
+
+  @override
+  bool get isNotEmpty => _items.isNotEmpty;
+
+  @override
+  Iterable<String> get keys => _items.keys;
+
+  @override
+  int get length => _items.length;
+
+  @override
+  Iterable<Anime> get values => _items.values;
 
   //endregion
 
   //region get set
 
-  String get id => _id ?? '';
-  set id(String value) => _id = value;
-
-  String get idUser => FirebaseOki.user.uid;
-  String get idPai {
-    if (id[0] == '_') {
-      var temp = id.substring(1, id.length);
-      return '_' + temp.substring(0, temp.indexOf('_'));
-    }
-    return id.substring(0, id.indexOf('_'));
+  bool get isFavorited {
+    if (length <= 1)
+      return _isFavorited ?? false;
+    return where((e) => e.isFavorited).length == length;
   }
-
-  String get nome => _nome ?? '';
-  set nome(String value) => _nome = value;
-
-  String get tipo => _tipo ?? '';
-  set tipo(String value) => _tipo = value;
-
-  String get nome2 => _nome2 ?? null;
-  set nome2(String value) => _nome2 = value;
+  set isFavorited(bool value) => _isFavorited = value;
 
   String get desc => _desc ?? '';
   set desc(String value) => _desc = value;
-
-  int get episodios => _episodios ?? 0;
-  set episodios(int value) => _episodios = value;
-
-  String get aviso => _aviso ?? null;
-  set aviso(String value) => _aviso = value;
-
-  String get trailer => _trailer ?? '';
-  set trailer(String value) => _trailer = value;
-
-  String get miniatura => _miniatura ?? '';
-  set miniatura(String value) => _miniatura = value;
-
-  String get sinopse => _sinopse ?? '';
-  set sinopse(String value) => _sinopse = value;
-
-  List<dynamic> get generos {
-    if (_generos == null)
-      _generos = [];
-    return _generos;
-  }
-  set generos(List<dynamic> value) => _generos = value;
-
-  String get link => _link ?? '';
-  set link(String value) =>  _link = value;
-
-  Classificacao get classificacao {
-    if (_classificacao == null)
-      _classificacao = Classificacao();
-    return _classificacao;
-  }
-  set classificacao(Classificacao value) => _classificacao = value;
 
   bool get isCopiado => _isCopiado ?? false;
   set isCopiado(bool value) => _isCopiado = value;
@@ -768,15 +607,30 @@ class Anime {
   int get ultimoAssistido => _ultimoAssistido ?? 0;
   set ultimoAssistido(int value) => _ultimoAssistido = value;
 
-  String get data => _data ?? '';
-  set data(String value) => _data = value;
-
-  String get maturidade => _maturidade ?? '';
-  set maturidade(String value) => _maturidade = value;
-
   double get pontosBase => _pontosBase ?? -1;
   set pontosBase(double value) => _pontosBase = value;
 
   //endregion
 
+}
+
+enum LinksType {
+  crunchyroll, funimation
+}
+
+class _Listener {
+  final List<Function(Anime)> _onChanged = [];
+
+  void addListener(Function(Anime) item) {
+    if (!_onChanged.contains(item))
+      _onChanged.add(item);
+  }
+  void removeListener(Function(Anime) item) {
+    _onChanged.remove(item);
+  }
+  void _callListener(Anime item) {
+    _onChanged.forEach((fun) {
+      fun?.call(item);
+    });
+  }
 }

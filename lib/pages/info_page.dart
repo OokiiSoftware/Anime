@@ -1,6 +1,7 @@
-import 'package:anime/auxiliar/import.dart';
-import 'package:anime/model/import.dart';
-import 'package:anime/res/import.dart';
+import 'package:flutter/material.dart';
+import 'dart:io';
+import '../manager/import.dart';
+import '../res/import.dart';
 
 class InfoPage extends StatefulWidget {
   @override
@@ -10,10 +11,11 @@ class _MyState extends State<InfoPage> {
 
   //region Variaveis
 
-  // static const String TAG = 'ConfigPage';
+  // ignore: unused_field
+  static const String TAG = 'InfoPage';
 
-  bool showInfo = false;
-  var titleStyle = TextStyle(fontSize: 20);
+  static bool _showInfo = false;
+  var _titleStyle = TextStyle(fontSize: 20);
 
   //endregion
 
@@ -21,57 +23,40 @@ class _MyState extends State<InfoPage> {
 
   @override
   void dispose() {
-    AdMob.instance.removeListener(this);
+    AdMobManager.i.removeListener(_adMobChanged);
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    showInfo = Preferences.getBool(PreferencesKey.CONFIG_SHOW_INFO, padrao: false);
-    AdMob.instance.addListener(this);
+    AdMobManager.i.addListener(_adMobChanged);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(Titles.INFORMACOES, style: Styles.textFixo)),
+      appBar: AppBar(title: Text(Titles.INFORMACOES)),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(20),
         child: Column(
           children: [
             //Info
-            ClipRRect(
-              borderRadius: BorderRadius.all(Radius.circular(5)),
-              child: Container(
-                color: OkiTheme.textInvert(0.05),
-                padding: EdgeInsets.all(10),
-                child: Column(
-                  children: [
-                    GestureDetector(
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text('${showInfo ? 'Ocultar' : 'Mostrar'} Info', style: titleStyle),
-                          Padding(padding: EdgeInsets.all(5)),
-                          Icon(showInfo ? Icons.arrow_circle_up : Icons.arrow_circle_down)
-                        ],
-                      ),
-                      onTap: _onShowInfoClick,
-                    ),
+            ExpansionTile(
+              initiallyExpanded: _showInfo,
+              trailing: Icon(_showInfo ? Icons.arrow_circle_up : Icons.arrow_circle_down),
+              title: Text('${_showInfo ? 'Ocultar' : 'Mostrar'} Info', style: _titleStyle),
+              children: [
+                _iconsInfo(),
+              ],
+              onExpansionChanged: (value) {
+                setState(() {
+                  _showInfo = value;
+                });
+              },
+            ), // Info
 
-                    Divider(),
-//                    Text('Disponibilizamos links no app para melhorar o seu uso.\nNão somos patrocinados.'),
-                    if (showInfo)...[
-                      Text('Esperamos que esse App seja útil a você e à comunidade Otaku.\n\nEstamos adicionando novos animes, seja paciente, se desejar pode sugerir seus animes favoritos e nós trabalharemos para adiciona-lo o mais rápido possível.\n\nOBS: Não disponibilizaremos animes com conteúdo impróprio.'),
-                      _iconsInfo(),
-                      // Divider(),
-                      // _doacaoPix(),
-                    ],
-                  ],
-                ),
-              ),
-            ),
+            Divider(),
 
             Padding(padding: EdgeInsets.only(top: 30)),
             _appInfo(),
@@ -88,25 +73,31 @@ class _MyState extends State<InfoPage> {
 
   //region Metodos
 
+  void _adMobChanged(bool b) {//todo admob
+
+  }
+
   Widget _appInfo() {
     var dividerP = Padding(padding: EdgeInsets.only(top: 10, right: 5));
     var dividerG = Padding(padding: EdgeInsets.only(top: 30));
     return Column(children: [
       //Icone
-      Image.asset(MyIcons.ic_launcher,
+      Image.asset(MyIcons.ic_launcher_adaptive,
         width: 130,
         height: 130,
+        color: OkiColors.primary,
       ),
-      dividerG,
+      // dividerG,
       Text('${AppResources.APP_NAME}'),
       dividerP,
-      Text('${Strings.VERSAO} : ${Aplication.packageInfo.version}'),
+      if (Platform.isAndroid)
+        Text('${Strings.VERSAO} : ${AplicationManager.i.packageInfo.version}'),
       dividerG,
       Text(Strings.CONTATOS),
       dividerP,
       GestureDetector(
-        child: Text(AppResources.app_email, style: TextStyle(color: OkiTheme.primary)),
-        onTap: () {Aplication.openEmail(AppResources.app_email, context);},
+        child: Text(AppResources.app_email, style: TextStyle(color: OkiColors.primary)),
+        onTap: () {AplicationManager.i.openEmail(AppResources.app_email);},
       ),
       dividerG,
       Text(Strings.POR),
@@ -125,100 +116,67 @@ class _MyState extends State<InfoPage> {
     var padding = EdgeInsets.symmetric(horizontal: 10, vertical: 5);
 
     return Column(
-      children: [
-        Padding(
-          padding: padding,
-          child: Text('Icones', style: titleStyle),
-        ),
-       Row(
-         children: [
-           Layouts.getAnimeTypeIcon(AnimeType.TV),
-           Padding(
-             padding: padding,
-             child: Text('${AnimeType.TV}: Televisão'),
-           )
-         ]
-       ),
-       Row(
-         children: [
-           Layouts.getAnimeTypeIcon(AnimeType.OVA),
-           Padding(
-             padding: padding,
-             child: Text('${AnimeType.OVA}: Original Video Animation'),
-           )
-         ]
-       ),
-       Row(
-         children: [
-           Layouts.getAnimeTypeIcon(AnimeType.ONA),
-           Padding(
-             padding: padding,
-             child: Text('${AnimeType.ONA}: Original Net Animation'),
-           )
-         ]
-       ),
-       Row(
-         children: [
-           Layouts.getAnimeTypeIcon(AnimeType.MOVIE),
-           Padding(
-             padding: padding,
-             child: Text('${AnimeType.MOVIE}: Filme'),
-           )
-         ]
-       ),
-       Row(
-         children: [
-           Layouts.getAnimeTypeIcon(AnimeType.SPECIAL),
-           Padding(
-             padding: padding,
-             child: Text('${AnimeType.SPECIAL}: Especial'),
-           )
-         ]
-       ),
-       Row(
-         children: [
-           Layouts.getAnimeTypeIcon(AnimeType.INDEFINIDO),
-           Padding(
-             padding: padding,
-             child: Text('${AnimeType.INDEFINIDO}: Indefinido'),
-           )
-         ]
-       ),
-      ]
+        children: [
+          Padding(
+            padding: padding,
+            child: Text('Icones', style: _titleStyle),
+          ),
+          Row(
+              children: [
+                AnimeTypeIcon(value: AnimeType.TV),
+                Padding(
+                  padding: padding,
+                  child: Text('${AnimeType.TV}: Televisão'),
+                )
+              ]
+          ),
+          Row(
+              children: [
+                AnimeTypeIcon(value: AnimeType.OVA),
+                Padding(
+                  padding: padding,
+                  child: Text('${AnimeType.OVA}: Original Video Animation'),
+                )
+              ]
+          ),
+          Row(
+              children: [
+                AnimeTypeIcon(value: AnimeType.ONA),
+                Padding(
+                  padding: padding,
+                  child: Text('${AnimeType.ONA}: Original Net Animation'),
+                )
+              ]
+          ),
+          Row(
+              children: [
+                AnimeTypeIcon(value: AnimeType.MOVIE),
+                Padding(
+                  padding: padding,
+                  child: Text('${AnimeType.MOVIE}: Filme'),
+                )
+              ]
+          ),
+          Row(
+              children: [
+                AnimeTypeIcon(value: AnimeType.SPECIAL),
+                Padding(
+                  padding: padding,
+                  child: Text('${AnimeType.SPECIAL}: Especial'),
+                )
+              ]
+          ),
+          Row(
+              children: [
+                AnimeTypeIcon(value: AnimeType.INDEFINIDO),
+                Padding(
+                  padding: padding,
+                  child: Text('${AnimeType.INDEFINIDO}: Indefinido'),
+                )
+              ]
+          ),
+        ]
     );
-  }
-
-  /*Widget _doacaoPix() {
-    return Column(
-      children: [
-        Text('Doação', style: titleStyle),
-        Padding(padding: EdgeInsets.all(5)),
-        Text('Faça-nos uma doação através do pix'),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Jonas S. Ferreira'),
-            FlatButton(
-              child: Text('Copiar chave Pix'),
-              onPressed: () {
-                ClipboardManager.copyToClipBoard(AppResources.pix).then((value) {
-                  Log.snack('Pix copiado');
-                }).catchError((e) {
-                  Log.snack('Erro ao copiar o pix', isError: true);
-                });
-              },
-            )
-          ],
-        )
-      ]
-    );
-  }*/
-
-  void _onShowInfoClick() {
-    setState(() {
-      showInfo = !showInfo;
-    });
-    Preferences.setBool(PreferencesKey.CONFIG_SHOW_INFO, showInfo);
   }
 
   //endregion

@@ -1,161 +1,154 @@
-import 'package:anime/auxiliar/import.dart';
-import 'package:anime/res/strings.dart';
-
-class DialogResult {
-  static const int noneValue = 50;
-  static const int positiveValue = 12;
-  static const int negativeValue = 22;
-  static const int auxValue = 33;
-  static const int aux2Value = 54;
-
-  static DialogResult get none => DialogResult(noneValue);
-  static DialogResult get positive => DialogResult(positiveValue);
-  static DialogResult get negative => DialogResult(negativeValue);
-  static DialogResult get aux => DialogResult(auxValue);
-  static DialogResult get aux2 => DialogResult(aux2Value);
-
-  DialogResult(this.value);
-
-  int value;
-  bool get isPositive => value == positiveValue;
-  bool get isNegative => value == negativeValue;
-  bool get isAux => value == auxValue;
-  bool get isAux2 => value == aux2Value;
-  bool get isNone => value == noneValue;
-}
-
-enum DialogType {
-  ok,
-  okCancel,
-  cancel,
-  sim,
-  simNao,
-  nao,
-}
+import 'package:flutter/material.dart';
 
 class DialogBox {
-  static Future<DialogResult> dialogSimNao(BuildContext context,
-      {String title, List<Widget> content, EdgeInsets contentPadding}) async {
-    return await _dialogAux(context, title: title,
-        content: content,
-        contentPadding: contentPadding,
-        dialogType: DialogType.simNao);
+  final BuildContext context;
+  final String title;
+  final String notShowAgainText;
+  final String auxBtnText;
+  final bool dismissible;
+  final List<Widget> content;
+  final EdgeInsets contentPadding;
+  final Function(bool value) onNotShowAgain;
+  final Function(StateSetter) onBuilder;
+  DialogBox({
+    @required this.context,
+    this.title,
+    this.notShowAgainText = 'Não mostrar novamente',
+    this.auxBtnText = '',
+    this.dismissible = true,
+    this.content = const [],
+    this.contentPadding = const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 24.0),
+    this.onNotShowAgain,
+    this.onBuilder,
+  });
+
+  Future<DialogResult> none() async {
+    return await _aux();
   }
 
-  static Future<DialogResult> dialogCancelOK(BuildContext context,
-      {String title, String auxBtnText, String positiveButton, String negativeButton, List<
-          Widget> content, EdgeInsets contentPadding}) async {
-    return await _dialogAux(context, title: title,
-        positiveButton: positiveButton,
-        negativeButton: negativeButton,
-        auxBtnText: auxBtnText,
-        content: content,
-        contentPadding: contentPadding,
-        dialogType: DialogType.okCancel);
+  Future<DialogResult> simNao() async {
+    return await _aux(
+        dismissible: dismissible,
+        actions: [
+          negativeButton('Não'),
+          positiveButton('Sim'),
+        ]
+    );
+  }
+  Future<DialogResult> simNaoCancel() async {
+    return await _aux(
+        dismissible: dismissible,
+        actions: [
+          noneButton('Cancelar'),
+          negativeButton('Não'),
+          positiveButton('Sim'),
+        ]
+    );
   }
 
-  static Future<DialogResult> dialogOK(BuildContext context,
-      {String title, String positiveButton, String auxBtnText, List<
-          Widget> content, EdgeInsets contentPadding}) async {
-    return await _dialogAux(context, title: title,
-        positiveButton: positiveButton,
-        auxBtnText: auxBtnText,
-        content: content,
-        contentPadding: contentPadding,
-        dialogType: DialogType.ok);
+  Future<DialogResult> cancelOK() async {
+    return await _aux(
+        dismissible: dismissible,
+        actions: [
+          negativeButton('Cancelar'),
+          positiveButton('OK'),
+        ]
+    );
   }
 
-  static Future<DialogResult> dialogCancel(BuildContext context,
-      {String title, String negativeButton, String auxBtnText, List<
-          Widget> content, EdgeInsets contentPadding}) async {
-    return await _dialogAux(context, title: title,
-        negativeButton: negativeButton,
-        auxBtnText: auxBtnText,
-        content: content,
-        contentPadding: contentPadding,
-        dialogType: DialogType.cancel);
+  Future<DialogResult> ok() async {
+    return await _aux(
+        dismissible: dismissible,
+        actions: [
+          positiveButton('OK'),
+        ]
+    );
   }
 
-  static Future<DialogResult> _dialogAux(BuildContext context, {
-    String title,
-    String auxBtnText,
-    String positiveButton,
-    String negativeButton,
-    List<Widget> content,
-    EdgeInsets contentPadding,
-    @required DialogType dialogType,
-  }) async {
-    //region variaveis
-    auxBtnText ??= '';
-    contentPadding ??= EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 24.0);
+  Future<DialogResult> cancel() async {
+    return await _aux(
+        dismissible: dismissible,
+        actions: [
+          negativeButton('Cancelar'),
+        ]
+    );
+  }
 
-    positiveButton ??=
-    (dialogType == DialogType.sim || dialogType == DialogType.simNao) ?
-    Strings.SIM : Strings.OK;
-
-    negativeButton ??=
-    (dialogType == DialogType.nao || dialogType == DialogType.simNao) ?
-    Strings.NAO : Strings.CANCELAR;
-
-    bool okButton = _showPositiveButton(dialogType);
-    bool cancelButton = _showNegativeButton(dialogType);
-
-    content ??= [];
-    //endregion
-
-    return await showDialog(
+  Future<DialogResult> _aux({List<Widget> actions, bool dismissible = true}) async {
+    return await showDialog<DialogResult>(
       context: context,
+      barrierDismissible: dismissible,
       builder: (context) =>
           StatefulBuilder(
-            builder: (context, setState) =>
-                AlertDialog(
+              builder: (context, setState) {
+                onBuilder?.call(setState);
+
+                return AlertDialog(
                   title: title == null ? null : Text(title),
                   content: SingleChildScrollView(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
                         children: content,
                       )
                   ),
                   contentPadding: contentPadding,
-                  actions: [
-                    if (auxBtnText.isNotEmpty) FlatButton(
-                      child: Text(auxBtnText),
-                      onPressed: () =>
-                          Navigator.pop(
-                              context, DialogResult.aux),
-                    ),
-                    if (cancelButton) FlatButton(
-                      child: Text(negativeButton),
-                      onPressed: () =>
-                          Navigator.pop(
-                              context, DialogResult.negative),
-                    ),
-                    if (okButton) FlatButton(
-                      child: Text(positiveButton),
-                      onPressed: () =>
-                          Navigator.pop(
-                              context, DialogResult.positive),
-                    ),
-                  ],
-                ),
+                  actions: actions,
+                );
+              }
           ),
     ) ?? DialogResult.none;
   }
 
-  static bool _showPositiveButton(DialogType dialogType) {
-    return (dialogType == DialogType.sim || dialogType == DialogType.simNao) ||
-        (dialogType == DialogType.ok || dialogType == DialogType.okCancel);
-  }
+  Widget noneButton(String text) =>
+      TextButton(
+        child: Text(text),
+        onPressed: () =>
+            Navigator.pop(
+                context, DialogResult.none),
+      );
 
-  static bool _showNegativeButton(DialogType dialogType) {
-    return (dialogType == DialogType.nao || dialogType == DialogType.simNao) ||
-        (dialogType == DialogType.cancel || dialogType == DialogType.okCancel);
-  }
+  Widget negativeButton(String text) =>
+      TextButton(
+        child: Text(text),
+        onPressed: () =>
+            Navigator.pop(
+                context, DialogResult.negative),
+      );
+
+  Widget positiveButton(String text) =>
+      TextButton(
+        child: Text(text),
+        onPressed: () =>
+            Navigator.pop(
+                context, DialogResult.positive),
+      );
+}
+
+class DialogResult {
+  static const int noneValue = 5720;
+  static const int positiveValue = 122;
+  static const int negativeValue = 2252;
+
+  final int value;
+  DialogResult(this.value);
+
+  static DialogResult get none => DialogResult(noneValue);
+  static DialogResult get positive => DialogResult(positiveValue);
+  static DialogResult get negative => DialogResult(negativeValue);
+
+  bool get isPositive => value == positiveValue;
+  bool get isNegative => value == negativeValue;
+  bool get isNone => value == noneValue;
 }
 
 class DialogFullScreen {
-  static void show(BuildContext context, List<Widget> content) {
-    showGeneralDialog(
+  final BuildContext context;
+  final List<Widget> content;
+  DialogFullScreen({@required this.context, this.content = const []});
+
+  Future<void> show() async {
+    await showGeneralDialog(
       context: context,
       barrierColor: Colors.black12.withOpacity(0.3),
       pageBuilder: (context, anim1, anim2) { // your widget implementation
@@ -164,6 +157,16 @@ class DialogFullScreen {
             children: content,
           ),
         );
+      },
+    );
+  }
+
+  Future<void> showIndex(int index) async {
+    await showGeneralDialog(
+      context: context,
+      barrierColor: Colors.black12.withOpacity(0.3),
+      pageBuilder: (context, anim1, anim2) { // your widget implementation
+        return content[index];
       },
     );
   }

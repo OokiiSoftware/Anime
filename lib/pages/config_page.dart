@@ -1,23 +1,26 @@
-import 'package:anime/auxiliar/import.dart';
-import 'package:anime/model/import.dart';
-import 'package:anime/res/import.dart';
-import 'admin_page.dart';
+import 'package:flutter/material.dart';
+import '../auxiliar/import.dart';
+import '../manager/import.dart';
+import '../model/import.dart';
+import '../res/import.dart';
+import 'import.dart';
 
 class ConfigPage extends StatefulWidget{
   @override
-  State<StatefulWidget> createState() => MyWidgetState();
+  State<StatefulWidget> createState() => _State();
 }
-class MyWidgetState extends State<ConfigPage> {
+class _State extends State<ConfigPage> {
 
   //region Variaveis
+
+  // ignore: unused_field
   static const String TAG = 'ConfigPage';
 
   bool _isAdmin = false;
   bool inProgress = false;
-  bool _showEcchi = false;
-  bool _useNewLayout = false;
 
-  String _currentThema;
+  ThemeManager get _theme => ThemeManager.i;
+  SettingsManager get _settings => SettingsManager.i;
   String _currentOrdem;
 
   //endregion
@@ -26,28 +29,23 @@ class MyWidgetState extends State<ConfigPage> {
 
   @override
   void dispose() {
-    AdMob.instance.removeListener(this);
+    AdMobManager.i.removeListener(_adMobChanged);
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-    _isAdmin = FirebaseOki.isAdmin;
-    _showEcchi = Config.showEcchi;
-    _useNewLayout = Config.useNewLayout;
-    _currentThema = Config.theme;
-    _currentOrdem = Config.listOrder;
-    AdMob.instance.addListener(this);
+    // _isAdmin = AdminManager.i.isAdmin;
+    // _currentOrdem = ConfigManager.i.listOrder;
+    AdMobManager.i.addListener(_adMobChanged);
   }
 
   @override
   Widget build(BuildContext context) {
-    var borderRadius = BorderRadius.all(Radius.circular(5));
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(Titles.CONFIGURACOES, style: Styles.textFixo),
+        title: Text(Titles.CONFIGURACOES),
         actions: [
           if (_isAdmin)
             IconButton(
@@ -62,79 +60,45 @@ class MyWidgetState extends State<ConfigPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: borderRadius,
-              child: Container(
-                color: OkiTheme.textInvert(0.2),
-                padding: EdgeInsets.all(10),
-                child: Column(
-                  children: [
-                    // Theme
-                    Row(
-                      children: [
-                        Text('Tema'),
-                        Padding(padding: EdgeInsets.only(right: 10)),
-                        DropDownMenu(
-                          value: _currentThema,
-                          items: Arrays.thema,
-                          onChanged: _onThemeChanged,
-                        ),
-                      ],
-                    ),
-                    // Odem de listagem dos animes
-                    Row(
-                      children: [
-                        Text('Ordem de listagem'),
-                        Padding(padding: EdgeInsets.only(right: 10)),
-                        DropDownMenu(
-                          value: _currentOrdem,
-                          items: Arrays.ordem,
-                          onChanged: _onOrderChanged,
-                        ),
-                        IconButton(
-                            icon: Icon(Icons.help),
-                            onPressed: _onOrderHelpClick
-                        )
-                      ],
-                    ),
-                    Divider(),
-                    CheckboxListTile(
-                        title: Text('Menu lateral na tela principal'),
-                        value: _useNewLayout,
-                        onChanged: _onLayoutChanged
-                    ),
-                    CheckboxListTile(
-                        title: Text('Mostrar animes com gênero Ecchi'),
-                        value: _showEcchi,
-                        onChanged: _onEcchiChanged
-                    ),
-                  ],
-                ),
+            Card(
+              child: OkiDropDown(
+                text: 'Tema',
+                value: _theme.themeModeString,
+                items: Arrays.thema,
+                onChanged: _onThemeChanged,
               ),
             ),
+
+            Card(
+              child: CheckboxListTile(
+                  title: Text('Menu lateral na tela principal'),
+                  value: _settings.useNewLayout,
+                  onChanged: _onLayoutChanged
+              ),
+            ),
+
             Padding(padding: EdgeInsets.all(5)),
             //Sugestões
-            ClipRRect(
-              borderRadius: borderRadius,
+            Card(
               child: Container(
-                color: OkiTheme.textInvert(0.2),
                 padding: EdgeInsets.all(10),
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                        'Ajude-nos a melhorar enviando sugestões',
-                        textAlign: TextAlign.center),
+                    Text('Ajude-nos a melhorar enviando sugestões',
+                      textAlign: TextAlign.center,
+                    ),
                     Divider(),
-                    FlatButton(
-                      minWidth: 200,
-                      color: OkiTheme.accent,
-                      child: Text(MyTexts.ANINE_SUGESTAO, style: Styles.textFixo),
+                    TextButton(
+                      // minWidth: 200,
+                      // color: OkiColors.accent,
+                      child: Text(MyTexts.ANINE_SUGESTAO),
                       onPressed: () => _onSugestaoCkick(true),
                     ),
-                    FlatButton(
-                      minWidth: 200,
-                      color: OkiTheme.accent,
-                      child: Text(MyTexts.ENVIE_SUGESTAO, style: Styles.textFixo),
+                    TextButton(
+                      // minWidth: 200,
+                      // color: OkiColors.accent,
+                      child: Text(MyTexts.ENVIE_SUGESTAO),
                       onPressed: _onSugestaoCkick,
                     ),
                   ],
@@ -153,36 +117,28 @@ class MyWidgetState extends State<ConfigPage> {
 
   //region Metodos
 
+  void _adMobChanged(bool b) {//todo admob
+
+  }
+
   void onSalvar() async {
     Log.snack(MyTexts.DADOS_SALVOS);
   }
 
   void _onThemeChanged(String value) async {
     setState(() {
-      _currentThema = value;
+      _theme.setThemeMode(value);
     });
-    Config.theme = value;
-    Brightness brightness = OkiTheme.getBrilho(value);
-    await DynamicTheme.of(context).setBrightness(brightness);
   }
   void _onOrderChanged(String value) async {
     setState(() {
       _currentOrdem = value;
     });
-    Config.listOrder = value;
-  }
-  void _onEcchiChanged(bool value) async {
-    setState(() {
-      _showEcchi = value;
-    });
-    Config.showEcchi = value;
   }
   void _onLayoutChanged(bool value) async {
     setState(() {
-      _useNewLayout = value;
+      _settings.useNewLayout = value;
     });
-    Config.useNewLayout = value;
-    OkiTheme.refesh(context);
   }
 
   void _onSugestaoCkick([bool isSugestaoAnime = false]) async {
@@ -198,25 +154,25 @@ class MyWidgetState extends State<ConfigPage> {
         ),
       )
     ];
-    var result = await DialogBox.dialogCancelOK(context, title: title, content: content);
+    var result = await DialogBox(context: context, title: title, content: content,).cancelOK();
     var desc = controller.text;
     if (result.isPositive && desc.trim().isNotEmpty) {
-      Sugestao item = Sugestao();
-      item.idUser = FirebaseOki.user.uid;
-      item.data = DataHora.now();
-      item.descricao = desc;
+      // Sugestao item = Sugestao();
+      // item.idUser = FirebaseManager.i.user.uid;//todo
+      // item.data = DataHora.now();
+      // item.descricao = desc;
 
-      _setInProgress(true);
-      if (await item.salvar(isSugestaoAnime))
-        Log.snack(MyTexts.ENVIE_SUGESTAO_AGRADECIMENTO);
-      else
-        Log.snack(MyErros.ERRO_GENERICO, isError: true);
-      _setInProgress(false);
+      // _setInProgress(true);
+      // if (await item.salvar(isSugestaoAnime))
+      //   Log.snack(MyTexts.ENVIE_SUGESTAO_AGRADECIMENTO);
+      // else
+      //   Log.snack(MyErros.ERRO_GENERICO, isError: true);
+      // _setInProgress(false);
     }
   }
 
   void _gotoAdminPage() {
-    Navigate.to(context, AdminPage());
+    // Navigate.to(context, AdminPage());
   }
 
   void _onOrderHelpClick() {
@@ -225,7 +181,7 @@ class MyWidgetState extends State<ConfigPage> {
       Text('Essa listagem não altera a ordem nas listas principais \'Assistindo, Favoritos, Concluidos e Online\''),
       Text('É alterada na lista de animes com várias temporadas')
     ];
-    DialogBox.dialogOK(context, title: title, content: content);
+    DialogBox(context: context, title: title, content: content,).ok();
   }
 
   void _setInProgress(bool b) {

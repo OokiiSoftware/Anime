@@ -1,5 +1,4 @@
-import 'package:anime/auxiliar/import.dart';
-import 'theme.dart';
+import '../manager/import.dart';
 
 class AppResources {
   static const String APP_NAME = 'Anime';
@@ -13,6 +12,7 @@ class AppResources {
 
 class Strings {
   static const String CRUNCHYROLL = 'CRUNCHYROLL';
+  static const String FUNIMATION = 'FUNIMATION';
   static const String CANCELAR = 'Cancelar';
   static const String OK = 'OK';
   static const String SIM = 'Sim';
@@ -76,7 +76,7 @@ class Titles {
 
   static const String AVISO_ITEM_REPETIDO = 'Este item já está em sua lista de ';
 
-  static const main_page = [DESEJOS, FAVORITOS, CONCLUIDOS, ONLINE, Menus.NAO_LANCADOS];
+  static const main_page = [FAVORITOS, ONLINE, Menus.NAO_LANCADOS];
 }
 
 class MyTexts {
@@ -122,9 +122,9 @@ class MenuMain {
 }
 
 class Arrays {
-  static List<String> thema = [OkiThemeMode.sistema, OkiThemeMode.claro, OkiThemeMode.escuro];
+  static List<String> get thema => ThemeManager.i.modesList;
 
   ///Ordem de listagem dos animes
-  static List<String> ordem = [ListOrder.nome, ListOrder.dataAsc, ListOrder.dataDsc];
+  static List<String> ordem = [];//[ListOrder.nome, ListOrder.dataAsc, ListOrder.dataDsc];
   static List<String> menuMain = [MenuMain.config, MenuMain.sobre, MenuMain.logout];
 }

@@ -30,21 +30,8 @@ class Classificacao {
 
   Classificacao();
 
-  Classificacao.fromJson(Map<dynamic, dynamic> map) {
-    if (map == null) return;
-    //A forma que eu usava antes [map[ACAO]?.toString()] não estava funcionando
-    //então fiz essa verificação [_mapNotNull]
-    if(_mapNotNull(map[ACAO])) acao = double.tryParse(map[ACAO]?.toString());
-    if(_mapNotNull(map[DRAMA])) drama = double.tryParse(map[DRAMA]?.toString());
-    if(_mapNotNull(map[TERROR])) terror = double.tryParse(map[TERROR]?.toString());
-    if(_mapNotNull(map[ROMANCE])) romance = double.tryParse(map[ROMANCE]?.toString());
-    if(_mapNotNull(map[COMEDIA])) comedia = double.tryParse(map[COMEDIA]?.toString());
-    if(_mapNotNull(map[ANIMACAO])) animacao = double.tryParse(map[ANIMACAO]?.toString());
-    if(_mapNotNull(map[AVENTURA])) aventura = double.tryParse(map[AVENTURA]?.toString());
-    if(_mapNotNull(map[HISTORIA])) historia = double.tryParse(map[HISTORIA]?.toString());
-    if(_mapNotNull(map[ECCHI])) ecchi = double.tryParse(map[ECCHI]?.toString());
-    if(_mapNotNull(map[FIM])) fim = double.tryParse(map[FIM]?.toString());
-    if(_mapNotNull(map[VOTOS])) votos = map[VOTOS];
+  Classificacao.fromJson(Map map) {
+    set(map);
   }
 
   Map<String, dynamic> toJson() => {
@@ -61,9 +48,43 @@ class Classificacao {
     VOTOS: votos,
   };
 
+  void set(Map map) {
+    if (map == null) return;
+    //A forma que eu usava antes [map[ACAO]?.toString()] não estava funcionando
+    //então fiz essa verificação [_mapNotNull]
+    if(_mapNotNull(map[ACAO])) acao = double.tryParse(map[ACAO]?.toString());
+    if(_mapNotNull(map[DRAMA])) drama = double.tryParse(map[DRAMA]?.toString());
+    if(_mapNotNull(map[TERROR])) terror = double.tryParse(map[TERROR]?.toString());
+    if(_mapNotNull(map[ROMANCE])) romance = double.tryParse(map[ROMANCE]?.toString());
+    if(_mapNotNull(map[COMEDIA])) comedia = double.tryParse(map[COMEDIA]?.toString());
+    if(_mapNotNull(map[ANIMACAO])) animacao = double.tryParse(map[ANIMACAO]?.toString());
+    if(_mapNotNull(map[AVENTURA])) aventura = double.tryParse(map[AVENTURA]?.toString());
+    if(_mapNotNull(map[HISTORIA])) historia = double.tryParse(map[HISTORIA]?.toString());
+    if(_mapNotNull(map[ECCHI])) ecchi = double.tryParse(map[ECCHI]?.toString());
+    if(_mapNotNull(map[FIM])) fim = double.tryParse(map[FIM]?.toString());
+    if(_mapNotNull(map[VOTOS])) votos = map[VOTOS];
+  }
+
+  @override
+  toString() => toJson().toString();
+
   //endregion
 
   //region Metodos
+
+  void reset() {
+    _acao =
+        _drama =
+        _terror =
+        _romance =
+        _comedia =
+        _animacao =
+        _aventura =
+        _historia =
+        _ecchi =
+        _fim = -1;
+    _votos = -1;
+  }
 
   double get media {
     List<double> values = mediaValues();
@@ -98,9 +119,7 @@ class Classificacao {
     return values;
   }
 
-  static bool _mapNotNull(dynamic value) {
-    return value != null;
-  }
+  static bool _mapNotNull(dynamic value) => value != null;
 
   //endregion
 
@@ -139,6 +158,6 @@ class Classificacao {
   int get votos => _votos ?? null;
   set votos(int value) => _votos = value;
 
-  //endregion
+//endregion
 
 }
